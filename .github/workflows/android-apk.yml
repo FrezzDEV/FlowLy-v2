@@ -22,6 +22,8 @@ jobs:
           cache: true
       - name: Flutter version
         run: flutter --version
+      - name: Generate Android platform scaffold
+        run: flutter create --platforms=android --project-name flowly --org com.frezzdev .
       - name: Resolve dependencies
         run: flutter pub get
       - name: Analyze
