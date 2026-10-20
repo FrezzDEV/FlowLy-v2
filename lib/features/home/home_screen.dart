@@ -215,7 +215,7 @@ class HomeScreen extends StatelessWidget {
   Widget _recentSection(BuildContext context) {
     final songs = [
       ('The Night We Met', 'Lord Huron', Icons.nightlight_round, const Color(0xFF41454A)),
-      ('Chill Bill', 'Rob $tone', Icons.person, const Color(0xFF4C171D)),
+      ('Chill Bill', 'Rob Stone', Icons.person, const Color(0xFF4C171D)),
       ('As It Was', 'Harry Styles', Icons.door_front_door, const Color(0xFF332947)),
       ('Sweater Weather', 'The Neighbourhood', Icons.forest, const Color(0xFF34423A)),
     ];
