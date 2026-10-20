@@ -1,0 +1,248 @@
+import 'package:flutter/material.dart';
+
+const _muted = Color(0xFFA5A6AC);
+const _lime = Color(0xFFB6F36B);
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      bottom: false,
+      child: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 22),
+            sliver: SliverToBoxAdapter(child: _header(context)),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            sliver: SliverToBoxAdapter(child: _sectionTitle('Недавние')),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
+            sliver: SliverToBoxAdapter(child: _quickGrid()),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.only(bottom: 28),
+            sliver: SliverToBoxAdapter(child: _popularSection()),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.only(bottom: 28),
+            sliver: SliverToBoxAdapter(child: _mixSection()),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
+            sliver: SliverToBoxAdapter(child: _recentSection(context)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _header(BuildContext context) => Row(
+    children: [
+      Container(
+        width: 38, height: 38,
+        decoration: BoxDecoration(color: _lime, borderRadius: BorderRadius.circular(13)),
+        child: const Icon(Icons.graphic_eq_rounded, color: Color(0xFF11130D), size: 25),
+      ),
+      const SizedBox(width: 10),
+      const Text('Flow', style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800, letterSpacing: -.8)),
+      const Text('Ly', style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800, color: _lime, letterSpacing: -.8)),
+      const Spacer(),
+      IconButton(
+        tooltip: 'Профиль',
+        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Профиль доступен во вкладке «Профиль»'))),
+        icon: const CircleAvatar(radius: 19, backgroundColor: Color(0xFF24262B), child: Icon(Icons.person_outline, color: Colors.white)),
+      ),
+    ],
+  );
+
+  Widget _sectionTitle(String title, {String? action, VoidCallback? onAction}) => Row(
+    children: [
+      Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, letterSpacing: -.4)),
+      const Spacer(),
+      if (action != null) TextButton(onPressed: onAction, child: Text(action, style: const TextStyle(color: _muted, fontSize: 14))),
+    ],
+  );
+
+  Widget _quickGrid() {
+    final items = [
+      ('Избранное', Icons.favorite_rounded, const Color(0xFF6D4B9D)),
+      ('The Night We Met', Icons.music_note_rounded, const Color(0xFF4D555B)),
+      ('Afterlife', Icons.waves_rounded, const Color(0xFF24617B)),
+      ('Chill mix', Icons.bolt_rounded, const Color(0xFF713B36)),
+      ('Night Drive', Icons.directions_car_rounded, const Color(0xFF173C65)),
+      ('Мой микс 01', Icons.graphic_eq_rounded, const Color(0xFF7B3B75)),
+      ('Любимые', Icons.favorite_border_rounded, const Color(0xFF6A4A34)),
+      ('As It Was', Icons.album_rounded, const Color(0xFF485C76)),
+      ('В дорогу', Icons.headphones_rounded, const Color(0xFF2D6554)),
+    ];
+    return LayoutBuilder(builder: (context, constraints) {
+      final spacing = 10.0;
+      final tile = (constraints.maxWidth - spacing * 2) / 3;
+      return Wrap(
+        spacing: spacing,
+        runSpacing: spacing,
+        children: [
+          for (var i = 0; i < items.length; i++)
+            SizedBox(
+              width: tile,
+              child: AspectRatio(
+                aspectRatio: 1.06,
+                child: Material(
+                  color: const Color(0xFF17191D),
+                  borderRadius: BorderRadius.circular(14),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    onTap: () {},
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [items[i].$3, const Color(0xFF111216)]))),
+                        Positioned(right: -13, top: -14, child: Icon(items[i].$2, size: 86, color: Colors.white.withValues(alpha: .10))),
+                        Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.end, children: [
+                            Icon(items[i].$2, color: i == 0 ? Colors.pink[100] : Colors.white.withValues(alpha: .9), size: 21),
+                            const SizedBox(height: 7),
+                            Text(items[i].$1, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, height: 1.15)),
+                          ]),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      );
+    });
+  }
+
+  Widget _popularSection() {
+    final tracks = [
+      ('Afterlife', 'Ed Sheeran', const Color(0xFF1C6788), Icons.water),
+      ('Someone You Loved', 'Lewis Capaldi', const Color(0xFFB52F17), Icons.person),
+      ('Night Drive', 'Kavinsky', const Color(0xFF112A45), Icons.directions_car),
+      ('The Night We Met', 'Lord Huron', const Color(0xFF393943), Icons.nightlight_round),
+    ];
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: Text('Популярное', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700))),
+      const SizedBox(height: 14),
+      SizedBox(
+        height: 232,
+        child: ListView.separated(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          scrollDirection: Axis.horizontal,
+          itemCount: tracks.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 12),
+          itemBuilder: (context, index) {
+            final t = tracks[index];
+            return SizedBox(
+              width: 172,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.white.withValues(alpha: .10)),
+                    gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [t.$3, const Color(0xFF151619)]),
+                  ),
+                  child: Stack(children: [
+                    Positioned(right: -18, top: 10, child: Icon(t.$4, size: 130, color: Colors.white.withValues(alpha: .12))),
+                    Positioned(left: 14, right: 12, bottom: 14, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(t.$1, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      const SizedBox(height: 4),
+                      Text(t.$2, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: _muted, fontSize: 13)),
+                    ])),
+                    Positioned(right: 10, bottom: 58, child: Material(
+                      color: Colors.white.withValues(alpha: .17),
+                      shape: const CircleBorder(),
+                      child: IconButton(
+                        tooltip: 'Воспроизвести',
+                        onPressed: () {},
+                        icon: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 26),
+                      ),
+                    )),
+                  ]),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    ]);
+  }
+
+  Widget _mixSection() {
+    final mixes = [
+      ('01', const Color(0xFF9C337F), const Color(0xFF3C184B)),
+      ('02', const Color(0xFF287AC3), const Color(0xFF10223F)),
+      ('03', const Color(0xFF2B8A68), const Color(0xFF102D25)),
+      ('04', const Color(0xFF8045C5), const Color(0xFF24123D)),
+    ];
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: Text('Для тебя', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700))),
+      const SizedBox(height: 14),
+      SizedBox(height: 166, child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        scrollDirection: Axis.horizontal,
+        itemCount: mixes.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (_, i) => Container(
+          width: 140,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: .10)),
+            gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [mixes[i].$2, mixes[i].$3]),
+          ),
+          child: Stack(children: [
+            Positioned(right: -28, top: -30, child: Icon(Icons.waves_rounded, size: 112, color: Colors.white.withValues(alpha: .12))),
+            Align(alignment: Alignment.bottomLeft, child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Мой микс\n${mixes[i].$1}', style: const TextStyle(fontSize: 16, height: 1.25, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 8),
+              const Text('Обновлён сегодня', style: TextStyle(color: Colors.white70, fontSize: 10)),
+            ])),
+          ]),
+        ),
+      )),
+    ]);
+  }
+
+  Widget _recentSection(BuildContext context) {
+    final songs = [
+      ('The Night We Met', 'Lord Huron', Icons.nightlight_round, const Color(0xFF41454A)),
+      ('Chill Bill', 'Rob $tone', Icons.person, const Color(0xFF4C171D)),
+      ('As It Was', 'Harry Styles', Icons.door_front_door, const Color(0xFF332947)),
+      ('Sweater Weather', 'The Neighbourhood', Icons.forest, const Color(0xFF34423A)),
+    ];
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _sectionTitle('Недавно прослушано', action: 'Ещё', onAction: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Полный список появится на следующем этапе')))),
+      const SizedBox(height: 8),
+      for (final song in songs)
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Container(
+            width: 54, height: 54,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), gradient: LinearGradient(colors: [song.$4, const Color(0xFF17181B)])),
+            child: Icon(song.$3, color: Colors.white70, size: 28),
+          ),
+          title: Text(song.$1, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+          subtitle: Text(song.$2, style: const TextStyle(color: _muted, fontSize: 13)),
+          trailing: PopupMenuButton<String>(
+            tooltip: 'Действия с треком',
+            icon: const Icon(Icons.more_vert_rounded, color: _muted),
+            onSelected: (value) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$value: ${song.$1}'))),
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'В избранное', child: Text('В избранное')),
+              PopupMenuItem(value: 'Добавить в очередь', child: Text('Добавить в очередь')),
+              PopupMenuItem(value: 'Подробнее', child: Text('Подробнее')),
+            ],
+          ),
+        ),
+    ]);
+  }
+}
