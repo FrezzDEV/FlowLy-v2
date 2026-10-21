@@ -161,9 +161,11 @@ class PlayerTransitionOverlay extends StatelessWidget {
         animation: player,
         builder: (context, _) {
           final track = player.currentTrack;
-          return Stack(
-            fit: StackFit.expand,
-            children: [
+          return Material(
+            color: Colors.transparent,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
               ColoredBox(
                 color: _playerBackground.withValues(alpha: p),
               ),
@@ -366,7 +368,8 @@ class PlayerTransitionOverlay extends StatelessWidget {
                   ),
                 ),
               ),
-            ],
+              ],
+            ),
           );
         },
       ),
