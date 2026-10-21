@@ -5,8 +5,6 @@ class LibraryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => SafeArea(
     child: ListView(padding: const EdgeInsets.all(20), children: [
-      const Text('Библиотека', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800)),
-      const SizedBox(height: 22),
       const Wrap(spacing: 8, children: [
         _FilterChip(label: 'Плейлисты', selected: true),
         _FilterChip(label: 'Исполнители'),
