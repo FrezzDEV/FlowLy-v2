@@ -178,15 +178,13 @@ class PlayerTransitionOverlay extends StatelessWidget {
                 top: media.padding.top + 4,
                 left: 12,
                 right: 12,
-                child: IgnorePointer(
-                  ignoring: p < 0.94,
-                  child: Opacity(
-                    opacity: p,
-                    child: Row(
-                      children: [
-                        IconButton(
-                          tooltip: 'Свернуть плеер',
-                          onPressed: onClose,
+                child: Opacity(
+                  opacity: p,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        tooltip: 'Свернуть плеер',
+                        onPressed: onClose,
                           icon: const Icon(
                             Icons.keyboard_arrow_down_rounded,
                             color: Colors.white,
@@ -210,9 +208,8 @@ class PlayerTransitionOverlay extends StatelessWidget {
                             const SnackBar(content: Text('Очередь появится на следующем этапе')),
                           ),
                           icon: const Icon(Icons.queue_music_rounded, color: Colors.white),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
