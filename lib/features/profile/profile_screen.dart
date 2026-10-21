@@ -1,25 +1,61 @@
 import 'package:flutter/material.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final _scrollController = ScrollController();
+  final _settingsKey = GlobalKey();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _openSettings() {
+    final targetContext = _settingsKey.currentContext;
+    if (targetContext == null) return;
+    Scrollable.ensureVisible(
+      targetContext,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOut,
+      alignment: 0.08,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) => SafeArea(
-    child: ListView(padding: const EdgeInsets.all(20), children: [
-      const Text('Профиль', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800)),
-      const SizedBox(height: 24),
-      const Center(child: CircleAvatar(radius: 42, backgroundColor: Color(0xFF24272B), child: Icon(Icons.person_rounded, size: 44))),
-      const SizedBox(height: 12),
-      const Center(child: Text('Слушатель FlowLy', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700))),
-      const Center(child: Text('Демо-профиль', style: TextStyle(color: Colors.white60))),
-      const SizedBox(height: 32),
-      const Text('Настройки', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-      const SizedBox(height: 8),
-      _SettingRow(Icons.palette_outlined, 'Внешний вид', 'Тёмная тема'),
-      _SettingRow(Icons.notifications_none_rounded, 'Уведомления', 'Настройка уведомлений'),
-      _SettingRow(Icons.high_quality_rounded, 'Качество звука', 'Будет доступно после интеграции'),
-      _SettingRow(Icons.language_rounded, 'Язык', 'Русский'),
-      _SettingRow(Icons.info_outline_rounded, 'О приложении', 'FlowLy · 0.1.0'),
-    ]),
+    child: ListView(
+      controller: _scrollController,
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+      children: [
+        Align(
+          alignment: Alignment.centerRight,
+          child: IconButton(
+            tooltip: 'Настройки',
+            onPressed: _openSettings,
+            icon: const Icon(Icons.settings_rounded, size: 26),
+          ),
+        ),
+        const SizedBox(height: 12),
+        const Center(child: CircleAvatar(radius: 42, backgroundColor: Color(0xFF24272B), child: Icon(Icons.person_rounded, size: 44))),
+        const SizedBox(height: 12),
+        const Center(child: Text('Слушатель FlowLy', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700))),
+        const Center(child: Text('Демо-профиль', style: TextStyle(color: Colors.white60))),
+        const SizedBox(height: 32),
+        Text('Настройки', key: _settingsKey, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 8),
+        _SettingRow(Icons.palette_outlined, 'Внешний вид', 'Тёмная тема'),
+        _SettingRow(Icons.notifications_none_rounded, 'Уведомления', 'Настройка уведомлений'),
+        _SettingRow(Icons.high_quality_rounded, 'Качество звука', 'Будет доступно после интеграции'),
+        _SettingRow(Icons.language_rounded, 'Язык', 'Русский'),
+        _SettingRow(Icons.info_outline_rounded, 'О приложении', 'FlowLy · 0.1.0'),
+      ],
+    ),
   );
 }
 
