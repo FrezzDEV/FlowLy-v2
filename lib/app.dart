@@ -131,11 +131,14 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
       setState(() => _showPlayer = false);
       return;
     }
-    _playerAnimation.animateTo(
-      0,
-      duration: const Duration(milliseconds: 350),
-      curve: Curves.easeInOutCubic,
-    );
+    _playerAnimation
+        .reverse(duration: const Duration(milliseconds: 350))
+        .whenComplete(() {
+      if (!mounted) return;
+      if (_playerAnimation.value <= 0.001 && _showPlayer) {
+        setState(() => _showPlayer = false);
+      }
+    });
   }
 
   @override
