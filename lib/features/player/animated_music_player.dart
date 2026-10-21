@@ -185,29 +185,29 @@ class PlayerTransitionOverlay extends StatelessWidget {
                       IconButton(
                         tooltip: 'Свернуть плеер',
                         onPressed: onClose,
-                          icon: const Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            color: Colors.white,
-                            size: 36,
-                          ),
+                        icon: const Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          color: Colors.white,
+                          size: 36,
                         ),
-                        const Spacer(),
-                        const Text(
-                          'СЕЙЧАС ИГРАЕТ',
-                          style: TextStyle(
-                            color: _playerMuted,
-                            fontSize: 11,
-                            letterSpacing: 1.8,
-                            fontWeight: FontWeight.w700,
-                          ),
+                      ),
+                      const Spacer(),
+                      const Text(
+                        'СЕЙЧАС ИГРАЕТ',
+                        style: TextStyle(
+                          color: _playerMuted,
+                          fontSize: 11,
+                          letterSpacing: 1.8,
+                          fontWeight: FontWeight.w700,
                         ),
-                        const Spacer(),
-                        IconButton(
-                          tooltip: 'Очередь',
-                          onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Очередь появится на следующем этапе')),
-                          ),
-                          icon: const Icon(Icons.queue_music_rounded, color: Colors.white),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        tooltip: 'Очередь',
+                        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Очередь появится на следующем этапе')),
+                        ),
+                        icon: const Icon(Icons.queue_music_rounded, color: Colors.white),
                       ),
                     ],
                   ),
