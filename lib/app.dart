@@ -5,7 +5,6 @@ import 'features/search/search_screen.dart';
 import 'features/library/library_screen.dart';
 import 'features/profile/profile_screen.dart';
 import 'features/player/animated_music_player.dart';
-import 'features/player/player_controller.dart';
 
 class FlowLyApp extends StatelessWidget {
   const FlowLyApp({super.key});
