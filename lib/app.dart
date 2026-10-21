@@ -32,6 +32,9 @@ class FlowLyApp extends StatelessWidget {
         navigationBarTheme: const NavigationBarThemeData(
           indicatorColor: Colors.transparent,
           overlayColor: WidgetStatePropertyAll(Colors.transparent),
+          labelTextStyle: WidgetStatePropertyAll(
+            TextStyle(fontSize: 10, height: 1),
+          ),
         ),
         iconButtonTheme: const IconButtonThemeData(
           style: ButtonStyle(
@@ -164,28 +167,29 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
                   onDragEnd: _finishInteractiveDrag,
                 ),
                 NavigationBar(
+                  height: 54,
                   selectedIndex: _selected,
                   onDestinationSelected: (index) => setState(() => _selected = index),
                   backgroundColor: const Color(0xFF101114),
                   indicatorColor: Colors.transparent,
                   destinations: const [
                     NavigationDestination(
-                      icon: Icon(Icons.home_outlined),
-                      selectedIcon: Icon(Icons.home_rounded),
+                      icon: Icon(Icons.home_outlined, size: 16),
+                      selectedIcon: Icon(Icons.home_rounded, size: 16),
                       label: 'Главная',
                     ),
                     NavigationDestination(
-                      icon: Icon(Icons.search_rounded),
+                      icon: Icon(Icons.search_rounded, size: 16),
                       label: 'Поиск',
                     ),
                     NavigationDestination(
-                      icon: Icon(Icons.library_music_outlined),
-                      selectedIcon: Icon(Icons.library_music),
+                      icon: Icon(Icons.library_music_outlined, size: 16),
+                      selectedIcon: Icon(Icons.library_music, size: 16),
                       label: 'Библиотека',
                     ),
                     NavigationDestination(
-                      icon: Icon(Icons.person_outline_rounded),
-                      selectedIcon: Icon(Icons.person_rounded),
+                      icon: Icon(Icons.person_outline_rounded, size: 16),
+                      selectedIcon: Icon(Icons.person_rounded, size: 16),
                       label: 'Профиль',
                     ),
                   ],
