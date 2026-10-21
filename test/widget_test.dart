@@ -23,4 +23,19 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Популярные жанры'), findsOneWidget);
   });
+  testWidgets('mini player opens and closes the full-screen player', (tester) async {
+    await tester.pumpWidget(const FlowLyApp());
+
+    expect(find.text('Midnight Flow'), findsOneWidget);
+    await tester.tap(find.text('Midnight Flow'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('СЕЙЧАС ИГРАЕТ'), findsOneWidget);
+    await tester.tap(find.byTooltip('Свернуть плеер'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('СЕЙЧАС ИГРАЕТ'), findsNothing);
+    expect(find.text('Midnight Flow'), findsOneWidget);
+  });
+
 }
