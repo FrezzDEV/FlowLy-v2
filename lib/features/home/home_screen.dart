@@ -133,7 +133,7 @@ class HomeScreen extends StatelessWidget {
       const Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: Text('Популярное', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700))),
       const SizedBox(height: 14),
       SizedBox(
-        height: 232,
+        height: 172,
         child: ListView.separated(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           scrollDirection: Axis.horizontal,
@@ -143,6 +143,7 @@ class HomeScreen extends StatelessWidget {
             final t = tracks[index];
             return SizedBox(
               width: 172,
+              height: 172,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(18),
                 child: DecoratedBox(
@@ -186,13 +187,14 @@ class HomeScreen extends StatelessWidget {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: Text('Для тебя', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700))),
       const SizedBox(height: 14),
-      SizedBox(height: 166, child: ListView.separated(
+      SizedBox(height: 172, child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         scrollDirection: Axis.horizontal,
         itemCount: mixes.length,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (_, i) => Container(
-          width: 140,
+          width: 172,
+          height: 172,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
@@ -203,8 +205,6 @@ class HomeScreen extends StatelessWidget {
             Positioned(right: -28, top: -30, child: Icon(Icons.waves_rounded, size: 112, color: Colors.white.withValues(alpha: .12))),
             Align(alignment: Alignment.bottomLeft, child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('Мой микс\n${mixes[i].$1}', style: const TextStyle(fontSize: 16, height: 1.25, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 8),
-              const Text('Обновлён сегодня', style: TextStyle(color: Colors.white70, fontSize: 10)),
             ])),
           ]),
         ),
