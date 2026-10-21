@@ -16,8 +16,6 @@ class _SearchScreenState extends State<SearchScreen> {
     child: Padding(
       padding: const EdgeInsets.all(20),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Поиск', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800)),
-        const SizedBox(height: 20),
         TextField(
           controller: _controller,
           onChanged: (_) => setState(() {}),
