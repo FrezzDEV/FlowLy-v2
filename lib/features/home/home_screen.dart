@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../player/player_controller.dart';
 
 const _muted = Color(0xFFA5A6AC);
 const _lime = Color(0xFFB6F36B);
@@ -80,6 +81,17 @@ class HomeScreen extends StatelessWidget {
       ('As It Was', Icons.album_rounded, const Color(0xFF485C76)),
       ('В дорогу', Icons.headphones_rounded, const Color(0xFF2D6554)),
     ];
+    final playTracks = [
+      PlayerController.catalog[4],
+      PlayerController.catalog[4],
+      PlayerController.catalog[1],
+      PlayerController.catalog[5],
+      PlayerController.catalog[3],
+      PlayerController.catalog[0],
+      PlayerController.catalog[4],
+      PlayerController.catalog[6],
+      PlayerController.catalog[7],
+    ];
     return LayoutBuilder(builder: (context, constraints) {
       final spacing = 10.0;
       final tile = (constraints.maxWidth - spacing * 2) / 3;
@@ -97,7 +109,7 @@ class HomeScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   clipBehavior: Clip.antiAlias,
                   child: InkWell(
-                    onTap: () {},
+                    onTap: () => PlayerController.instance.playTrack(playTracks[i]),
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
@@ -124,13 +136,16 @@ class HomeScreen extends StatelessWidget {
 
   Widget _popularSection() {
     final tracks = [
-      ('Afterlife', 'Ed Sheeran', const Color(0xFF1C6788), Icons.water),
-      ('Someone You Loved', 'Lewis Capaldi', const Color(0xFFB52F17), Icons.person),
-      ('Night Drive', 'Kavinsky', const Color(0xFF112A45), Icons.directions_car),
-      ('The Night We Met', 'Lord Huron', const Color(0xFF393943), Icons.nightlight_round),
+      PlayerController.catalog[1],
+      PlayerController.catalog[2],
+      PlayerController.catalog[3],
+      PlayerController.catalog[4],
     ];
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: Text('Популярное', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700))),
+      const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Text('Популярное', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+      ),
       const SizedBox(height: 14),
       SizedBox(
         height: 172,
@@ -140,25 +155,44 @@ class HomeScreen extends StatelessWidget {
           itemCount: tracks.length,
           separatorBuilder: (_, __) => const SizedBox(width: 12),
           itemBuilder: (context, index) {
-            final t = tracks[index];
-            return SizedBox(
-              width: 172,
-              height: 172,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(18),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.white.withValues(alpha: .10)),
-                    gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [t.$3, const Color(0xFF151619)]),
+            final track = tracks[index];
+            return GestureDetector(
+              onTap: () => PlayerController.instance.playTrack(track),
+              child: SizedBox(
+                width: 172,
+                height: 172,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.white.withValues(alpha: .10)),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [track.color, const Color(0xFF151619)],
+                      ),
+                    ),
+                    child: Stack(children: [
+                      Positioned(
+                        right: -18,
+                        top: 10,
+                        child: Icon(track.icon, size: 130, color: Colors.white.withValues(alpha: .12)),
+                      ),
+                      Positioned(
+                        left: 14,
+                        right: 12,
+                        bottom: 14,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(track.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                            const SizedBox(height: 4),
+                            Text(track.artist, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: _muted, fontSize: 13)),
+                          ],
+                        ),
+                      ),
+                    ]),
                   ),
-                  child: Stack(children: [
-                    Positioned(right: -18, top: 10, child: Icon(t.$4, size: 130, color: Colors.white.withValues(alpha: .12))),
-                    Positioned(left: 14, right: 12, bottom: 14, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(t.$1, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-                      const SizedBox(height: 4),
-                      Text(t.$2, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: _muted, fontSize: 13)),
-                    ])),
-                  ]),
                 ),
               ),
             );
@@ -205,28 +239,41 @@ class HomeScreen extends StatelessWidget {
 
   Widget _recentSection(BuildContext context) {
     final songs = [
-      ('The Night We Met', 'Lord Huron', Icons.nightlight_round, const Color(0xFF41454A)),
-      ('Chill Bill', 'Rob Stone', Icons.person, const Color(0xFF4C171D)),
-      ('As It Was', 'Harry Styles', Icons.door_front_door, const Color(0xFF332947)),
-      ('Sweater Weather', 'The Neighbourhood', Icons.forest, const Color(0xFF34423A)),
+      PlayerController.catalog[4],
+      PlayerController.catalog[5],
+      PlayerController.catalog[6],
+      PlayerController.catalog[7],
     ];
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _sectionTitle('Недавно прослушано', action: 'Ещё', onAction: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Полный список появится на следующем этапе')))),
+      _sectionTitle(
+        'Недавно прослушано',
+        action: 'Ещё',
+        onAction: () => ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Полный список появится на следующем этапе')),
+        ),
+      ),
       const SizedBox(height: 8),
       for (final song in songs)
         ListTile(
+          onTap: () => PlayerController.instance.playTrack(song),
           contentPadding: EdgeInsets.zero,
           leading: Container(
-            width: 54, height: 54,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), gradient: LinearGradient(colors: [song.$4, const Color(0xFF17181B)])),
-            child: Icon(song.$3, color: Colors.white70, size: 28),
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              gradient: LinearGradient(colors: [song.color, const Color(0xFF17181B)]),
+            ),
+            child: Icon(song.icon, color: Colors.white70, size: 28),
           ),
-          title: Text(song.$1, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-          subtitle: Text(song.$2, style: const TextStyle(color: _muted, fontSize: 13)),
+          title: Text(song.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+          subtitle: Text(song.artist, style: const TextStyle(color: _muted, fontSize: 13)),
           trailing: PopupMenuButton<String>(
             tooltip: 'Действия с треком',
             icon: const Icon(Icons.more_vert_rounded, color: _muted),
-            onSelected: (value) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$value: ${song.$1}'))),
+            onSelected: (value) => ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('$value: ${song.title}')),
+            ),
             itemBuilder: (_) => const [
               PopupMenuItem(value: 'В избранное', child: Text('В избранное')),
               PopupMenuItem(value: 'Добавить в очередь', child: Text('Добавить в очередь')),
