@@ -52,8 +52,10 @@ class AppShell extends StatefulWidget {
   State<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
+class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin {
   int _selected = 0;
+  late final AnimationController _playerAnimation;
+  bool _showPlayer = false;
 
   late final List<Widget> _pages = const [
     HomeScreen(),
@@ -62,69 +64,143 @@ class _AppShellState extends State<AppShell> {
     ProfileScreen(),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _playerAnimation = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 450),
+      reverseDuration: const Duration(milliseconds: 350),
+      value: 0,
+    );
+    _playerAnimation.addStatusListener((status) {
+      if (status == AnimationStatus.dismissed && _showPlayer && mounted) {
+        setState(() => _showPlayer = false);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _playerAnimation.dispose();
+    super.dispose();
+  }
+
   void _openFullPlayer() {
-    Navigator.of(context).push<void>(
-      PageRouteBuilder<void>(
-        transitionDuration: const Duration(milliseconds: 450),
-        reverseTransitionDuration: const Duration(milliseconds: 350),
-        pageBuilder: (_, __, ___) => const FullScreenPlayer(),
-        transitionsBuilder: (_, animation, secondaryAnimation, child) {
-          final curved = CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeInOutCubic,
-          );
-          return FadeTransition(
-            opacity: curved,
-            child: ScaleTransition(
-              scale: Tween<double>(begin: 0.92, end: 1.0).animate(curved),
-              child: child,
-            ),
-          );
-        },
-      ),
+    if (!_showPlayer) setState(() => _showPlayer = true);
+    _playerAnimation.animateTo(
+      1,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeInOutCubic,
+    );
+  }
+
+  void _beginInteractiveDrag() {
+    _playerAnimation.stop();
+    if (!_showPlayer) setState(() => _showPlayer = true);
+  }
+
+  void _updateInteractiveDrag(double deltaY) {
+    final height = MediaQuery.sizeOf(context).height;
+    _playerAnimation.value =
+        (_playerAnimation.value - deltaY / (height * 0.78)).clamp(0.0, 1.0);
+  }
+
+  void _finishInteractiveDrag(double velocityY) {
+    final shouldExpand = velocityY < -700 ||
+        (velocityY <= 700 && _playerAnimation.value >= 0.5);
+    if (shouldExpand) {
+      _playerAnimation.animateTo(
+        1,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+      );
+    } else if (_playerAnimation.value == 0) {
+      setState(() => _showPlayer = false);
+    } else {
+      _playerAnimation.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
+  void _closePlayer() {
+    if (_playerAnimation.value == 0) {
+      setState(() => _showPlayer = false);
+      return;
+    }
+    _playerAnimation.animateTo(
+      0,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOutCubic,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(index: _selected, children: _pages),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            MiniPlayer(onOpen: _openFullPlayer),
-            NavigationBar(
-              selectedIndex: _selected,
-              onDestinationSelected: (index) => setState(() => _selected = index),
-              backgroundColor: const Color(0xFF101114),
-              indicatorColor: Colors.transparent,
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.home_outlined),
-                  selectedIcon: Icon(Icons.home_rounded),
-                  label: 'Главная',
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Scaffold(
+          body: IndexedStack(index: _selected, children: _pages),
+          bottomNavigationBar: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                MiniPlayer(
+                  onOpen: _openFullPlayer,
+                  onDragStart: _beginInteractiveDrag,
+                  onDragUpdate: _updateInteractiveDrag,
+                  onDragEnd: _finishInteractiveDrag,
                 ),
-                NavigationDestination(
-                  icon: Icon(Icons.search_rounded),
-                  label: 'Поиск',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.library_music_outlined),
-                  selectedIcon: Icon(Icons.library_music),
-                  label: 'Библиотека',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.person_outline_rounded),
-                  selectedIcon: Icon(Icons.person_rounded),
-                  label: 'Профиль',
+                NavigationBar(
+                  selectedIndex: _selected,
+                  onDestinationSelected: (index) => setState(() => _selected = index),
+                  backgroundColor: const Color(0xFF101114),
+                  indicatorColor: Colors.transparent,
+                  destinations: const [
+                    NavigationDestination(
+                      icon: Icon(Icons.home_outlined),
+                      selectedIcon: Icon(Icons.home_rounded),
+                      label: 'Главная',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.search_rounded),
+                      label: 'Поиск',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.library_music_outlined),
+                      selectedIcon: Icon(Icons.library_music),
+                      label: 'Библиотека',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.person_outline_rounded),
+                      selectedIcon: Icon(Icons.person_rounded),
+                      label: 'Профиль',
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
-      ),
+        if (_showPlayer)
+          Positioned.fill(
+            child: AnimatedBuilder(
+              animation: _playerAnimation,
+              builder: (context, _) => PlayerTransitionOverlay(
+                progress: _playerAnimation.value,
+                onDragStart: _beginInteractiveDrag,
+                onDragUpdate: _updateInteractiveDrag,
+                onDragEnd: _finishInteractiveDrag,
+                onClose: _closePlayer,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
