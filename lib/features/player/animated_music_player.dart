@@ -172,14 +172,14 @@ class PlayerTransitionOverlay extends StatelessWidget {
                 top: coverTop,
                 child: AlbumCover(track: track, size: coverSize),
               ),
-              IgnorePointer(
-                ignoring: p < 0.94,
-                child: Opacity(
-                  opacity: p,
-                  child: Positioned(
-                    top: media.padding.top + 4,
-                    left: 12,
-                    right: 12,
+              Positioned(
+                top: media.padding.top + 4,
+                left: 12,
+                right: 12,
+                child: IgnorePointer(
+                  ignoring: p < 0.94,
+                  child: Opacity(
+                    opacity: p,
                     child: Row(
                       children: [
                         IconButton(
