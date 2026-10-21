@@ -132,7 +132,11 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
       return;
     }
     _playerAnimation
-        .reverse(duration: const Duration(milliseconds: 350))
+        .animateBack(
+          0,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOutCubic,
+        )
         .whenComplete(() {
       if (!mounted) return;
       if (_playerAnimation.value <= 0.001 && _showPlayer) {
