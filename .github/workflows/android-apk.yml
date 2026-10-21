@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -39,3 +39,18 @@ jobs:
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 14
+      - name: Publish APK to GitHub Releases
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: FlowLy APK — latest build
+          body: |
+            Автоматическая сборка FlowLy из ветки main.
+
+            APK: app-release.apk
+            Для установки скачайте APK из Assets ниже.
+          target_commitish: ${{ github.sha }}
+          files: build/app/outputs/flutter-apk/app-release.apk
+          overwrite_files: true
+          make_latest: true
