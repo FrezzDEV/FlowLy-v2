@@ -16,9 +16,28 @@ class FlowLyApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: background,
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFB6F36B), brightness: Brightness.dark),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFB6F36B),
+          brightness: Brightness.dark,
+        ),
         useMaterial3: true,
         fontFamily: 'Roboto',
+        // Remove touch ripples/highlights throughout the app.
+        splashFactory: NoSplash.splashFactory,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        focusColor: Colors.transparent,
+        navigationBarTheme: const NavigationBarThemeData(
+          indicatorColor: Colors.transparent,
+          overlayColor: WidgetStatePropertyAll(Colors.transparent),
+        ),
+        iconButtonTheme: const IconButtonThemeData(
+          style: ButtonStyle(
+            overlayColor: WidgetStatePropertyAll(Colors.transparent),
+            splashFactory: NoSplash.splashFactory,
+          ),
+        ),
       ),
       home: const AppShell(),
     );
@@ -48,7 +67,7 @@ class _AppShellState extends State<AppShell> {
         selectedIndex: _selected,
         onDestinationSelected: (index) => setState(() => _selected = index),
         backgroundColor: const Color(0xFF101114),
-        indicatorColor: const Color(0xFFB6F36B).withValues(alpha: .16),
+        indicatorColor: Colors.transparent,
         destinations: const [
           NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'Главная'),
           NavigationDestination(icon: Icon(Icons.search_rounded), label: 'Поиск'),
