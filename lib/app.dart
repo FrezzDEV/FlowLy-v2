@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+
 import 'features/home/home_screen.dart';
 import 'features/search/search_screen.dart';
 import 'features/library/library_screen.dart';
 import 'features/profile/profile_screen.dart';
+import 'features/player/animated_music_player.dart';
+import 'features/player/player_controller.dart';
 
 class FlowLyApp extends StatelessWidget {
   const FlowLyApp({super.key});
@@ -22,7 +25,6 @@ class FlowLyApp extends StatelessWidget {
         ),
         useMaterial3: true,
         fontFamily: 'Roboto',
-        // Remove touch ripples/highlights throughout the app.
         splashFactory: NoSplash.splashFactory,
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
@@ -46,12 +48,14 @@ class FlowLyApp extends StatelessWidget {
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
+
   @override
   State<AppShell> createState() => _AppShellState();
 }
 
 class _AppShellState extends State<AppShell> {
   int _selected = 0;
+
   late final List<Widget> _pages = const [
     HomeScreen(),
     SearchScreen(),
@@ -59,21 +63,68 @@ class _AppShellState extends State<AppShell> {
     ProfileScreen(),
   ];
 
+  void _openFullPlayer() {
+    Navigator.of(context).push<void>(
+      PageRouteBuilder<void>(
+        transitionDuration: const Duration(milliseconds: 450),
+        reverseTransitionDuration: const Duration(milliseconds: 350),
+        pageBuilder: (_, __, ___) => const FullScreenPlayer(),
+        transitionsBuilder: (_, animation, secondaryAnimation, child) {
+          final curved = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeInOutCubic,
+          );
+          return FadeTransition(
+            opacity: curved,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.92, end: 1.0).animate(curved),
+              child: child,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _selected, children: _pages),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selected,
-        onDestinationSelected: (index) => setState(() => _selected = index),
-        backgroundColor: const Color(0xFF101114),
-        indicatorColor: Colors.transparent,
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'Главная'),
-          NavigationDestination(icon: Icon(Icons.search_rounded), label: 'Поиск'),
-          NavigationDestination(icon: Icon(Icons.library_music_outlined), selectedIcon: Icon(Icons.library_music), label: 'Библиотека'),
-          NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: 'Профиль'),
-        ],
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            MiniPlayer(onOpen: _openFullPlayer),
+            NavigationBar(
+              selectedIndex: _selected,
+              onDestinationSelected: (index) => setState(() => _selected = index),
+              backgroundColor: const Color(0xFF101114),
+              indicatorColor: Colors.transparent,
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.home_outlined),
+                  selectedIcon: Icon(Icons.home_rounded),
+                  label: 'Главная',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.search_rounded),
+                  label: 'Поиск',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.library_music_outlined),
+                  selectedIcon: Icon(Icons.library_music),
+                  label: 'Библиотека',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.person_outline_rounded),
+                  selectedIcon: Icon(Icons.person_rounded),
+                  label: 'Профиль',
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
