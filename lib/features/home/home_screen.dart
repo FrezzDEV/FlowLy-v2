@@ -158,7 +158,7 @@ class HomeScreen extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(t.$2, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: _muted, fontSize: 13)),
                     ])),
-                    Positioned(right: 10, bottom: 58, child: Material(
+                    Positioned(right: 10, top: 10, child: Material(
                       color: Colors.white.withValues(alpha: .17),
                       shape: const CircleBorder(),
                       child: IconButton(
