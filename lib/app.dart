@@ -55,9 +55,8 @@ class AppShell extends StatefulWidget {
   State<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin {
+class _AppShellState extends State<AppShell> {
   int _selected = 0;
-  late final AnimationController _playerAnimation;
   bool _showPlayer = false;
 
   late final List<Widget> _pages = const [
@@ -67,85 +66,26 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
     ProfileScreen(),
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    _playerAnimation = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 450),
-      reverseDuration: const Duration(milliseconds: 350),
-      value: 0,
-    );
-    _playerAnimation.addStatusListener((status) {
-      if (status == AnimationStatus.dismissed && _showPlayer && mounted) {
-        setState(() => _showPlayer = false);
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _playerAnimation.dispose();
-    super.dispose();
-  }
-
   void _openFullPlayer() {
-    if (!_showPlayer) setState(() => _showPlayer = true);
-    _playerAnimation.animateTo(
-      1,
-      duration: const Duration(milliseconds: 450),
-      curve: Curves.easeInOutCubic,
-    );
+    setState(() => _showPlayer = true);
   }
 
-  void _beginInteractiveDrag() {
-    _playerAnimation.stop();
-    if (!_showPlayer) setState(() => _showPlayer = true);
-  }
+  void _beginInteractiveDrag() {}
 
-  void _updateInteractiveDrag(double deltaY) {
-    final height = MediaQuery.sizeOf(context).height;
-    _playerAnimation.value =
-        (_playerAnimation.value - deltaY / (height * 0.78)).clamp(0.0, 1.0);
-  }
+  void _updateInteractiveDrag(double deltaY) {}
 
   void _finishInteractiveDrag(double velocityY) {
-    final shouldExpand = velocityY < -700 ||
-        (velocityY <= 700 && _playerAnimation.value >= 0.5);
-    if (shouldExpand) {
-      _playerAnimation.animateTo(
-        1,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-      );
-    } else if (_playerAnimation.value == 0) {
-      setState(() => _showPlayer = false);
-    } else {
-      _playerAnimation.animateTo(
-        0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-      );
+    if (velocityY < -700) {
+      _openFullPlayer();
+    } else if (velocityY > 700) {
+      _closePlayer();
     }
   }
 
   void _closePlayer() {
-    if (_playerAnimation.value == 0) {
+    if (_showPlayer) {
       setState(() => _showPlayer = false);
-      return;
     }
-    _playerAnimation
-        .animateBack(
-          0,
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeInOutCubic,
-        )
-        .whenComplete(() {
-      if (!mounted) return;
-      if (_playerAnimation.value <= 0.001 && _showPlayer) {
-        setState(() => _showPlayer = false);
-      }
-    });
   }
 
   @override
@@ -200,15 +140,12 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
         ),
         if (_showPlayer)
           Positioned.fill(
-            child: AnimatedBuilder(
-              animation: _playerAnimation,
-              builder: (context, _) => PlayerTransitionOverlay(
-                progress: _playerAnimation.value,
-                onDragStart: _beginInteractiveDrag,
-                onDragUpdate: _updateInteractiveDrag,
-                onDragEnd: _finishInteractiveDrag,
-                onClose: _closePlayer,
-              ),
+            child: PlayerTransitionOverlay(
+              progress: 1,
+              onDragStart: _beginInteractiveDrag,
+              onDragUpdate: _updateInteractiveDrag,
+              onDragEnd: _finishInteractiveDrag,
+              onClose: _closePlayer,
             ),
           ),
       ],
