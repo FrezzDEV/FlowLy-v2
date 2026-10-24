@@ -58,6 +58,7 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _selected = 0;
+  late final ValueNotifier<int> _selectedTab = ValueNotifier<int>(_selected);
 
   late final List<Widget> _pages = const [
     HomeScreen(),
@@ -67,11 +68,27 @@ class _AppShellState extends State<AppShell> {
   ];
 
   @override
+  void dispose() {
+    _selectedTab.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         Scaffold(
-          body: IndexedStack(index: _selected, children: _pages),
+          body: Navigator(
+            onGenerateRoute: (_) => MaterialPageRoute<void>(
+              builder: (_) => ValueListenableBuilder<int>(
+                valueListenable: _selectedTab,
+                builder: (context, selected, child) => IndexedStack(
+                  index: selected,
+                  children: _pages,
+                ),
+              ),
+            ),
+          ),
           bottomNavigationBar: SafeArea(
             top: false,
             child: Column(
@@ -82,8 +99,10 @@ class _AppShellState extends State<AppShell> {
                   height: 54,
                   labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
                   selectedIndex: _selected,
-                  onDestinationSelected: (index) =>
-                      setState(() => _selected = index),
+                  onDestinationSelected: (index) {
+                    setState(() => _selected = index);
+                    _selectedTab.value = index;
+                  },
                   backgroundColor: const Color(0xFF101114),
                   indicatorColor: Colors.transparent,
                   destinations: const [
