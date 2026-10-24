@@ -273,9 +273,8 @@ void main() {
     expect(find.byType(PlaylistPage), findsNothing);
 
     await tester.tap(find.text('Dawn Drive'));
-    await tester.pump();
-    expect(find.byType(PlaylistPage), findsOneWidget);
     await tester.pumpAndSettle();
+    expect(find.byType(PlaylistPage), findsOneWidget);
 
     expect(find.text('First Light'), findsOneWidget);
     expect(find.byType(IconButton).evaluate().any(
