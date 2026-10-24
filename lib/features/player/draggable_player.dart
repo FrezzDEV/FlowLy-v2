@@ -252,7 +252,7 @@ class DraggableViewState extends State<DraggableView>
                           ),
                           child: BigPlayerContent(
                             player: _player,
-                            active: t > 0.5 || _player.isPlaying,
+                            active: t > 0.5,
                           ),
                         ),
                       ),
