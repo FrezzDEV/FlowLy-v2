@@ -1,4 +1,4 @@
-# FlowLy v2
+# FlowLy
 
 Flutter mobile UI prototype for the FlowLy music app. The current phase is intentionally UI-only: catalogue, playback, mixes, profile data and search results are demonstration content. No external music provider or backend is called.
 
@@ -16,10 +16,10 @@ flutter run
 ```bash
 flutter build apk --release
 ```
-Artifact: `build/app/outputs/flutter-apk/app-release.apk`.
+Artifact: `build/app/outputs/flutter-apk/FlowLy.apk`.
 
 ## GitHub Actions
-Workflow `.github/workflows/android-apk.yml` runs on pushes, pull requests and manual dispatch. It resolves dependencies, runs static analysis and widget tests, builds a release APK and uploads it as the `flowly-release-apk` artifact. Open the Actions run and download the artifact.
+Workflow `.github/workflows/android-apk.yml` runs on pushes, pull requests and manual dispatch. It resolves dependencies, runs static analysis and widget tests, builds a release APK and uploads it as the `FlowLy-release-apk` artifact. Open the Actions run and download the artifact.
 
 ## Structure
 ```
