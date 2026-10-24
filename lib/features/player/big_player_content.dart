@@ -49,14 +49,10 @@ class BigPlayerContent extends StatefulWidget {
     super.key,
     required this.player,
     required this.active,
-    required this.onClose,
-    required this.onMore,
   });
 
   final PlayerController player;
   final bool active;
-  final VoidCallback onClose;
-  final VoidCallback onMore;
 
   @override
   State<BigPlayerContent> createState() => _BigPlayerContentState();

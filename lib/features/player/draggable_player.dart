@@ -240,11 +240,51 @@ class DraggableViewState extends State<DraggableView>
                           child: BigPlayerContent(
                             player: _player,
                             active: t > 0.5 || _player.isPlaying,
-                            onClose: close,
-                            onMore: () => showSaveTrackToPlaylistSheet(
-                              context,
-                              track,
-                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (t >= 0.3)
+                    Positioned(
+                      top: safeTop + 8,
+                      left: 8,
+                      right: 8,
+                      height: 48,
+                      child: IgnorePointer(
+                        ignoring: t < 0.5,
+                        child: Opacity(
+                          opacity: expandedOpacity,
+                          child: Row(
+                            children: [
+                              _ActionButton(
+                                icon: Icons.keyboard_arrow_down_rounded,
+                                size: 48,
+                                onTap: close,
+                              ),
+                              Expanded(
+                                child: Center(
+                                  child: Text(
+                                    'Сейчас играет',
+                                    maxLines: 1,
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              _ActionButton(
+                                icon: Icons.more_horiz_rounded,
+                                size: 48,
+                                onTap: () => showSaveTrackToPlaylistSheet(
+                                  context,
+                                  track,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -265,10 +305,12 @@ class _ActionButton extends StatelessWidget {
   const _ActionButton({
     required this.icon,
     required this.onTap,
+    this.size = 44,
   });
 
   final IconData icon;
   final VoidCallback? onTap;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -276,13 +318,13 @@ class _ActionButton extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        width: 44,
-        height: 44,
+        width: size,
+        height: size,
         child: Center(
           child: Icon(
             icon,
             color: onTap == null ? Colors.white24 : Colors.white,
-            size: 26.4,
+            size: size * 0.6,
           ),
         ),
       ),
