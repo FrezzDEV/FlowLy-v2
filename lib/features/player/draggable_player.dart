@@ -24,25 +24,76 @@ class DraggableView extends StatefulWidget {
 }
 
 class DraggableViewState extends State<DraggableView>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   static const double _miniHeight = 56;
   static const double _miniMargin = 8;
   static const double _miniRadius = 12;
   static const double _navBarHeight = 54; // высота NavigationBar в app.dart
 
   late final AnimationController _progress;
+  late final AnimationController _coverReveal;
   final PlayerController _player = PlayerController.instance;
+  late PlayerTrack _coverTrack;
+  PlayerTrack? _incomingTrack;
+  bool _coverForward = true;
 
   bool get isOpen => _progress.value > 0.5;
 
   @override
   void initState() {
     super.initState();
+    _coverTrack = _player.currentTrack;
     _progress = AnimationController(vsync: this, value: 0);
+    _coverReveal = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    )..addStatusListener(_onCoverRevealStatus);
+    _player.addListener(_onPlayerTrackChanged);
+  }
+
+  void _onCoverRevealStatus(AnimationStatus status) {
+    if (status != AnimationStatus.completed || !mounted) return;
+    final incoming = _incomingTrack;
+    if (incoming == null) return;
+    setState(() {
+      _coverTrack = incoming;
+      _incomingTrack = null;
+    });
+    _coverReveal.value = 0;
+  }
+
+  void _onPlayerTrackChanged() {
+    final next = _player.currentTrack;
+    if (identical(next, _coverTrack) || identical(next, _incomingTrack)) return;
+
+    // Finish an interrupted reveal first, so rapid next/previous taps never leave stale art.
+    if (_incomingTrack != null) {
+      _coverTrack = _incomingTrack!;
+      _incomingTrack = null;
+      _coverReveal.stop();
+      _coverReveal.value = 0;
+    }
+
+    final catalog = PlayerController.catalog;
+    final oldIndex = catalog.indexOf(_coverTrack);
+    final newIndex = catalog.indexOf(next);
+    _coverForward = oldIndex < 0 || newIndex < 0
+        ? true
+        : newIndex == (oldIndex + 1) % catalog.length;
+    _incomingTrack = next;
+    _coverReveal.duration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 700);
+    if (mounted) setState(() {});
+    _coverReveal.forward(from: 0);
   }
 
   @override
   void dispose() {
+    _player.removeListener(_onPlayerTrackChanged);
+    _coverReveal
+      ..removeStatusListener(_onCoverRevealStatus)
+      ..dispose();
     _progress.dispose();
     super.dispose();
   }
@@ -156,13 +207,27 @@ class DraggableViewState extends State<DraggableView>
                     left: artLeft,
                     width: artSize,
                     height: artSize,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        AlbumCover(track: track, size: artSize),
-                        // DEMO ONLY: remove this tint line at release when final cover art is ready.
-                        ColoredBox(color: track.color.withValues(alpha: .12)),
-                      ],
+                    child: AnimatedBuilder(
+                      animation: _coverReveal,
+                      builder: (context, _) => Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          AlbumCover(track: _coverTrack, size: artSize),
+                          if (_incomingTrack != null)
+                            ClipPath(
+                              clipper: _TrackCircleRevealClipper(
+                                t: Curves.easeInOutCubic.transform(_coverReveal.value),
+                                forward: _coverForward,
+                              ),
+                              child: AlbumCover(
+                                track: _incomingTrack!,
+                                size: artSize,
+                              ),
+                            ),
+                          // DEMO ONLY: remove this tint line at release when final cover art is ready.
+                          ColoredBox(color: track.color.withValues(alpha: .12)),
+                        ],
+                      ),
                     ),
                   ),
                   Positioned(
@@ -360,4 +425,32 @@ class _ActionButton extends StatelessWidget {
       ),
     );
   }
+}
+
+
+/// Reveals the incoming track cover from a circle growing below the artwork.
+class _TrackCircleRevealClipper extends CustomClipper<Path> {
+  const _TrackCircleRevealClipper({required this.t, required this.forward});
+
+  final double t;
+  final bool forward;
+
+  @override
+  Path getClip(Size size) {
+    final center = Offset(
+      size.width * (forward ? .88 : .12),
+      size.height * 1.12,
+    );
+    return Path()
+      ..addOval(
+        Rect.fromCircle(
+          center: center,
+          radius: size.width * 1.7 * t,
+        ),
+      );
+  }
+
+  @override
+  bool shouldReclip(covariant _TrackCircleRevealClipper oldClipper) =>
+      oldClipper.t != t || oldClipper.forward != forward;
 }
