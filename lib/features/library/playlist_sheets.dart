@@ -104,18 +104,20 @@ Future<void> showSaveTrackToPlaylistSheet(
               ),
               title: const Text('Создать новый плейлист'),
               onTap: () async {
-                Navigator.of(sheetContext).pop();
+                // Keep the playlist sheet mounted under the dialog. Popping the
+                // sheet first could make the dialog close on the same Navigator.
                 final playlist = await showCreatePlaylistDialog(
                   context,
                   initialTrack: track,
                 );
-                if (playlist != null && context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Трек добавлен в «${playlist.name}»'),
-                    ),
-                  );
-                }
+                if (playlist == null || !sheetContext.mounted) return;
+                Navigator.of(sheetContext).pop();
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Трек добавлен в «${playlist.name}»'),
+                  ),
+                );
               },
             ),
             const Divider(color: Colors.white12),
