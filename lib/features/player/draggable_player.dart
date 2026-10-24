@@ -155,6 +155,11 @@ class DraggableViewState extends State<DraggableView>
             padding: EdgeInsets.only(bottom: bottomMargin),
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
+              // Every part of the mini-player bar opens the full player;
+              // child controls keep their own tap handlers.
+              onTap: () {
+                if (_progress.value < 0.5) open();
+              },
               onVerticalDragUpdate: _onDragUpdate,
               onVerticalDragEnd: _onDragEnd,
               child: Container(
