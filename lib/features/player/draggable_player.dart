@@ -93,8 +93,13 @@ class DraggableViewState extends State<DraggableView>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: Listenable.merge([_progress, _player]),
+    return DefaultTextStyle.merge(
+      style: const TextStyle(
+        decoration: TextDecoration.none,
+        decorationColor: Colors.transparent,
+      ),
+      child: AnimatedBuilder(
+        animation: Listenable.merge([_progress, _player]),
       builder: (context, _) {
         final track = _player.currentTrack;
         final size = MediaQuery.sizeOf(context);
@@ -370,7 +375,8 @@ class DraggableViewState extends State<DraggableView>
           ),
         ),
       );
-      },
+        },
+      ),
     );
   }
 }
