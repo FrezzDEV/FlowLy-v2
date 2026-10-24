@@ -219,15 +219,18 @@ class DraggableViewState extends State<DraggableView>
                       ),
                     ),
                   ),
-                  Positioned(
-                    top: artTop + artSize + 32,
-                    left: 24,
-                    right: 24,
+                  if (t >= 0.3 && artTop + artSize + 32 <= cardHeight - 16)
+                    Positioned(
+                      top: artTop + artSize + 32,
+                      left: 24,
+                      right: 24,
+                      bottom: 16,
                     child: IgnorePointer(
                       ignoring: t < 0.5,
                       child: Opacity(
                         opacity: expandedOpacity,
-                        child: Column(
+                        child: SingleChildScrollView(
+                          child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
@@ -341,13 +344,15 @@ class DraggableViewState extends State<DraggableView>
                             ),
                           ],
                         ),
+                        ),
                       ),
                     ),
                   ),
-                  Positioned(
-                    top: safeTop + 8,
-                    left: 8,
-                    child: IgnorePointer(
+                  if (t >= 0.3)
+                    Positioned(
+                      top: safeTop + 8,
+                      left: 8,
+                      child: IgnorePointer(
                       ignoring: t < 0.5,
                       child: Opacity(
                         opacity: expandedOpacity,
