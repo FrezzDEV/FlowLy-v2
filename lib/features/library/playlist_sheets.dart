@@ -83,7 +83,9 @@ Future<void> showSaveTrackToPlaylistSheet(
       initialChildSize: 0.66,
       minChildSize: 0.40,
       maxChildSize: 0.92,
-      builder: (context, scrollController) => Material(
+      builder: (context, scrollController) => AnimatedBuilder(
+        animation: controller,
+        builder: (context, _) => Material(
         color: const Color(0xFF17181D),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
         clipBehavior: Clip.antiAlias,
@@ -184,6 +186,7 @@ Future<void> showSaveTrackToPlaylistSheet(
                 },
               ),
           ],
+        ),
         ),
       ),
     ),
