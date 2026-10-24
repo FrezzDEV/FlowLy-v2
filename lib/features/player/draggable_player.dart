@@ -268,17 +268,20 @@ class DraggableViewState extends State<DraggableView>
                               ],
                             ),
                             const SizedBox(height: 28),
-                            SliderTheme(
-                              data: SliderTheme.of(context).copyWith(
-                                activeTrackColor: Colors.white,
-                                inactiveTrackColor: Colors.white24,
-                                thumbColor: Colors.white,
-                                overlayColor: Colors.transparent,
-                                trackHeight: 4,
-                              ),
-                              child: Slider(
-                                value: _player.progress,
-                                onChanged: _player.seek,
+                            Material(
+                              color: Colors.transparent,
+                              child: SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  activeTrackColor: Colors.white,
+                                  inactiveTrackColor: Colors.white24,
+                                  thumbColor: Colors.white,
+                                  overlayColor: Colors.transparent,
+                                  trackHeight: 4,
+                                ),
+                                child: Slider(
+                                  value: _player.progress,
+                                  onChanged: _player.seek,
+                                ),
                               ),
                             ),
                             Row(
