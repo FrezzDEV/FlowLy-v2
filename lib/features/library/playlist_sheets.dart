@@ -131,31 +131,25 @@ Future<void> showSaveTrackToPlaylistSheet(
               ),
               title: const Text('Создать новый плейлист'),
               onTap: () async {
-                // Keep the picker mounted below the dialog and create the new
-                // playlist with the current track before updating this sheet.
-                final playlist = await showCreatePlaylistDialog(
+                // Keep the picker mounted under the dialog. The current track
+                // is added as part of creation, so the new playlist is ready
+                // immediately when the dialog closes.
+                await showCreatePlaylistDialog(
                   context,
                   initialTrack: track,
                 );
-                if (playlist == null || !sheetContext.mounted) return;
-
-                // The newly created playlist is appended at the end. Scroll to
-                // it so the creation is visibly confirmed instead of looking
-                // like the action did nothing when the list is long.
-                await WidgetsBinding.instance.endOfFrame;
-                if (!scrollController.hasClients) return;
-                final position = scrollController.position;
-                if (position.maxScrollExtent > position.pixels) {
-                  await scrollController.animateTo(
-                    position.maxScrollExtent,
-                    duration: const Duration(milliseconds: 240),
-                    curve: Curves.easeOutCubic,
-                  );
-                }
               },
             ),
             const Divider(color: Colors.white12),
-            for (final playlist in controller.playlists)
+            // Keep system playlists first and show the newest custom
+            // playlists near the top, where they remain visible after creation.
+            for (final playlist in [
+              ...controller.playlists.where((item) => item.isSystem),
+              ...controller.playlists
+                  .where((item) => !item.isSystem)
+                  .toList()
+                  .reversed,
+            ])
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: Container(
