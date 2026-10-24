@@ -35,6 +35,7 @@ class FlowLyApp extends StatelessWidget {
           labelTextStyle: WidgetStatePropertyAll(
             TextStyle(fontSize: 10, height: 1),
           ),
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
         ),
         iconButtonTheme: const IconButtonThemeData(
           style: ButtonStyle(
