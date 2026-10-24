@@ -44,6 +44,28 @@ void main() {
     expect(player.isPlaying, isFalse);
   });
 
+  testWidgets('playlists can be created and tracks added and removed', (tester) async {
+    final player = PlayerController.instance;
+    final playlist = await player.createPlaylist(
+      'Тестовый плейлист FlowLy',
+      initialTrack: PlayerController.catalog.first,
+    );
+
+    expect(playlist.name, 'Тестовый плейлист FlowLy');
+    expect(playlist.tracks, hasLength(1));
+    expect(playlist.tracks.single.title, PlayerController.catalog.first.title);
+
+    final added = await player.addTrackToPlaylist(
+      playlist.id,
+      PlayerController.catalog[1],
+    );
+    expect(added, isTrue);
+    expect(player.playlistById(playlist.id)!.tracks, hasLength(2));
+
+    await player.removeTrackFromPlaylist(playlist.id, PlayerController.catalog.first);
+    expect(player.playlistById(playlist.id)!.tracks, hasLength(1));
+  });
+
   testWidgets('mini player opens and closes the full-screen player', (tester) async {
     await tester.pumpWidget(const FlowLyApp());
 
