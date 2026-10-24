@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flowly/app.dart';
 import 'package:flowly/features/player/player_controller.dart';
+import 'package:flowly/features/player/draggable_player.dart';
 import 'package:flowly/features/library/playlist_detail_screen.dart';
 
 void main() {
@@ -139,6 +140,39 @@ void main() {
     );
     expect(button.onPressed, isNull);
     expect(find.byType(SnackBar), findsNothing);
+  });
+
+  testWidgets('creating a playlist from the full player menu saves the track', (tester) async {
+    final player = PlayerController.instance;
+    await tester.pumpWidget(const FlowLyApp());
+
+    await tester.tap(find.text('Midnight Flow').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.more_horiz_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Создать новый плейлист'), findsOneWidget);
+    await tester.tap(find.text('Создать новый плейлист'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).last, 'Создан из плеера');
+    await tester.tap(find.text('Создать').last);
+    await tester.pumpAndSettle();
+
+    final playlist = player.playlists.firstWhere(
+      (item) => item.name == 'Создан из плеера',
+    );
+    expect(playlist.tracks, contains(player.currentTrack));
+  });
+
+  testWidgets('playlist screen keeps bottom navigation and mini player visible', (tester) async {
+    await tester.pumpWidget(const FlowLyApp());
+    await tester.tap(find.text('Избранное').first);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PlaylistDetailScreen), findsOneWidget);
+    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(DraggableView), findsOneWidget);
   });
 
   testWidgets('mini player opens and closes the full-screen player', (tester) async {
