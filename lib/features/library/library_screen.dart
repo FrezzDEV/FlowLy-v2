@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../navigation/circle_reveal_route.dart';
 import '../player/player_controller.dart';
 import '../player/draggable_player.dart';
 import 'catalog_collection_screen.dart';
@@ -87,9 +88,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   const Color(0xFF7D376F),
                   favorites.name,
                   '${favorites.tracks.length} треков',
-                  onTap: () => _openPlaylist(
+                  onTapAt: (position) => _openPlaylist(
                     context,
                     PlayerController.favoritesPlaylistId,
+                    position,
                   ),
                 ),
                 _LibraryRow(
@@ -97,9 +99,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   const Color(0xFF32664E),
                   downloads.name,
                   '${downloads.tracks.length} треков',
-                  onTap: () => _openPlaylist(
+                  onTapAt: (position) => _openPlaylist(
                     context,
                     PlayerController.downloadsPlaylistId,
+                    position,
                   ),
                 ),
                 _LibraryRow(
@@ -145,7 +148,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         : const Color(0xFF275F7D),
                     playlist.name,
                     '${playlist.tracks.length} треков',
-                    onTap: () => _openPlaylist(context, playlist.id),
+                    onTapAt: (position) =>
+                        _openPlaylist(context, playlist.id, position),
                   ),
               ] else if (_category == 1) ...[
                 const Text(
@@ -159,10 +163,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     tracksByArtist[artist]!.first.color,
                     artist,
                     '${tracksByArtist[artist]!.length} треков',
-                    onTap: () => _openCollection(
+                    onTapAt: (position) => _openCollection(
                       context,
                       artist,
                       tracksByArtist[artist]!,
+                      position,
                     ),
                   ),
               ] else ...[
@@ -177,10 +182,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     tracksByAlbum[album]!.first.color,
                     album,
                     '${tracksByAlbum[album]!.length} треков · ${tracksByAlbum[album]!.first.artist}',
-                    onTap: () => _openCollection(
+                    onTapAt: (position) => _openCollection(
                       context,
                       album,
                       tracksByAlbum[album]!,
+                      position,
                     ),
                   ),
               ],
@@ -191,14 +197,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
     );
   }
 
-  void _openPlaylist(BuildContext context, String playlistId) {
-    // Enter playlist pages in the persistent app shell with the player collapsed,
-    // so the bottom navigation and mini-player remain available.
+  void _openPlaylist(
+    BuildContext context,
+    String playlistId,
+    Offset tapPosition,
+  ) {
+    // Оставляем навигацию и мини-плеер в shell, но сворачиваем большой плеер.
     draggablePlayerKey.currentState?.close();
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => PlaylistDetailScreen(playlistId: playlistId),
+    final backButtonKey = GlobalKey();
+    context.pushCircleReveal(
+      page: PlaylistDetailScreen(
+        playlistId: playlistId,
+        backButtonKey: backButtonKey,
       ),
+      tapPosition: tapPosition,
+      backButtonKey: backButtonKey,
+      backgroundColor: const Color(0xFF08090B),
     );
   }
 
@@ -206,11 +220,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
     BuildContext context,
     String title,
     List<PlayerTrack> tracks,
+    Offset tapPosition,
   ) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => CatalogCollectionScreen(title: title, tracks: tracks),
+    final backButtonKey = GlobalKey();
+    context.pushCircleReveal(
+      page: CatalogCollectionScreen(
+        title: title,
+        tracks: tracks,
+        backButtonKey: backButtonKey,
       ),
+      tapPosition: tapPosition,
+      backButtonKey: backButtonKey,
+      backgroundColor: const Color(0xFF08090B),
     );
   }
 }
@@ -248,17 +269,34 @@ class _LibraryRow extends StatelessWidget {
     this.color,
     this.title,
     this.subtitle, {
-    required this.onTap,
-  });
+    this.onTap,
+    this.onTapAt,
+  }) : assert(onTap != null || onTapAt != null);
 
   final IconData icon;
   final Color color;
   final String title;
   final String subtitle;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final ValueChanged<Offset>? onTapAt;
 
   @override
-  Widget build(BuildContext context) => ListTile(
+  Widget build(BuildContext context) {
+    Offset? tapPosition;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (details) => tapPosition = details.globalPosition,
+      onTap: () {
+        if (onTapAt != null) {
+          onTapAt!(tapPosition ?? Offset(
+            MediaQuery.sizeOf(context).width / 2,
+            MediaQuery.sizeOf(context).height / 2,
+          ));
+        } else {
+          onTap?.call();
+        }
+      },
+      child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
         leading: Container(
           width: 52,
@@ -282,6 +320,7 @@ class _LibraryRow extends StatelessWidget {
           style: const TextStyle(color: Colors.white54),
         ),
         trailing: const Icon(Icons.chevron_right_rounded, color: Colors.white38),
-        onTap: onTap,
-      );
+      ),
+    );
+  }
 }
