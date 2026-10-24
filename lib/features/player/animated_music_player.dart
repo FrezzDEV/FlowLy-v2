@@ -1,11 +1,11 @@
-import 'dart:math' as math;\nimport 'dart:ui' show ImageFilter;
+import 'dart:math' as math;
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
 import 'player_controller.dart';
 
 const _playerBackground = Color(0xFF101014);
-const _playerSurface = Color(0xFF282830);
 const _playerMuted = Color(0xFF9A9AA5);
 const _playerLime = Color(0xFFB6F36B);
 
