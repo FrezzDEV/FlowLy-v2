@@ -3,6 +3,7 @@ import '../player/player_controller.dart';
 import '../library/playlist_detail_screen.dart';
 import '../library/playlist_sheets.dart';
 import '../player/draggable_player.dart';
+import '../profile/profile_screen.dart';
 
 const _muted = Color(0xFFA5A6AC);
 const _lime = Color(0xFFB6F36B);
@@ -58,7 +59,9 @@ class HomeScreen extends StatelessWidget {
       const Spacer(),
       IconButton(
         tooltip: 'Профиль',
-        onPressed: () {},
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
+        ),
         icon: const CircleAvatar(radius: 19, backgroundColor: Color(0xFF24262B), child: Icon(Icons.person_outline, color: Colors.white)),
       ),
     ],
@@ -262,11 +265,7 @@ class HomeScreen extends StatelessWidget {
       PlayerController.catalog[7],
     ];
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _sectionTitle(
-        'Недавно прослушано',
-        action: 'Ещё',
-        onAction: null,
-      ),
+      _sectionTitle('Недавно прослушано'),
       const SizedBox(height: 8),
       for (final song in songs)
         ListTile(
