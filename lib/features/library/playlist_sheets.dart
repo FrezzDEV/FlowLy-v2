@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../player/player_controller.dart';
+import '../player/draggable_player.dart';
 
 Future<MusicPlaylist?> showCreatePlaylistDialog(
   BuildContext context, {
@@ -76,6 +77,7 @@ Future<void> showSaveTrackToPlaylistSheet(
   final controller = PlayerController.instance;
   await showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (sheetContext) => DraggableScrollableSheet(
@@ -331,6 +333,9 @@ Future<void> showPlaylistDetailsSheet(
                                 onTap: () {
                                   controller.playTrack(track);
                                   Navigator.of(sheetContext).pop();
+                                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                                    draggablePlayerKey.currentState?.open();
+                                  });
                                 },
                               ),
                             );
