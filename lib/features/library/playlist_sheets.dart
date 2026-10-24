@@ -144,7 +144,11 @@ Future<void> showSaveTrackToPlaylistSheet(
             // Keep system playlists first and show the newest custom
             // playlists near the top, where they remain visible after creation.
             for (final playlist in [
-              ...controller.playlists.where((item) => item.isSystem),
+              ...controller.playlists.where(
+                (item) =>
+                    item.isSystem &&
+                    item.id != PlayerController.downloadsPlaylistId,
+              ),
               ...controller.playlists
                   .where((item) => !item.isSystem)
                   .toList()
