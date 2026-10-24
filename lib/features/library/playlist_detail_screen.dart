@@ -181,8 +181,7 @@ class PlaylistDetailScreen extends StatelessWidget {
                                       allTracksDownloaded
                                   ? null
                                   : () async {
-                                      final added =
-                                          await controller.addTracksToPlaylist(
+                                      await controller.addTracksToPlaylist(
                                         PlayerController.downloadsPlaylistId,
                                         playlist.tracks,
                                       );
