@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../player/player_controller.dart';
+import '../player/draggable_player.dart';
 import 'catalog_collection_screen.dart';
 import 'playlist_detail_screen.dart';
 import 'playlist_sheets.dart';
@@ -191,6 +192,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   void _openPlaylist(BuildContext context, String playlistId) {
+    // Enter playlist pages in the persistent app shell with the player collapsed,
+    // so the bottom navigation and mini-player remain available.
+    draggablePlayerKey.currentState?.close();
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => PlaylistDetailScreen(playlistId: playlistId),
