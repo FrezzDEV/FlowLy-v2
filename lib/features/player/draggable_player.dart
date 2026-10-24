@@ -68,7 +68,8 @@ class DraggableViewState extends State<DraggableView>
     if (range <= 0) return;
     _progress.stop();
     _progress.value =
-        (_progress.value - (details.primaryDelta ?? 0) / range)\n            .clamp(0.0, 1.0)\n            .toDouble();
+        (_progress.value - (details.primaryDelta ?? 0) / range)\n            .clamp(0.0, 1.0)
+            .toDouble();
   }
 
   Future<void> _onDragEnd(DragEndDetails details) async {
