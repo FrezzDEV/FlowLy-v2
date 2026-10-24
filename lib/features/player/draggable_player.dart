@@ -7,6 +7,9 @@ import 'animated_music_player.dart' show AlbumCover;
 import 'player_controller.dart';
 import '../library/playlist_sheets.dart';
 
+final GlobalKey<DraggableViewState> draggablePlayerKey =
+    GlobalKey<DraggableViewState>();
+
 /// Один виджет-карточка: мини-плеер и полный плеер — это одно и то же,
 /// все размеры/позиции считаются из одного progress (0 = мини, 1 = полный).
 class DraggableView extends StatefulWidget {
@@ -107,16 +110,7 @@ class DraggableViewState extends State<DraggableView>
       PlayerController.downloadsPlaylistId,
       track,
     );
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          added
-              ? 'Трек сохранён в «Скачанные»'
-              : 'Трек уже есть в «Скачанные»',
-        ),
-      ),
-    );
+    // Adding an existing track is a no-op; no toast is shown.
   }
 
 
