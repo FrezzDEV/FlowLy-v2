@@ -12,7 +12,7 @@ class CircleRevealRoute<T> extends PageRouteBuilder<T> {
     this.disableAnimations = false,
   }) : super(
           opaque: true,
-          allowSnapshotting: false,
+          allowSnapshotting: true,
           transitionDuration: Duration(
             milliseconds: disableAnimations ? 150 : 700,
           ),
@@ -82,7 +82,7 @@ extension CircleRevealNavigation on BuildContext {
   }
 }
 
-class _CircleRevealTransition extends StatelessWidget {
+class _CircleRevealTransition extends StatefulWidget {
   const _CircleRevealTransition({
     required this.animation,
     required this.origin,
@@ -97,51 +97,93 @@ class _CircleRevealTransition extends StatelessWidget {
   final Color? backgroundColor;
   final Widget child;
 
-  Offset _centerForExit(BuildContext context) {
-    final buttonContext = backButtonKey?.currentContext;
+  @override
+  State<_CircleRevealTransition> createState() =>
+      _CircleRevealTransitionState();
+}
+
+class _CircleRevealTransitionState extends State<_CircleRevealTransition> {
+  Offset? _exitCenter;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.animation.addStatusListener(_handleStatus);
+  }
+
+  @override
+  void didUpdateWidget(covariant _CircleRevealTransition oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.animation != widget.animation) {
+      oldWidget.animation.removeStatusListener(_handleStatus);
+      widget.animation.addStatusListener(_handleStatus);
+    }
+  }
+
+  void _handleStatus(AnimationStatus status) {
+    if (status == AnimationStatus.reverse) {
+      // Фиксируем цель схлопывания один раз на старте выхода: кнопка может
+      // сама анимироваться, поэтому пересчёт центра каждый кадр даёт дрожание.
+      _exitCenter = _resolveExitCenter();
+    } else if (status == AnimationStatus.forward) {
+      _exitCenter = null;
+    }
+  }
+
+  Offset _resolveExitCenter() {
+    final buttonContext = widget.backButtonKey?.currentContext;
     final renderObject = buttonContext?.findRenderObject();
 
     if (renderObject is RenderBox && renderObject.hasSize) {
-      // При выходе переносим центр круга к фактическому центру кнопки «назад».
+      // При выходе круг схлопывается к глобальному центру кнопки «назад».
       return renderObject.localToGlobal(
         renderObject.size.center(Offset.zero),
       );
     }
 
-    // Если ключ не передали или кнопка ещё недоступна, используем исходную
-    // точку нажатия как безопасный запасной вариант.
-    return origin;
+    // Если ключ не задан или кнопка ещё недоступна, схлопываем к origin.
+    return widget.origin;
   }
 
   double _maxRadius(Size size, Offset center) {
-    // Радиус должен дотянуться до самого дальнего угла экрана от выбранного
-    // центра: берём максимальное расстояние по X и Y и гипотенузу.
+    // Радиус до самого дальнего угла: гипотенуза из максимальных расстояний
+    // по горизонтали и вертикали от выбранного центра.
     final dx = math.max(center.dx, size.width - center.dx);
     final dy = math.max(center.dy, size.height - center.dy);
     return math.sqrt(dx * dx + dy * dy);
   }
 
   @override
+  void dispose() {
+    widget.animation.removeStatusListener(_handleStatus);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: animation,
+      animation: widget.animation,
       builder: (context, _) {
-        // forward — вход из точки нажатия; reverse — выход к кнопке «назад».
-        final isExiting = animation.status == AnimationStatus.reverse;
-        final center = isExiting ? _centerForExit(context) : origin;
+        // forward — раскрываем круг от origin; reverse — сжимаем его к кнопке.
+        final isExiting =
+            widget.animation.status == AnimationStatus.reverse;
+        final center = isExiting
+            ? (_exitCenter ?? _resolveExitCenter())
+            : widget.origin;
         final size = MediaQuery.sizeOf(context);
-        final rawProgress = animation.value.clamp(0.0, 1.0).toDouble();
+        final rawProgress =
+            widget.animation.value.clamp(0.0, 1.0).toDouble();
         final progress = Curves.easeInOutCubic.transform(rawProgress);
         final radius = _maxRadius(size, center) * progress;
 
         var opacity = 1.0;
         if (isExiting) {
-          // При выходе содержимое гаснет за первые 240 мс из 560 мс,
-          // пока круг ещё продолжает сжиматься.
+          // Содержимое гаснет за первые 240 мс из 560 мс обратного перехода.
           const fadeWindow = 240 / 560;
-          final fadeProgress = ((rawProgress - (1 - fadeWindow)) / fadeWindow)
-              .clamp(0.0, 1.0)
-              .toDouble();
+          final fadeProgress =
+              ((rawProgress - (1 - fadeWindow)) / fadeWindow)
+                  .clamp(0.0, 1.0)
+                  .toDouble();
           opacity = Curves.easeOut.transform(fadeProgress);
         }
 
@@ -149,9 +191,12 @@ class _CircleRevealTransition extends StatelessWidget {
           clipper: _CircleClipper(center: center, radius: radius),
           child: Opacity(
             opacity: opacity,
-            child: backgroundColor == null
-                ? child
-                : ColoredBox(color: backgroundColor!, child: child),
+            child: widget.backgroundColor == null
+                ? widget.child
+                : ColoredBox(
+                    color: widget.backgroundColor!,
+                    child: widget.child,
+                  ),
           ),
         );
       },
