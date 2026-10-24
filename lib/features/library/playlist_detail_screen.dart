@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../../navigation/reveal_stagger.dart';
 import '../player/player_controller.dart';
 import '../player/draggable_player.dart';
 
 class PlaylistDetailScreen extends StatelessWidget {
-  const PlaylistDetailScreen({super.key, required this.playlistId});
+  const PlaylistDetailScreen({
+    super.key,
+    required this.playlistId,
+    this.backButtonKey,
+  });
 
   final String playlistId;
+  final GlobalKey? backButtonKey;
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +24,20 @@ class PlaylistDetailScreen extends StatelessWidget {
         if (playlist == null) {
           return Scaffold(
             backgroundColor: const Color(0xFF08090B),
-            appBar: AppBar(title: const Text('Плейлист')),
+            appBar: AppBar(
+              automaticallyImplyLeading: backButtonKey == null,
+              leading: backButtonKey == null
+                  ? null
+                  : RevealHeader(
+                      child: IconButton(
+                        key: backButtonKey,
+                        tooltip: 'Назад',
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.arrow_back_rounded),
+                      ),
+                    ),
+              title: const Text('Плейлист'),
+            ),
             body: const Center(child: Text('Плейлист не найден')),
           );
         }
@@ -54,7 +73,18 @@ class PlaylistDetailScreen extends StatelessWidget {
         return Scaffold(
           backgroundColor: const Color(0xFF08090B),
           appBar: AppBar(
-            title: const Text('Плейлист'),
+            automaticallyImplyLeading: backButtonKey == null,
+            leading: backButtonKey == null
+                ? null
+                : RevealHeader(
+                    child: IconButton(
+                      key: backButtonKey,
+                      tooltip: 'Назад',
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.arrow_back_rounded),
+                    ),
+                  ),
+            title: const RevealHeader(child: Text('Плейлист')),
             centerTitle: true,
             backgroundColor: const Color(0xFF08090B),
             surfaceTintColor: Colors.transparent,
@@ -261,7 +291,9 @@ class PlaylistDetailScreen extends StatelessWidget {
                           final isCurrent =
                               track.title == controller.currentTrack.title &&
                               track.artist == controller.currentTrack.artist;
-                          return Dismissible(
+                          return RevealStagger(
+                            index: index,
+                            child: Dismissible(
                             key: ValueKey(
                               '$playlistId:${track.title}:${track.artist}',
                             ),
@@ -344,6 +376,7 @@ class PlaylistDetailScreen extends StatelessWidget {
                                 controller.playTrack(track);
                                 draggablePlayerKey.currentState?.open();
                               },
+                            ),
                             ),
                           );
                         },
