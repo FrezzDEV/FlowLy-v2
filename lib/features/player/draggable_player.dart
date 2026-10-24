@@ -265,12 +265,10 @@ class _ActionButton extends StatelessWidget {
   const _ActionButton({
     required this.icon,
     required this.onTap,
-    this.size = 44,
   });
 
   final IconData icon;
   final VoidCallback? onTap;
-  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -278,13 +276,13 @@ class _ActionButton extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        width: size,
-        height: size,
+        width: 44,
+        height: 44,
         child: Center(
           child: Icon(
             icon,
             color: onTap == null ? Colors.white24 : Colors.white,
-            size: size * 0.6,
+            size: 26.4,
           ),
         ),
       ),
