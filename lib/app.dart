@@ -23,6 +23,19 @@ class FlowLyApp extends StatelessWidget {
           brightness: Brightness.dark,
         ),
         useMaterial3: true,
+        // Disable route transitions globally: no zoom, swipe, or tinted
+        // predictive-back animation when opening playlists, collections,
+        // the profile, or other pages.
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: _NoPageTransitionsBuilder(),
+            TargetPlatform.iOS: _NoPageTransitionsBuilder(),
+            TargetPlatform.fuchsia: _NoPageTransitionsBuilder(),
+            TargetPlatform.linux: _NoPageTransitionsBuilder(),
+            TargetPlatform.macOS: _NoPageTransitionsBuilder(),
+            TargetPlatform.windows: _NoPageTransitionsBuilder(),
+          },
+        ),
         fontFamily: 'Roboto',
         splashFactory: NoSplash.splashFactory,
         splashColor: Colors.transparent,
@@ -143,6 +156,21 @@ class _AppShellState extends State<AppShell> {
       ],
     );
   }
+}
+
+/// A page transition builder that swaps pages immediately without
+/// a swipe, zoom, fade, or platform-specific tint.
+class _NoPageTransitionsBuilder extends PageTransitionsBuilder {
+  const _NoPageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) => child;
 }
 
 /// Custom "Your Library" waveform-like glyph from the original FlowLy app.
