@@ -66,6 +66,17 @@ class DraggableViewState extends State<DraggableView>
     final next = _player.currentTrack;
     if (identical(next, _coverTrack) || identical(next, _incomingTrack)) return;
 
+    // In the collapsed mini-player, swap the cover immediately without a reveal.
+    if (_progress.value < 0.5) {
+      _coverReveal
+        ..stop()
+        ..value = 0;
+      _coverTrack = next;
+      _incomingTrack = null;
+      if (mounted) setState(() {});
+      return;
+    }
+
     // Finish an interrupted reveal first, so rapid next/previous taps never leave stale art.
     if (_incomingTrack != null) {
       _coverTrack = _incomingTrack!;
@@ -220,29 +231,36 @@ class DraggableViewState extends State<DraggableView>
                       borderRadius: BorderRadius.circular(artSize * .08),
                       child: AnimatedBuilder(
                         animation: _coverReveal,
-                        builder: (context, _) => Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            _demoTintedCover(_coverTrack, artSize),
-                            if (_incomingTrack != null)
-                              ClipRRect(
-                                clipBehavior: Clip.antiAliasWithSaveLayer,
-                                borderRadius: BorderRadius.circular(artSize * .08),
-                                child: ClipPath(
-                                clipper: _TrackCircleRevealClipper(
-                                  t: Curves.easeInOutCubic.transform(
-                                    _coverReveal.value,
+                        builder: (context, _) {
+                          // Mini-player art changes immediately; the circular
+                          // reveal is reserved for the expanded player.
+                          if (_progress.value < 0.5) {
+                            return _demoTintedCover(track, artSize);
+                          }
+                          return Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              _demoTintedCover(_coverTrack, artSize),
+                              if (_incomingTrack != null)
+                                ClipRRect(
+                                  clipBehavior: Clip.antiAliasWithSaveLayer,
+                                  borderRadius: BorderRadius.circular(artSize * .08),
+                                  child: ClipPath(
+                                    clipper: _TrackCircleRevealClipper(
+                                      t: Curves.easeInOutCubic.transform(
+                                        _coverReveal.value,
+                                      ),
+                                      forward: _coverForward,
+                                    ),
+                                    child: _demoTintedCover(
+                                      _incomingTrack!,
+                                      artSize,
+                                    ),
                                   ),
-                                  forward: _coverForward,
                                 ),
-                                child: _demoTintedCover(
-                                  _incomingTrack!,
-                                  artSize,
-                                ),
-                                ),
-                              ),
-                          ],
-                        ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                   ),
