@@ -145,12 +145,14 @@ Future<void> showSaveTrackToPlaylistSheet(
             // playlists near the top, where they remain visible after creation.
             for (final playlist in [
               ...controller.playlists.where(
-                (item) =>
-                    item.isSystem &&
-                    item.id != PlayerController.downloadsPlaylistId,
+                (item) => item.id == PlayerController.favoritesPlaylistId,
               ),
               ...controller.playlists
-                  .where((item) => !item.isSystem)
+                  .where(
+                    (item) =>
+                        !item.isSystem &&
+                        item.id != PlayerController.downloadsPlaylistId,
+                  )
                   .toList()
                   .reversed,
             ])
