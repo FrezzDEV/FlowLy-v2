@@ -347,14 +347,14 @@ class DraggableViewState extends State<DraggableView>
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 _ActionButton(
-                                  icon: Icons.skip_previous_rounded,
-                                  size: 44,
-                                  onTap: _player.previous,
-                                ),
-                                _ActionButton(
                                   icon: Icons.share_rounded,
                                   size: 44,
                                   onTap: () => _shareCurrentTrack(track),
+                                ),
+                                _ActionButton(
+                                  icon: Icons.skip_previous_rounded,
+                                  size: 44,
+                                  onTap: _player.previous,
                                 ),
                                 GestureDetector(
                                   onTap: _player.togglePlay,
@@ -375,14 +375,14 @@ class DraggableViewState extends State<DraggableView>
                                   ),
                                 ),
                                 _ActionButton(
-                                  icon: Icons.download_rounded,
-                                  size: 44,
-                                  onTap: () => _downloadCurrentTrack(track),
-                                ),
-                                _ActionButton(
                                   icon: Icons.skip_next_rounded,
                                   size: 44,
                                   onTap: _player.next,
+                                ),
+                                _ActionButton(
+                                  icon: Icons.download_rounded,
+                                  size: 44,
+                                  onTap: () => _downloadCurrentTrack(track),
                                 ),
                               ],
                             ),
