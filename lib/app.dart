@@ -4,7 +4,7 @@ import 'features/home/home_screen.dart';
 import 'features/search/search_screen.dart';
 import 'features/library/library_screen.dart';
 import 'features/profile/profile_screen.dart';
-import 'features/player/animated_music_player.dart';
+import 'features/player/draggable_player.dart';
 
 class FlowLyApp extends StatelessWidget {
   const FlowLyApp({super.key});
@@ -58,7 +58,6 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _selected = 0;
-  bool _playerRouteOpen = false;
 
   late final List<Widget> _pages = const [
     HomeScreen(),
@@ -67,100 +66,54 @@ class _AppShellState extends State<AppShell> {
     ProfileScreen(),
   ];
 
-  /// FlowLy v1.0.15 opens the player as a page sliding up from the bottom.
-  Future<void> _openFullPlayer() async {
-    if (!mounted || _playerRouteOpen) return;
-    _playerRouteOpen = true;
-
-    try {
-      await Navigator.of(context, rootNavigator: true).push<void>(
-        PageRouteBuilder<void>(
-          opaque: true,
-          fullscreenDialog: true,
-          transitionDuration: const Duration(milliseconds: 320),
-          reverseTransitionDuration: const Duration(milliseconds: 260),
-          pageBuilder: (routeContext, animation, secondaryAnimation) {
-            void closePlayer() {
-              final navigator = Navigator.of(routeContext);
-              if (navigator.canPop()) navigator.pop();
-            }
-
-            return PlayerTransitionOverlay(
-              progress: 1,
-              onDragStart: () {},
-              onDragUpdate: (_) {},
-              onDragEnd: (velocityY) {
-                if (velocityY > 600) closePlayer();
-              },
-              onClose: closePlayer,
-            );
-          },
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            final curved = CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeOutCubic,
-              reverseCurve: Curves.easeInCubic,
-            );
-            return SlideTransition(
-              position: curved.drive(
-                Tween<Offset>(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ),
-              ),
-              child: child,
-            );
-          },
-        ),
-      );
-    } finally {
-      _playerRouteOpen = false;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(index: _selected, children: _pages),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            MiniPlayer(onOpen: _openFullPlayer),
-            NavigationBar(
-              height: 54,
-              labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
-              selectedIndex: _selected,
-              onDestinationSelected: (index) =>
-                  setState(() => _selected = index),
-              backgroundColor: const Color(0xFF101114),
-              indicatorColor: Colors.transparent,
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.home_outlined, size: 16),
-                  selectedIcon: Icon(Icons.home_rounded, size: 16),
-                  label: 'Главная',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.search_rounded, size: 16),
-                  label: 'Поиск',
-                ),
-                NavigationDestination(
-                  icon: _LibraryNavIcon(color: Color(0xFF8E8E8E)),
-                  selectedIcon: _LibraryNavIcon(color: Colors.white),
-                  label: 'Библиотека',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.person_outline_rounded, size: 16),
-                  selectedIcon: Icon(Icons.person_rounded, size: 16),
-                  label: 'Профиль',
+    return Stack(
+      children: [
+        Scaffold(
+          body: IndexedStack(index: _selected, children: _pages),
+          bottomNavigationBar: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 60),
+                NavigationBar(
+                  height: 54,
+                  labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+                  selectedIndex: _selected,
+                  onDestinationSelected: (index) =>
+                      setState(() => _selected = index),
+                  backgroundColor: const Color(0xFF101114),
+                  indicatorColor: Colors.transparent,
+                  destinations: const [
+                    NavigationDestination(
+                      icon: Icon(Icons.home_outlined, size: 16),
+                      selectedIcon: Icon(Icons.home_rounded, size: 16),
+                      label: 'Главная',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.search_rounded, size: 16),
+                      label: 'Поиск',
+                    ),
+                    NavigationDestination(
+                      icon: _LibraryNavIcon(color: Color(0xFF8E8E8E)),
+                      selectedIcon: _LibraryNavIcon(color: Colors.white),
+                      label: 'Библиотека',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.person_outline_rounded, size: 16),
+                      selectedIcon: Icon(Icons.person_rounded, size: 16),
+                      label: 'Профиль',
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
-      ),
+        const DraggableView(),
+      ],
     );
   }
 }
