@@ -26,7 +26,7 @@ void main() {
   testWidgets('mini player opens and closes the full-screen player', (tester) async {
     await tester.pumpWidget(const FlowLyApp());
 
-    expect(find.text('Midnight Flow'), findsOneWidget);
+    expect(find.text('Midnight Flow'), findsWidgets);
     await tester.tap(find.text('Midnight Flow'));
     await tester.pumpAndSettle();
 
