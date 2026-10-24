@@ -112,8 +112,8 @@ class DraggableViewState extends State<DraggableView>
       SnackBar(
         content: Text(
           added
-              ? 'Трек сохранён в «Загрузки»'
-              : 'Трек уже есть в «Загрузки»',
+              ? 'Трек сохранён в «Скачанные»'
+              : 'Трек уже есть в «Скачанные»',
         ),
       ),
     );
