@@ -56,13 +56,9 @@ class AppShell extends StatefulWidget {
   State<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin {
-  static const _playerTransitionDuration = Duration(milliseconds: 260);
-
+class _AppShellState extends State<AppShell> {
   int _selected = 0;
-  bool _showPlayer = false;
-  bool _isDraggingPlayer = false;
-  late final AnimationController _playerAnimation;
+  bool _playerRouteOpen = false;
 
   late final List<Widget> _pages = const [
     HomeScreen(),
@@ -71,139 +67,100 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
     ProfileScreen(),
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    _playerAnimation = AnimationController(
-      vsync: this,
-      value: 0,
-      duration: _playerTransitionDuration,
-    );
-  }
-
-  @override
-  void dispose() {
-    _playerAnimation.dispose();
-    super.dispose();
-  }
-
+  /// FlowLy v1.0.15 opens the player as a page sliding up from the bottom.
   Future<void> _openFullPlayer() async {
-    if (!mounted) return;
-    if (!_showPlayer) {
-      setState(() => _showPlayer = true);
-    }
-    await _playerAnimation.animateTo(
-      1,
-      duration: _playerTransitionDuration,
-      curve: Curves.easeOutCubic,
-    );
-  }
+    if (!mounted || _playerRouteOpen) return;
+    _playerRouteOpen = true;
 
-  void _beginInteractiveDrag() {
-    _playerAnimation.stop();
-    _isDraggingPlayer = true;
-    if (!_showPlayer) {
-      setState(() => _showPlayer = true);
-    }
-  }
+    try {
+      await Navigator.of(context, rootNavigator: true).push<void>(
+        PageRouteBuilder<void>(
+          opaque: true,
+          fullscreenDialog: true,
+          transitionDuration: const Duration(milliseconds: 320),
+          reverseTransitionDuration: const Duration(milliseconds: 260),
+          pageBuilder: (routeContext, animation, secondaryAnimation) {
+            void closePlayer() {
+              final navigator = Navigator.of(routeContext);
+              if (navigator.canPop()) navigator.pop();
+            }
 
-  void _updateInteractiveDrag(double deltaY) {
-    if (!_isDraggingPlayer) return;
-    final range = MediaQuery.sizeOf(context).height - 72.0;
-    if (range <= 0) return;
-    _playerAnimation.value =
-        (_playerAnimation.value - deltaY / range).clamp(0.0, 1.0).toDouble();
-  }
-
-  void _finishInteractiveDrag(double velocityY) {
-    _isDraggingPlayer = false;
-    final target = velocityY.abs() > 600
-        ? (velocityY < 0 ? 1.0 : 0.0)
-        : (_playerAnimation.value > 0.5 ? 1.0 : 0.0);
-
-    if (target == 1) {
-      _openFullPlayer();
-    } else {
-      _closePlayer();
-    }
-  }
-
-  Future<void> _closePlayer() async {
-    if (!_showPlayer) return;
-    await _playerAnimation.animateTo(
-      0,
-      duration: _playerTransitionDuration,
-      curve: Curves.easeOutCubic,
-    );
-    if (mounted && !_isDraggingPlayer && _playerAnimation.value <= 0.001) {
-      setState(() => _showPlayer = false);
+            return PlayerTransitionOverlay(
+              progress: 1,
+              onDragStart: () {},
+              onDragUpdate: (_) {},
+              onDragEnd: (velocityY) {
+                if (velocityY > 600) closePlayer();
+              },
+              onClose: closePlayer,
+            );
+          },
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            final curved = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+              reverseCurve: Curves.easeInCubic,
+            );
+            return SlideTransition(
+              position: curved.drive(
+                Tween<Offset>(
+                  begin: const Offset(0, 1),
+                  end: Offset.zero,
+                ),
+              ),
+              child: child,
+            );
+          },
+        ),
+      );
+    } finally {
+      _playerRouteOpen = false;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Scaffold(
-          body: IndexedStack(index: _selected, children: _pages),
-          bottomNavigationBar: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                MiniPlayer(
-                  onOpen: _openFullPlayer,
-                  onDragStart: _beginInteractiveDrag,
-                  onDragUpdate: _updateInteractiveDrag,
-                  onDragEnd: _finishInteractiveDrag,
+    return Scaffold(
+      body: IndexedStack(index: _selected, children: _pages),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            MiniPlayer(onOpen: _openFullPlayer),
+            NavigationBar(
+              height: 54,
+              labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+              selectedIndex: _selected,
+              onDestinationSelected: (index) =>
+                  setState(() => _selected = index),
+              backgroundColor: const Color(0xFF101114),
+              indicatorColor: Colors.transparent,
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.home_outlined, size: 16),
+                  selectedIcon: Icon(Icons.home_rounded, size: 16),
+                  label: 'Главная',
                 ),
-                NavigationBar(
-                  height: 54,
-                  selectedIndex: _selected,
-                  onDestinationSelected: (index) => setState(() => _selected = index),
-                  backgroundColor: const Color(0xFF101114),
-                  indicatorColor: Colors.transparent,
-                  destinations: const [
-                    NavigationDestination(
-                      icon: Icon(Icons.home_outlined, size: 16),
-                      selectedIcon: Icon(Icons.home_rounded, size: 16),
-                      label: 'Главная',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.search_rounded, size: 16),
-                      label: 'Поиск',
-                    ),
-                    NavigationDestination(
-                      icon: _LibraryNavIcon(color: Color(0xFF8E8E8E)),
-                      selectedIcon: _LibraryNavIcon(color: Colors.white),
-                      label: 'Библиотека',
-                    ),
-                    NavigationDestination(
-                      icon: Icon(Icons.person_outline_rounded, size: 16),
-                      selectedIcon: Icon(Icons.person_rounded, size: 16),
-                      label: 'Профиль',
-                    ),
-                  ],
+                NavigationDestination(
+                  icon: Icon(Icons.search_rounded, size: 16),
+                  label: 'Поиск',
+                ),
+                NavigationDestination(
+                  icon: _LibraryNavIcon(color: Color(0xFF8E8E8E)),
+                  selectedIcon: _LibraryNavIcon(color: Colors.white),
+                  label: 'Библиотека',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.person_outline_rounded, size: 16),
+                  selectedIcon: Icon(Icons.person_rounded, size: 16),
+                  label: 'Профиль',
                 ),
               ],
             ),
-          ),
+          ],
         ),
-        if (_showPlayer)
-          Positioned.fill(
-            child: AnimatedBuilder(
-              animation: _playerAnimation,
-              builder: (context, _) => PlayerTransitionOverlay(
-                progress: _playerAnimation.value,
-                onDragStart: _beginInteractiveDrag,
-                onDragUpdate: _updateInteractiveDrag,
-                onDragEnd: _finishInteractiveDrag,
-                onClose: _closePlayer,
-              ),
-            ),
-          ),
-      ],
+      ),
     );
   }
 }
