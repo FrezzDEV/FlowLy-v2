@@ -12,8 +12,11 @@ import 'package:flowly/examples/playlist_page.dart';
 
 Future<void> pumpPlayerUi(WidgetTester tester) async {
   // The expanded player deliberately owns a continuously ticking playback clock,
-  // so pumpAndSettle would wait forever while a track is playing.
-  await tester.pump(const Duration(milliseconds: 350));
+  // so pumpAndSettle would wait forever while a track is playing. Pump explicit
+  // frames so controller animations advance deterministically without settling.
+  for (var i = 0; i < 24; i++) {
+    await tester.pump(const Duration(milliseconds: 16));
+  }
 }
 
 void main() {
