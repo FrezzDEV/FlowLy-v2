@@ -19,7 +19,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Популярное'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.search_rounded));
+    await tester.tap(find.descendant(
+      of: find.byType(NavigationBar),
+      matching: find.byIcon(Icons.search_rounded),
+    ));
     await tester.pumpAndSettle();
     expect(find.text('Популярные жанры'), findsOneWidget);
   });
@@ -34,7 +37,13 @@ void main() {
     await tester.tap(find.byIcon(Icons.keyboard_arrow_down_rounded));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsNothing);
+    final closeIcon = find.byIcon(Icons.keyboard_arrow_down_rounded);
+    expect(closeIcon, findsOneWidget);
+    final closeIconOpacity = find.ancestor(
+      of: closeIcon,
+      matching: find.byType(Opacity),
+    ).first;
+    expect(tester.widget<Opacity>(closeIconOpacity).opacity, 0);
     expect(find.text('Midnight Flow'), findsWidgets);
   });
 
