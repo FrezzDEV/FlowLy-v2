@@ -275,6 +275,31 @@ class PlayerController extends ChangeNotifier {
     return true;
   }
 
+  Future<int> addTracksToPlaylist(
+    String playlistId,
+    Iterable<PlayerTrack> tracks,
+  ) async {
+    final index = _playlists.indexWhere((playlist) => playlist.id == playlistId);
+    if (index < 0) return 0;
+
+    final playlist = _playlists[index];
+    final updatedTracks = [...playlist.tracks];
+    var addedCount = 0;
+    for (final track in tracks) {
+      if (updatedTracks.any((item) => _sameTrack(item, track))) continue;
+      updatedTracks.add(track);
+      addedCount++;
+    }
+    if (addedCount == 0) return 0;
+
+    final updatedPlaylists = [..._playlists];
+    updatedPlaylists[index] = playlist.copyWith(tracks: updatedTracks);
+    _playlists = updatedPlaylists;
+    notifyListeners();
+    await _persistPlaylists();
+    return addedCount;
+  }
+
   Future<bool> removeTrackFromPlaylist(
     String playlistId,
     PlayerTrack track,
