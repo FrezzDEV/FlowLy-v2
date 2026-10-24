@@ -198,10 +198,7 @@ void main() {
 
   testWidgets('playlist picker stays open and toggles track membership', (tester) async {
     final player = PlayerController.instance;
-    final playlist = await player.createPlaylist(
-      'Toggle menu test',
-      initialTrack: player.currentTrack,
-    );
+    final playlist = await player.createPlaylist('Toggle menu test');
     await tester.pumpWidget(const FlowLyApp());
     await tester.tap(find.text('Midnight Flow').first);
     await tester.pumpAndSettle();
@@ -214,7 +211,7 @@ void main() {
     expect(find.text('Сохранить в плейлист'), findsOneWidget);
     expect(
       player.playlistById(playlist.id)!.tracks,
-      isEmpty,
+      contains(player.currentTrack),
     );
 
     await tester.tap(find.text('Toggle menu test'));
@@ -222,7 +219,7 @@ void main() {
     expect(find.text('Сохранить в плейлист'), findsOneWidget);
     expect(
       player.playlistById(playlist.id)!.tracks,
-      contains(player.currentTrack),
+      isEmpty,
     );
     expect(find.byType(SnackBar), findsNothing);
   });
