@@ -106,7 +106,7 @@ class DraggableViewState extends State<DraggableView>
   }
 
   Future<void> _downloadCurrentTrack(PlayerTrack track) async {
-    final added = await _player.addTrackToPlaylist(
+    await _player.addTrackToPlaylist(
       PlayerController.downloadsPlaylistId,
       track,
     );
