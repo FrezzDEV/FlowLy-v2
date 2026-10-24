@@ -206,7 +206,7 @@ class PlayerController extends ChangeNotifier {
       _playlists.insert(favoritesIndex < 0 ? 0 : favoritesIndex + 1,
         MusicPlaylist(
           id: downloadsPlaylistId,
-          name: 'Загрузки',
+          name: 'Скачанные',
           isSystem: true,
         ),
       );
