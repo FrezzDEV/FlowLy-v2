@@ -120,6 +120,10 @@ class HomeScreen extends StatelessWidget {
                         final playlistId = i == 0
                             ? PlayerController.favoritesPlaylistId
                             : PlayerController.downloadsPlaylistId;
+                        // Playlist pages keep the app shell, navigation,
+                        // and mini-player visible; don't leave the full player
+                        // expanded over that screen.
+                        draggablePlayerKey.currentState?.close();
                         Navigator.of(context).push(
                           MaterialPageRoute<void>(
                             builder: (_) =>
