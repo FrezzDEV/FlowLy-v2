@@ -95,6 +95,9 @@ class DraggableViewState extends State<DraggableView>
   Widget build(BuildContext context) {
     return DefaultTextStyle.merge(
       style: const TextStyle(
+        fontFamily: 'Roboto',
+        fontFamilyFallback: ['sans-serif'],
+        letterSpacing: 0,
         decoration: TextDecoration.none,
         decorationColor: Colors.transparent,
       ),
@@ -116,6 +119,10 @@ class DraggableViewState extends State<DraggableView>
             lerpDouble(_navBarHeight + safeBottom + 4, 0, t)!;
         final radius = lerpDouble(_miniRadius, 0, t)!;
 
+        final playerBackground = Color.alphaBlend(
+          track.color.withValues(alpha: .35),
+          const Color(0xFF191919),
+        );
         final miniOpacity = 1 - _remap(t, 0, 0.3);
         final expandedOpacity = _remap(t, 0.5, 1);
 
@@ -132,14 +139,7 @@ class DraggableViewState extends State<DraggableView>
                 height: cardHeight,
                 clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
-                color: Color.lerp(
-                  Color.alphaBlend(
-                    track.color.withValues(alpha: .35),
-                    const Color(0xFF191919),
-                  ),
-                  const Color(0xFF101014),
-                  t,
-                ),
+                color: playerBackground,
                 borderRadius: BorderRadius.all(Radius.circular(radius)),
               ),
               child: Stack(
