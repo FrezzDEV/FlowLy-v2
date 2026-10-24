@@ -59,6 +59,8 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _selected = 0;
   late final ValueNotifier<int> _selectedTab = ValueNotifier<int>(_selected);
+  final GlobalKey<NavigatorState> _contentNavigatorKey =
+      GlobalKey<NavigatorState>();
 
   late final List<Widget> _pages = const [
     HomeScreen(),
@@ -79,6 +81,7 @@ class _AppShellState extends State<AppShell> {
       children: [
         Scaffold(
           body: Navigator(
+            key: _contentNavigatorKey,
             onGenerateRoute: (_) => MaterialPageRoute<void>(
               builder: (_) => ValueListenableBuilder<int>(
                 valueListenable: _selectedTab,
@@ -100,6 +103,10 @@ class _AppShellState extends State<AppShell> {
                   labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
                   selectedIndex: _selected,
                   onDestinationSelected: (index) {
+                    // Always leave any nested playlist/detail page when a main
+                    // tab is selected, regardless of where the user is.
+                    _contentNavigatorKey.currentState
+                        ?.popUntil((route) => route.isFirst);
                     setState(() => _selected = index);
                     _selectedTab.value = index;
                   },
@@ -132,7 +139,7 @@ class _AppShellState extends State<AppShell> {
             ),
           ),
         ),
-        const DraggableView(),
+        DraggableView(key: draggablePlayerKey),
       ],
     );
   }
