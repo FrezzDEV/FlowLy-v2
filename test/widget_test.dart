@@ -55,13 +55,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.keyboard_arrow_down_rounded));
     await tester.pumpAndSettle();
 
-    final closeIcon = find.byIcon(Icons.keyboard_arrow_down_rounded);
-    expect(closeIcon, findsOneWidget);
-    final closeIconOpacity = find.ancestor(
-      of: closeIcon,
-      matching: find.byType(Opacity),
-    ).first;
-    expect(tester.widget<Opacity>(closeIconOpacity).opacity, 0);
+    expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsNothing);
     expect(find.text('Midnight Flow'), findsWidgets);
   });
 
