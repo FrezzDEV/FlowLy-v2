@@ -12,6 +12,7 @@ class PlayerTrack {
     required this.color,
     required this.icon,
     required this.duration,
+    this.album = 'Single',
   });
 
   final String title;
@@ -19,6 +20,7 @@ class PlayerTrack {
   final Color color;
   final IconData icon;
   final Duration duration;
+  final String album;
 }
 
 class MusicPlaylist {
@@ -56,6 +58,7 @@ class PlayerController extends ChangeNotifier {
     PlayerTrack(
       title: 'Midnight Flow',
       artist: 'Unknown Artist',
+      album: 'Midnight Flow — Single',
       color: Color(0xFF51416D),
       icon: Icons.music_note_rounded,
       duration: Duration(minutes: 3, seconds: 45),
@@ -63,6 +66,7 @@ class PlayerController extends ChangeNotifier {
     PlayerTrack(
       title: 'Afterlife',
       artist: 'Ed Sheeran',
+      album: 'Afterlife — Single',
       color: Color(0xFF1C6788),
       icon: Icons.water_rounded,
       duration: Duration(minutes: 3, seconds: 45),
@@ -70,6 +74,7 @@ class PlayerController extends ChangeNotifier {
     PlayerTrack(
       title: 'Someone You Loved',
       artist: 'Lewis Capaldi',
+      album: 'Divinely Uninspired to a Hellish Extent',
       color: Color(0xFFB52F17),
       icon: Icons.person_rounded,
       duration: Duration(minutes: 3, seconds: 2),
@@ -77,6 +82,7 @@ class PlayerController extends ChangeNotifier {
     PlayerTrack(
       title: 'Night Drive',
       artist: 'Kavinsky',
+      album: 'OutRun',
       color: Color(0xFF112A45),
       icon: Icons.directions_car_rounded,
       duration: Duration(minutes: 4, seconds: 12),
@@ -84,6 +90,7 @@ class PlayerController extends ChangeNotifier {
     PlayerTrack(
       title: 'The Night We Met',
       artist: 'Lord Huron',
+      album: 'Strange Trails',
       color: Color(0xFF393943),
       icon: Icons.nightlight_round,
       duration: Duration(minutes: 3, seconds: 28),
@@ -91,6 +98,7 @@ class PlayerController extends ChangeNotifier {
     PlayerTrack(
       title: 'Chill Bill',
       artist: 'Rob Stone',
+      album: 'Chill Bill — Single',
       color: Color(0xFF4C171D),
       icon: Icons.person_rounded,
       duration: Duration(minutes: 3, seconds: 17),
@@ -98,6 +106,7 @@ class PlayerController extends ChangeNotifier {
     PlayerTrack(
       title: 'As It Was',
       artist: 'Harry Styles',
+      album: 'Harry’s House',
       color: Color(0xFF332947),
       icon: Icons.door_front_door_rounded,
       duration: Duration(minutes: 2, seconds: 47),
@@ -105,6 +114,7 @@ class PlayerController extends ChangeNotifier {
     PlayerTrack(
       title: 'Sweater Weather',
       artist: 'The Neighbourhood',
+      album: 'I Love You.',
       color: Color(0xFF34423A),
       icon: Icons.forest_rounded,
       duration: Duration(minutes: 4),
