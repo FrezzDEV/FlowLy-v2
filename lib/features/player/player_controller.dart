@@ -119,7 +119,7 @@ class PlayerController extends ChangeNotifier {
   bool _initialized = false;
   List<MusicPlaylist> _playlists = [
     MusicPlaylist(id: favoritesPlaylistId, name: 'Избранное', isSystem: true),
-    MusicPlaylist(id: downloadsPlaylistId, name: 'Загрузки', isSystem: true),
+    MusicPlaylist(id: downloadsPlaylistId, name: 'Скачанные', isSystem: true),
   ];
 
   PlayerTrack get currentTrack => _currentTrack;
@@ -174,7 +174,7 @@ class PlayerController extends ChangeNotifier {
             }
             loaded.add(MusicPlaylist(
               id: id,
-              name: name,
+              name: id == downloadsPlaylistId ? 'Скачанные' : name,
               tracks: tracks,
               isSystem: item['isSystem'] == true,
             ));
