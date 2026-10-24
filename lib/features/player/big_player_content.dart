@@ -362,7 +362,7 @@ class _BigPlayerContentState extends State<BigPlayerContent>
         _trackFor(tracks[(currentIndex - 1 + tracks.length) % tracks.length]);
     final next = _trackFor(tracks[(currentIndex + 1) % tracks.length]);
     for (final item in [previous, next]) {
-      unawaited(precacheImage(item.cover, context).catchError((Object _) {}));
+      unawaited(precacheImage(item.cover, context, onError: (exception, stackTrace) {}));
     }
   }
 
