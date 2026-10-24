@@ -30,11 +30,11 @@ void main() {
     await tester.tap(find.text('Midnight Flow'));
     await tester.pumpAndSettle();
 
-    expect(find.text('СЕЙЧАС ИГРАЕТ'), findsOneWidget);
-    await tester.tap(find.byTooltip('Свернуть плеер'));
+    expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.keyboard_arrow_down_rounded));
     await tester.pumpAndSettle();
 
-    expect(find.text('СЕЙЧАС ИГРАЕТ'), findsNothing);
+    expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsNothing);
     expect(find.text('Midnight Flow'), findsOneWidget);
   });
 
