@@ -6,43 +6,67 @@ Future<MusicPlaylist?> showCreatePlaylistDialog(
   BuildContext context, {
   PlayerTrack? initialTrack,
 }) async {
-  final nameController = TextEditingController();
   final name = await showDialog<String>(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      backgroundColor: const Color(0xFF191A20),
-      title: const Text('Новый плейлист'),
-      content: TextField(
-        controller: nameController,
-        autofocus: true,
-        textCapitalization: TextCapitalization.sentences,
-        maxLength: 40,
-        decoration: const InputDecoration(
-          hintText: 'Название плейлиста',
-          counterText: '',
-        ),
-        onSubmitted: (value) => Navigator.of(dialogContext).pop(value),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(dialogContext).pop(),
-          child: const Text('Отмена'),
-        ),
-        FilledButton(
-          onPressed: () =>
-              Navigator.of(dialogContext).pop(nameController.text),
-          child: const Text('Создать'),
-        ),
-      ],
-    ),
+    useRootNavigator: true,
+    builder: (_) => const _CreatePlaylistDialog(),
   );
-  nameController.dispose();
 
   if (name == null || name.trim().isEmpty || !context.mounted) return null;
   return PlayerController.instance.createPlaylist(
     name,
     initialTrack: initialTrack,
   );
+}
+
+class _CreatePlaylistDialog extends StatefulWidget {
+  const _CreatePlaylistDialog();
+
+  @override
+  State<_CreatePlaylistDialog> createState() => _CreatePlaylistDialogState();
+}
+
+class _CreatePlaylistDialogState extends State<_CreatePlaylistDialog> {
+  final TextEditingController _nameController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) return;
+    Navigator.of(context).pop(name);
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        backgroundColor: const Color(0xFF191A20),
+        title: const Text('Новый плейлист'),
+        content: TextField(
+          controller: _nameController,
+          autofocus: true,
+          textCapitalization: TextCapitalization.sentences,
+          maxLength: 40,
+          decoration: const InputDecoration(
+            hintText: 'Название плейлиста',
+            counterText: '',
+          ),
+          onSubmitted: (_) => _submit(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            onPressed: _submit,
+            child: const Text('Создать'),
+          ),
+        ],
+      );
 }
 
 Future<void> showSaveTrackToPlaylistSheet(
@@ -59,11 +83,10 @@ Future<void> showSaveTrackToPlaylistSheet(
       initialChildSize: 0.66,
       minChildSize: 0.40,
       maxChildSize: 0.92,
-      builder: (context, scrollController) => Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFF17181D),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
-        ),
+      builder: (context, scrollController) => Material(
+        color: const Color(0xFF17181D),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+        clipBehavior: Clip.antiAlias,
         child: ListView(
           controller: scrollController,
           padding: const EdgeInsets.fromLTRB(20, 10, 20, 28),
@@ -197,11 +220,10 @@ Future<void> showPlaylistDetailsSheet(
         builder: (context, _) {
           final playlist = controller.playlistById(playlistId);
           if (playlist == null) return const SizedBox.shrink();
-          return Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFF17181D),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
-            ),
+          return Material(
+            color: const Color(0xFF17181D),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+            clipBehavior: Clip.antiAlias,
             child: Column(
               children: [
                 const SizedBox(height: 10),
