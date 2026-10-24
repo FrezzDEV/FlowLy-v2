@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flowly/app.dart';
 import 'package:flowly/features/player/player_controller.dart';
+import 'package:flowly/features/library/playlist_detail_screen.dart';
 
 void main() {
   SharedPreferences.setMockInitialValues({});
@@ -66,6 +67,37 @@ void main() {
 
     await player.removeTrackFromPlaylist(playlist.id, PlayerController.catalog.first);
     expect(player.playlistById(playlist.id)!.tracks, hasLength(1));
+  });
+
+  testWidgets('playlist detail screen shows banner and bulk-adds tracks to downloads', (tester) async {
+    final player = PlayerController.instance;
+    final playlist = await player.createPlaylist(
+      'Тест загрузки всех треков',
+      initialTrack: PlayerController.catalog.first,
+    );
+    await player.addTrackToPlaylist(
+      playlist.id,
+      PlayerController.catalog[1],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(home: PlaylistDetailScreen(playlistId: playlist.id)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Тест загрузки всех треков'), findsOneWidget);
+    expect(find.text('Скачать все'), findsOneWidget);
+    expect(find.text('Midnight Flow'), findsOneWidget);
+    expect(find.text('Afterlife'), findsOneWidget);
+
+    await tester.tap(find.text('Скачать все'));
+    await tester.pumpAndSettle();
+
+    final downloads = player.playlistById(
+      PlayerController.downloadsPlaylistId,
+    )!;
+    expect(downloads.tracks, contains(PlayerController.catalog.first));
+    expect(downloads.tracks, contains(PlayerController.catalog[1]));
   });
 
   testWidgets('mini player opens and closes the full-screen player', (tester) async {
