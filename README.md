@@ -15,6 +15,7 @@ flutter run
 ## Build APK locally
 ```bash
 flutter build apk --release
+mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/FlowLy.apk
 ```
 Artifact: `build/app/outputs/flutter-apk/FlowLy.apk`.
 
