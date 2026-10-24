@@ -88,12 +88,13 @@ class _AppShellState extends State<AppShell> {
                   indicatorColor: Colors.transparent,
                   destinations: const [
                     NavigationDestination(
-                      icon: Icon(Icons.home_outlined, size: 16),
-                      selectedIcon: Icon(Icons.home_rounded, size: 16),
+                      icon: Icon(Icons.home_rounded, size: 24),
+                      selectedIcon: Icon(Icons.home_rounded, size: 26),
                       label: 'Главная',
                     ),
                     NavigationDestination(
-                      icon: Icon(Icons.search_rounded, size: 16),
+                      icon: Icon(Icons.search_rounded, size: 24),
+                      selectedIcon: Icon(Icons.search_rounded, size: 26),
                       label: 'Поиск',
                     ),
                     NavigationDestination(
@@ -102,8 +103,8 @@ class _AppShellState extends State<AppShell> {
                       label: 'Библиотека',
                     ),
                     NavigationDestination(
-                      icon: Icon(Icons.person_outline_rounded, size: 16),
-                      selectedIcon: Icon(Icons.person_rounded, size: 16),
+                      icon: Icon(Icons.person_outline_rounded, size: 24),
+                      selectedIcon: Icon(Icons.person_rounded, size: 26),
                       label: 'Профиль',
                     ),
                   ],
@@ -126,8 +127,8 @@ class _LibraryNavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-        width: 16,
-        height: 16,
+        width: 24,
+        height: 24,
         child: CustomPaint(painter: _LibraryNavPainter(color)),
       );
 }
