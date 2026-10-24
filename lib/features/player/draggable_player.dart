@@ -46,7 +46,7 @@ class DraggableViewState extends State<DraggableView>
     _progress = AnimationController(vsync: this, value: 0);
     _coverReveal = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 700),
+      duration: const Duration(milliseconds: 1100),
     )..addStatusListener(_onCoverRevealStatus);
     _player.addListener(_onPlayerTrackChanged);
   }
@@ -83,7 +83,7 @@ class DraggableViewState extends State<DraggableView>
     _incomingTrack = next;
     _coverReveal.duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
-        : const Duration(milliseconds: 700);
+        : const Duration(milliseconds: 1100);
     if (mounted) setState(() {});
     _coverReveal.forward(from: 0);
   }
@@ -143,6 +143,14 @@ class DraggableViewState extends State<DraggableView>
   double _remap(double value, double start, double end) =>
       ((value - start) / (end - start)).clamp(0.0, 1.0).toDouble();
 
+  Widget _demoTintedCover(PlayerTrack track, double size) => Stack(
+        fit: StackFit.expand,
+        children: [
+          AlbumCover(track: track, size: size),
+          // DEMO ONLY: remove this tint line at release when final cover art is ready.
+          ColoredBox(color: track.color.withValues(alpha: .12)),
+        ],
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -207,26 +215,29 @@ class DraggableViewState extends State<DraggableView>
                     left: artLeft,
                     width: artSize,
                     height: artSize,
-                    child: AnimatedBuilder(
-                      animation: _coverReveal,
-                      builder: (context, _) => Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          AlbumCover(track: _coverTrack, size: artSize),
-                          if (_incomingTrack != null)
-                            ClipPath(
-                              clipper: _TrackCircleRevealClipper(
-                                t: Curves.easeInOutCubic.transform(_coverReveal.value),
-                                forward: _coverForward,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(artSize * .08),
+                      child: AnimatedBuilder(
+                        animation: _coverReveal,
+                        builder: (context, _) => Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            _demoTintedCover(_coverTrack, artSize),
+                            if (_incomingTrack != null)
+                              ClipPath(
+                                clipper: _TrackCircleRevealClipper(
+                                  t: Curves.easeInOutCubic.transform(
+                                    _coverReveal.value,
+                                  ),
+                                  forward: _coverForward,
+                                ),
+                                child: _demoTintedCover(
+                                  _incomingTrack!,
+                                  artSize,
+                                ),
                               ),
-                              child: AlbumCover(
-                                track: _incomingTrack!,
-                                size: artSize,
-                              ),
-                            ),
-                          // DEMO ONLY: remove this tint line at release when final cover art is ready.
-                          ColoredBox(color: track.color.withValues(alpha: .12)),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -246,23 +257,57 @@ class DraggableViewState extends State<DraggableView>
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                track.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 360),
+                                switchInCurve: Curves.easeOutCubic,
+                                switchOutCurve: Curves.easeInCubic,
+                                transitionBuilder: (child, animation) =>
+                                    FadeTransition(
+                                  opacity: animation,
+                                  child: SlideTransition(
+                                    position: Tween<Offset>(
+                                      begin: const Offset(0, .18),
+                                      end: Offset.zero,
+                                    ).animate(animation),
+                                    child: child,
+                                  ),
+                                ),
+                                child: Text(
+                                  track.title,
+                                  key: ValueKey('mini-title-${track.title}'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
-                              Text(
-                                track.artist,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 420),
+                                switchInCurve: Curves.easeOutCubic,
+                                switchOutCurve: Curves.easeInCubic,
+                                transitionBuilder: (child, animation) =>
+                                    FadeTransition(
+                                  opacity: animation,
+                                  child: SlideTransition(
+                                    position: Tween<Offset>(
+                                      begin: const Offset(0, .18),
+                                      end: Offset.zero,
+                                    ).animate(animation),
+                                    child: child,
+                                  ),
+                                ),
+                                child: Text(
+                                  track.artist,
+                                  key: ValueKey('mini-artist-${track.artist}'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ),
                             ],
@@ -437,15 +482,16 @@ class _TrackCircleRevealClipper extends CustomClipper<Path> {
 
   @override
   Path getClip(Size size) {
+    // Start at a bottom corner so the reveal is visible from its first frames.
     final center = Offset(
-      size.width * (forward ? .88 : .12),
-      size.height * 1.12,
+      forward ? size.width : 0,
+      size.height,
     );
     return Path()
       ..addOval(
         Rect.fromCircle(
           center: center,
-          radius: size.width * 1.7 * t,
+          radius: size.width * 1.45 * t,
         ),
       );
   }
