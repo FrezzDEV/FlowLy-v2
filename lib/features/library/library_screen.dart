@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../player/player_controller.dart';
+import 'playlist_detail_screen.dart';
 import 'playlist_sheets.dart';
 
 class LibraryScreen extends StatelessWidget {
@@ -26,33 +27,13 @@ class LibraryScreen extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
             children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Библиотека',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -.5,
-                      ),
-                    ),
-                  ),
-                  IconButton.filledTonal(
-                    tooltip: 'Создать плейлист',
-                    onPressed: () async {
-                      final playlist = await showCreatePlaylistDialog(context);
-                      if (playlist != null && context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Плейлист «${playlist.name}» создан'),
-                          ),
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.add_rounded),
-                  ),
-                ],
+              const Text(
+                'Библиотека',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -.5,
+                ),
               ),
               const SizedBox(height: 16),
               const Wrap(
@@ -75,7 +56,7 @@ class LibraryScreen extends StatelessWidget {
                 const Color(0xFF7D376F),
                 favorites.name,
                 '${favorites.tracks.length} треков',
-                onTap: () => showPlaylistDetailsSheet(
+                onTap: () => _openPlaylist(
                   context,
                   PlayerController.favoritesPlaylistId,
                 ),
@@ -85,10 +66,25 @@ class LibraryScreen extends StatelessWidget {
                 const Color(0xFF32664E),
                 downloads.name,
                 '${downloads.tracks.length} треков в загрузках',
-                onTap: () => showPlaylistDetailsSheet(
+                onTap: () => _openPlaylist(
                   context,
                   PlayerController.downloadsPlaylistId,
                 ),
+              ),
+              _LibraryRow(
+                Icons.add_rounded,
+                const Color(0xFF34383F),
+                'Добавить плейлист',
+                'Создать свою подборку',
+                onTap: () async {
+                  final playlist = await showCreatePlaylistDialog(context);
+                  if (playlist == null || !context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Плейлист «${playlist.name}» создан'),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 20),
               Row(
@@ -112,17 +108,19 @@ class LibraryScreen extends StatelessWidget {
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 20),
                   child: Text(
-                    'Здесь будут созданные тобой плейлисты. Нажми +, чтобы создать первый.',
+                    'Созданные тобой подборки появятся здесь.',
                     style: TextStyle(color: Colors.white60, height: 1.4),
                   ),
                 ),
               for (final playlist in customPlaylists)
                 _LibraryRow(
                   Icons.queue_music_rounded,
-                  const Color(0xFF275F7D),
+                  playlist.tracks.isNotEmpty
+                      ? playlist.tracks.first.color
+                      : const Color(0xFF275F7D),
                   playlist.name,
                   '${playlist.tracks.length} треков',
-                  onTap: () => showPlaylistDetailsSheet(context, playlist.id),
+                  onTap: () => _openPlaylist(context, playlist.id),
                 ),
               const SizedBox(height: 20),
               const Text(
@@ -147,6 +145,14 @@ class LibraryScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  void _openPlaylist(BuildContext context, String playlistId) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PlaylistDetailScreen(playlistId: playlistId),
+      ),
     );
   }
 }
