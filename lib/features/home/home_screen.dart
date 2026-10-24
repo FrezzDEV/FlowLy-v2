@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../navigation/circle_reveal_route.dart';
+import '../../navigation/reveal_stagger.dart';
 import '../player/player_controller.dart';
 import '../library/playlist_detail_screen.dart';
 import '../library/playlist_sheets.dart';
@@ -46,26 +49,71 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _header(BuildContext context) => Row(
-    children: [
-      Container(
-        width: 38, height: 38,
-        decoration: BoxDecoration(color: _lime, borderRadius: BorderRadius.circular(13)),
-        child: const Icon(Icons.graphic_eq_rounded, color: Color(0xFF11130D), size: 25),
-      ),
-      const SizedBox(width: 10),
-      const Text('Flow', style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800, letterSpacing: -.8)),
-      const Text('Ly', style: TextStyle(fontSize: 25, fontWeight: FontWeight.w800, color: _lime, letterSpacing: -.8)),
-      const Spacer(),
-      IconButton(
-        tooltip: 'Профиль',
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
+  Widget _header(BuildContext context) {
+    Offset? profileTapPosition;
+    return Row(
+      children: [
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: _lime,
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: const Icon(
+            Icons.graphic_eq_rounded,
+            color: Color(0xFF11130D),
+            size: 25,
+          ),
         ),
-        icon: const CircleAvatar(radius: 19, backgroundColor: Color(0xFF24262B), child: Icon(Icons.person_outline, color: Colors.white)),
-      ),
-    ],
-  );
+        const SizedBox(width: 10),
+        const Text(
+          'Flow',
+          style: TextStyle(
+            fontSize: 25,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -.8,
+          ),
+        ),
+        const Text(
+          'Ly',
+          style: TextStyle(
+            fontSize: 25,
+            fontWeight: FontWeight.w800,
+            color: _lime,
+            letterSpacing: -.8,
+          ),
+        ),
+        const Spacer(),
+        GestureDetector(
+          onTapDown: (details) =>
+              profileTapPosition = details.globalPosition,
+          child: IconButton(
+            tooltip: 'Профиль',
+            onPressed: () {
+              final origin = profileTapPosition ??
+                  Offset(
+                    MediaQuery.sizeOf(context).width - 32,
+                    MediaQuery.paddingOf(context).top + 32,
+                  );
+              final backButtonKey = GlobalKey();
+              context.pushCircleReveal(
+                page: ProfileScreen(backButtonKey: backButtonKey),
+                tapPosition: origin,
+                backButtonKey: backButtonKey,
+                backgroundColor: const Color(0xFF08090B),
+              );
+            },
+            icon: const CircleAvatar(
+              radius: 19,
+              backgroundColor: Color(0xFF24262B),
+              child: Icon(Icons.person_outline, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _sectionTitle(String title, {String? action, VoidCallback? onAction}) => Row(
     children: [
@@ -101,6 +149,7 @@ class HomeScreen extends StatelessWidget {
     return LayoutBuilder(builder: (context, constraints) {
       final spacing = 10.0;
       final tile = (constraints.maxWidth - spacing * 2) / 3;
+      Offset? tapPosition;
       return Wrap(
         spacing: spacing,
         runSpacing: spacing,
@@ -115,20 +164,28 @@ class HomeScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   clipBehavior: Clip.antiAlias,
                   child: InkWell(
+                    onTapDown: (details) =>
+                        tapPosition = details.globalPosition,
                     onTap: () {
                       if (i == 0 || i == 1) {
                         final playlistId = i == 0
                             ? PlayerController.favoritesPlaylistId
                             : PlayerController.downloadsPlaylistId;
-                        // Playlist pages keep the app shell, navigation,
-                        // and mini-player visible; don't leave the full player
-                        // expanded over that screen.
+                        // Сохраняем постоянный shell и сворачиваем большой плеер.
                         draggablePlayerKey.currentState?.close();
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) =>
-                                PlaylistDetailScreen(playlistId: playlistId),
+                        final backButtonKey = GlobalKey();
+                        context.pushCircleReveal(
+                          page: PlaylistDetailScreen(
+                            playlistId: playlistId,
+                            backButtonKey: backButtonKey,
                           ),
+                          tapPosition: tapPosition ??
+                              Offset(
+                                constraints.maxWidth / 2,
+                                MediaQuery.sizeOf(context).height / 2,
+                              ),
+                          backButtonKey: backButtonKey,
+                          backgroundColor: const Color(0xFF08090B),
                         );
                       } else {
                         PlayerController.instance.playTrack(playTracks[i]);
