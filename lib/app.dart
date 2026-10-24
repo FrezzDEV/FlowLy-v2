@@ -111,7 +111,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
     final range = MediaQuery.sizeOf(context).height - 72.0;
     if (range <= 0) return;
     _playerAnimation.value =
-        (_playerAnimation.value - deltaY / range).clamp(0.0, 1.0);
+        (_playerAnimation.value - deltaY / range).clamp(0.0, 1.0).toDouble();
   }
 
   void _finishInteractiveDrag(double velocityY) {
