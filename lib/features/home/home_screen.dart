@@ -56,7 +56,7 @@ class HomeScreen extends StatelessWidget {
       const Spacer(),
       IconButton(
         tooltip: 'Профиль',
-        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Профиль доступен во вкладке «Профиль»'))),
+        onPressed: () {},
         icon: const CircleAvatar(radius: 19, backgroundColor: Color(0xFF24262B), child: Icon(Icons.person_outline, color: Colors.white)),
       ),
     ],
@@ -263,9 +263,7 @@ class HomeScreen extends StatelessWidget {
       _sectionTitle(
         'Недавно прослушано',
         action: 'Ещё',
-        onAction: () => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Полный список появится на следующем этапе')),
-        ),
+        onAction: null,
       ),
       const SizedBox(height: 8),
       for (final song in songs)
@@ -286,13 +284,38 @@ class HomeScreen extends StatelessWidget {
           trailing: PopupMenuButton<String>(
             tooltip: 'Действия с треком',
             icon: const Icon(Icons.more_vert_rounded, color: _muted),
-            onSelected: (value) => ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('$value: ${song.title}')),
-            ),
+            onSelected: (value) async {
+              final player = PlayerController.instance;
+              if (value == 'favorite') {
+                final favorites = player.playlistById(
+                  PlayerController.favoritesPlaylistId,
+                );
+                final exists = favorites?.tracks.any(
+                  (track) =>
+                      track.title == song.title && track.artist == song.artist,
+                ) ?? false;
+                if (exists) {
+                  await player.removeTrackFromPlaylist(
+                    PlayerController.favoritesPlaylistId,
+                    song,
+                  );
+                } else {
+                  await player.addTrackToPlaylist(
+                    PlayerController.favoritesPlaylistId,
+                    song,
+                  );
+                }
+              } else if (value == 'playlist') {
+                await showSaveTrackToPlaylistSheet(context, song);
+              } else if (value == 'play') {
+                player.playTrack(song);
+                draggablePlayerKey.currentState?.open();
+              }
+            },
             itemBuilder: (_) => const [
-              PopupMenuItem(value: 'В избранное', child: Text('В избранное')),
-              PopupMenuItem(value: 'Добавить в очередь', child: Text('Добавить в очередь')),
-              PopupMenuItem(value: 'Подробнее', child: Text('Подробнее')),
+              PopupMenuItem(value: 'favorite', child: Text('Добавить / убрать из избранного')),
+              PopupMenuItem(value: 'playlist', child: Text('Добавить / убрать в плейлисте')),
+              PopupMenuItem(value: 'play', child: Text('Открыть плеер')),
             ],
           ),
         ),
