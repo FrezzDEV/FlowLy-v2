@@ -264,23 +264,25 @@ class _BigPlayerContentState extends State<BigPlayerContent>
   void _onTick(Duration elapsed) {
     final previous = _lastElapsed;
     _lastElapsed = elapsed;
-    if (previous == null || !_player.isPlaying) return;
+    if (previous == null) return;
     final dt = (elapsed - previous).inMicroseconds / 1000000.0;
     if (dt <= 0) return;
 
     final previousWholeSecond = _t.floor();
-    _t += dt;
-    if (_t >= _durationSeconds && !_changing) {
-      _t = _durationSeconds;
-      _changeTrack(1);
-      return;
+    if (_player.isPlaying) {
+      _t += dt;
+      if (_t >= _durationSeconds && !_changing) {
+        _t = _durationSeconds;
+        _changeTrack(1);
+        return;
+      }
     }
-    _shown += (_t - _shown) * math.min(1.0, dt * 12.0);
+    _shown += (_t - _shown) * math.min(1.0, dt * 12.0).toDouble();
     _shownPosition.value = _shown.clamp(0.0, _durationSeconds).toDouble();
 
     // Общая позиция синхронизируется раз в секунду; кадры обновляют только
     // ValueNotifier полосы времени, а не весь экран.
-    if (_t.floor() != previousWholeSecond) {
+    if (_player.isPlaying && _t.floor() != previousWholeSecond) {
       _player.setExternalProgress(_t / _durationSeconds);
     }
   }
@@ -494,7 +496,7 @@ class _BigPlayerContentState extends State<BigPlayerContent>
               milliseconds: math.max(
                 0,
                 _downloadDuration.inMilliseconds - elapsed,
-              ),
+              ).toInt(),
             ),
             curve: Curves.linear,
           );
@@ -525,7 +527,8 @@ class _BigPlayerContentState extends State<BigPlayerContent>
     _arrowController.forward();
     _doneController.reverse();
     _ring.forward(from: 0);
-    _busy[title] = Timer(_downloadDuration, () {
+    final delay = _reduceMotion ? Duration.zero : _downloadDuration;
+    _busy[title] = Timer(delay, () {
       _busy.remove(title);
       _busyStartedAt.remove(title);
       _downloaded.add(title);
@@ -645,7 +648,7 @@ class _BigPlayerContentState extends State<BigPlayerContent>
     final bg = scheme.surface;
     final hint = scheme.onSurfaceVariant;
     final size = MediaQuery.sizeOf(context);
-    final coverWidth = math.min(size.width * .8, 360.0);
+    final coverWidth = math.min(size.width * .8, 360.0).toDouble();
 
     return Stack(
       fit: StackFit.expand,
@@ -710,7 +713,7 @@ class _BigPlayerContentState extends State<BigPlayerContent>
                         width: coverWidth,
                         child: AspectRatio(
                           aspectRatio: 1,
-                          child: _buildCover(coverWidth, ink),
+                          child: _buildCover(coverWidth),
                         ),
                       ),
                       const SizedBox(height: 22),
@@ -721,7 +724,6 @@ class _BigPlayerContentState extends State<BigPlayerContent>
                           children: [
                             Expanded(
                               child: TrackMeta(
-                                key: ValueKey<String>(_track.id),
                                 track: _track,
                                 reduceMotion: _reduceMotion,
                               ),
@@ -771,7 +773,7 @@ class _BigPlayerContentState extends State<BigPlayerContent>
     );
   }
 
-  Widget _buildCover(double width, Color ink) {
+  Widget _buildCover(double width) {
     return AnimatedBuilder(
       animation: Listenable.merge([_revealCurve, _squeezeAnim]),
       builder: (context, _) => Transform.scale(
