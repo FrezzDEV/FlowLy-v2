@@ -116,15 +116,16 @@ class DraggableViewState extends State<DraggableView>
 
         return Align(
           alignment: Alignment.bottomCenter,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onVerticalDragUpdate: _onDragUpdate,
-            onVerticalDragEnd: _onDragEnd,
-            child: Container(
-              width: cardWidth,
-              height: cardHeight,
-              margin: EdgeInsets.only(bottom: bottomMargin),
-              clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: EdgeInsets.only(bottom: bottomMargin),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onVerticalDragUpdate: _onDragUpdate,
+              onVerticalDragEnd: _onDragEnd,
+              child: Container(
+                width: cardWidth,
+                height: cardHeight,
+                clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 color: Color.lerp(
                   Color.alphaBlend(
@@ -362,7 +363,8 @@ class DraggableViewState extends State<DraggableView>
               ),
             ),
           ),
-        );
+        ),
+      );
       },
     );
   }
