@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../navigation/reveal_stagger.dart';
+
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  const ProfileScreen({super.key, this.backButtonKey});
+
+  final GlobalKey? backButtonKey;
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
@@ -33,19 +37,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
       children: [
-        Align(
-          alignment: Alignment.centerRight,
-          child: IconButton(
-            tooltip: 'Настройки',
-            onPressed: _openSettings,
-            icon: const Icon(Icons.settings_rounded, size: 26),
+        Row(
+          children: [
+            if (widget.backButtonKey != null)
+              RevealHeader(
+                child: IconButton(
+                  key: widget.backButtonKey,
+                  tooltip: 'Назад',
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.arrow_back_rounded),
+                ),
+              )
+            else
+              const SizedBox(width: 48, height: 48),
+            const Spacer(),
+            IconButton(
+              tooltip: 'Настройки',
+              onPressed: _openSettings,
+              icon: const Icon(Icons.settings_rounded, size: 26),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        const RevealHeader(
+          child: Center(
+            child: CircleAvatar(
+              radius: 42,
+              backgroundColor: Color(0xFF24272B),
+              child: Icon(Icons.person_rounded, size: 44),
+            ),
           ),
         ),
         const SizedBox(height: 12),
-        const Center(child: CircleAvatar(radius: 42, backgroundColor: Color(0xFF24272B), child: Icon(Icons.person_rounded, size: 44))),
-        const SizedBox(height: 12),
-        const Center(child: Text('Слушатель FlowLy', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700))),
-        const Center(child: Text('Демо-профиль', style: TextStyle(color: Colors.white60))),
+        const RevealHeader(
+          child: Center(
+            child: Text(
+              'Слушатель FlowLy',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ),
+        const Center(
+          child: Text('Демо-профиль', style: TextStyle(color: Colors.white60)),
+        ),
         const SizedBox(height: 32),
         Text('Настройки', key: _settingsKey, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
         const SizedBox(height: 8),
