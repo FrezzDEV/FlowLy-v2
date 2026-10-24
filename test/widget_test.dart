@@ -7,6 +7,7 @@ import 'package:flowly/features/player/draggable_player.dart';
 import 'package:flowly/features/library/playlist_detail_screen.dart';
 import 'package:flowly/features/library/catalog_collection_screen.dart';
 import 'package:flowly/features/library/library_screen.dart';
+import 'package:flowly/features/profile/profile_screen.dart';
 import 'package:flowly/examples/circle_reveal_demo_page.dart';
 import 'package:flowly/examples/playlist_page.dart';
 
@@ -45,6 +46,33 @@ void main() {
     expect(find.text('Популярные жанры'), findsNothing);
     expect(find.text('Найди музыку'), findsOneWidget);
   });
+  testWidgets('profile opens a separate settings screen', (tester) async {
+    await tester.pumpWidget(const FlowLyApp());
+
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget is IconButton && widget.tooltip == 'Профиль',
+      ),
+      findsNothing,
+    );
+
+    await tester.tap(find.descendant(
+      of: find.byType(NavigationBar),
+      matching: find.byIcon(Icons.person_outline_rounded),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Настройки'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SettingsScreen), findsOneWidget);
+    expect(find.text('Внешний вид'), findsOneWidget);
+    expect(find.text('Уведомления'), findsOneWidget);
+    expect(find.text('Качество звука'), findsOneWidget);
+    expect(find.text('Язык'), findsOneWidget);
+    expect(find.text('О приложении'), findsOneWidget);
+  });
+
   testWidgets('home favorites quick tile opens the playlist screen', (tester) async {
     await tester.pumpWidget(const FlowLyApp());
     await tester.tap(find.text('Избранное').first);
