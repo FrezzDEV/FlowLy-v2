@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flowly/app.dart';
+import 'package:flowly/features/player/player_controller.dart';
 
 void main() {
   testWidgets('FlowLy opens on home and navigation changes tabs', (tester) async {
@@ -26,6 +27,23 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Популярные жанры'), findsOneWidget);
   });
+  testWidgets('playback timer advances and pause freezes it', (tester) async {
+    final player = PlayerController.instance;
+    if (player.isPlaying) player.togglePlay();
+    player.seek(0);
+
+    player.togglePlay();
+    await tester.pump(const Duration(seconds: 2));
+    final advancedPosition = player.position;
+    expect(advancedPosition.inSeconds, greaterThan(0));
+
+    player.togglePlay();
+    final pausedPosition = player.position;
+    await tester.pump(const Duration(seconds: 2));
+    expect(player.position, pausedPosition);
+    expect(player.isPlaying, isFalse);
+  });
+
   testWidgets('mini player opens and closes the full-screen player', (tester) async {
     await tester.pumpWidget(const FlowLyApp());
 
