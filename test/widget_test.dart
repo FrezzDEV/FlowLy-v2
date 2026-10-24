@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flowly/app.dart';
 import 'package:flowly/features/player/player_controller.dart';
 
 void main() {
+  SharedPreferences.setMockInitialValues({});
   testWidgets('FlowLy opens on home and navigation changes tabs', (tester) async {
     await tester.pumpWidget(const FlowLyApp());
 
