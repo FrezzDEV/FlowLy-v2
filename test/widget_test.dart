@@ -226,6 +226,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Сохранить в плейлист'), findsOneWidget);
+    // Downloads remains available in the library, but not as a save target.
+    expect(find.widgetWithText(ListTile, 'Скачанные'), findsNothing);
     await tester.tap(find.text('Избранное').last);
     await tester.pumpAndSettle();
     expect(find.text('Сохранить в плейлист'), findsOneWidget);
