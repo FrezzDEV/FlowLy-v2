@@ -115,7 +115,7 @@ class _BigPlayerContentState extends State<BigPlayerContent>
     );
 
     _player.addListener(_handlePlayerChanged);
-    _player.setExternalPlaybackClock(true);
+    _player.setExternalPlaybackClock(widget.active);
     _downloaded.addAll(
       _player.playlistById(PlayerController.downloadsPlaylistId)
               ?.tracks.map((item) => item.title) ??
@@ -157,9 +157,16 @@ class _BigPlayerContentState extends State<BigPlayerContent>
     if (oldWidget.active == widget.active) return;
     _lastElapsed = null;
     if (widget.active) {
+      // Re-sync to the internal playback clock after the mini-player was active.
+      _t = (_player.progress * _durationSeconds)
+          .clamp(0.0, _durationSeconds).toDouble();
+      _shown = _t;
+      _shownPosition.value = _shown;
+      _player.setExternalPlaybackClock(true);
       _ticker.start();
     } else {
       _ticker.stop();
+      _player.setExternalPlaybackClock(false);
     }
   }
 
