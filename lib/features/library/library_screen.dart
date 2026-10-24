@@ -65,7 +65,7 @@ class LibraryScreen extends StatelessWidget {
                 Icons.download_rounded,
                 const Color(0xFF32664E),
                 downloads.name,
-                '${downloads.tracks.length} треков в загрузках',
+                '${downloads.tracks.length} треков',
                 onTap: () => _openPlaylist(
                   context,
                   PlayerController.downloadsPlaylistId,
