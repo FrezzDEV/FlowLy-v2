@@ -26,6 +26,17 @@ class PlaylistDetailScreen extends StatelessWidget {
             playlist.id == PlayerController.favoritesPlaylistId;
         final isDownloads =
             playlist.id == PlayerController.downloadsPlaylistId;
+        final downloadsPlaylist = controller.playlistById(
+          PlayerController.downloadsPlaylistId,
+        )!;
+        final allTracksDownloaded = playlist.tracks.isNotEmpty &&
+            playlist.tracks.every(
+              (track) => downloadsPlaylist.tracks.any(
+                (downloaded) =>
+                    downloaded.title == track.title &&
+                    downloaded.artist == track.artist,
+              ),
+            );
         final bannerColor = isFavorites
             ? const Color(0xFF793A6D)
             : isDownloads
@@ -164,7 +175,9 @@ class PlaylistDetailScreen extends StatelessWidget {
                               ),
                             ),
                             FilledButton.icon(
-                              onPressed: playlist.tracks.isEmpty || isDownloads
+                              onPressed: playlist.tracks.isEmpty ||
+                                      isDownloads ||
+                                      allTracksDownloaded
                                   ? null
                                   : () async {
                                       final added =
@@ -172,19 +185,21 @@ class PlaylistDetailScreen extends StatelessWidget {
                                         PlayerController.downloadsPlaylistId,
                                         playlist.tracks,
                                       );
-                                      if (!context.mounted) return;
+                                      if (added == 0 || !context.mounted) return;
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
                                           content: Text(
-                                            added == 0
-                                                ? 'Все треки уже в «Загрузки»'
-                                                : 'Добавлено в «Загрузки»: $added',
+                                            'Добавлено в «Скачанные»: $added',
                                           ),
                                         ),
                                       );
                                     },
                               icon: const Icon(Icons.download_rounded, size: 18),
-                              label: Text(isDownloads ? 'В загрузках' : 'Скачать все'),
+                              label: Text(
+                                isDownloads || allTracksDownloaded
+                                    ? 'Скачано'
+                                    : 'Скачать все',
+                              ),
                               style: FilledButton.styleFrom(
                                 backgroundColor: const Color(0xFFB6F36B),
                                 foregroundColor: const Color(0xFF11130D),
