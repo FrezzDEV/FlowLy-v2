@@ -36,7 +36,7 @@ class PlaylistDetailScreen extends StatelessWidget {
                         icon: const Icon(Icons.arrow_back_rounded),
                       ),
                     ),
-              title: const Text('Плейлист'),
+              title: const RevealHeader(child: Text('Плейлист')),
             ),
             body: const Center(child: Text('Плейлист не найден')),
           );
@@ -291,12 +291,14 @@ class PlaylistDetailScreen extends StatelessWidget {
                           final isCurrent =
                               track.title == controller.currentTrack.title &&
                               track.artist == controller.currentTrack.artist;
+                          final trackKey = ValueKey(
+                            '$playlistId:${track.title}:${track.artist}',
+                          );
                           return RevealStagger(
+                            key: trackKey,
                             index: index,
                             child: Dismissible(
-                            key: ValueKey(
-                              '$playlistId:${track.title}:${track.artist}',
-                            ),
+                            key: trackKey,
                             direction: DismissDirection.endToStart,
                             background: Container(
                               alignment: Alignment.centerRight,
