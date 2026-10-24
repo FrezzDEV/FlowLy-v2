@@ -515,17 +515,20 @@ class _BigPlayerContentState extends State<BigPlayerContent>
             valueListenable: _shownPosition,
             builder: (context, seconds, _) => Column(
               children: [
-                SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: Colors.white,
-                    inactiveTrackColor: Colors.white24,
-                    thumbColor: Colors.white,
-                    overlayColor: Colors.transparent,
-                    trackHeight: 4,
-                  ),
-                  child: Slider(
-                    value: (seconds / duration).clamp(0.0, 1.0).toDouble(),
-                    onChanged: _seek,
+                Material(
+                  color: Colors.transparent,
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: Colors.white,
+                      inactiveTrackColor: Colors.white24,
+                      thumbColor: Colors.white,
+                      overlayColor: Colors.transparent,
+                      trackHeight: 4,
+                    ),
+                    child: Slider(
+                      value: (seconds / duration).clamp(0.0, 1.0).toDouble(),
+                      onChanged: _seek,
+                    ),
                   ),
                 ),
                 Padding(
