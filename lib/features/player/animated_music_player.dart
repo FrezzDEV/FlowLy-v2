@@ -141,7 +141,7 @@ class PlayerTransitionOverlay extends StatelessWidget {
     final expandedCoverSize =
         math.min(screen.width * 0.76, screen.height < 750 ? 230.0 : 310.0);
     final miniCoverLeft = 20.0;
-    final miniCoverTop = screen.height - media.padding.bottom - 150.0;
+    final miniCoverTop = screen.height - media.padding.bottom - 124.0;
     final expandedCoverLeft = (screen.width - expandedCoverSize) / 2;
     final expandedCoverTop =
         math.max(media.padding.top + 68.0, screen.height * 0.17);
