@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 /// Demo-only playback state for the FlowLy UI. No audio engine is connected.
@@ -86,6 +88,7 @@ class PlayerController extends ChangeNotifier {
   bool _isPlaying = false;
   bool _isFavorite = false;
   double _progress = 0;
+  Timer? _playbackTimer;
 
   PlayerTrack get currentTrack => _currentTrack;
   bool get isPlaying => _isPlaying;
@@ -104,12 +107,44 @@ class PlayerController extends ChangeNotifier {
     if (index >= 0) _currentIndex = index;
     _progress = 0;
     _isPlaying = true;
+    _startPlaybackTimer();
     notifyListeners();
   }
 
   void togglePlay() {
     _isPlaying = !_isPlaying;
+    if (_isPlaying) {
+      if (_progress >= 1) _progress = 0;
+      _startPlaybackTimer();
+    } else {
+      _playbackTimer?.cancel();
+      _playbackTimer = null;
+    }
     notifyListeners();
+  }
+
+  void _startPlaybackTimer() {
+    _playbackTimer?.cancel();
+    if (!_isPlaying || _currentTrack.duration.inSeconds <= 0) {
+      _playbackTimer = null;
+      return;
+    }
+
+    _playbackTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!_isPlaying) {
+        timer.cancel();
+        _playbackTimer = null;
+        return;
+      }
+
+      final durationSeconds = _currentTrack.duration.inSeconds;
+      _progress = (_progress + 1 / durationSeconds).clamp(0.0, 1.0);
+      if (_progress >= 1) {
+        next();
+      } else {
+        notifyListeners();
+      }
+    });
   }
 
   void toggleFavorite() {
@@ -128,6 +163,7 @@ class PlayerController extends ChangeNotifier {
     _progress = 0;
     _isPlaying = true;
     _isFavorite = false;
+    _startPlaybackTimer();
     notifyListeners();
   }
 
@@ -137,6 +173,13 @@ class PlayerController extends ChangeNotifier {
     _progress = 0;
     _isPlaying = true;
     _isFavorite = false;
+    _startPlaybackTimer();
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _playbackTimer?.cancel();
+    super.dispose();
   }
 }
