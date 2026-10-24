@@ -1068,7 +1068,7 @@ class _ProgressAndTime extends StatelessWidget {
     required this.ink,
     required this.hint,
   });
-  final ValueListenable<double> position;
+  final ValueNotifier<double> position;
   final Color ink;
   final Color hint;
 
@@ -1216,18 +1216,6 @@ class _PressScaleState extends State<_PressScale> {
     final reduce = MediaQuery.disableAnimationsOf(context);
     return FocusableActionDetector(
       onShowFocusHighlight: (value) => setState(() => _focused = value),
-      shortcuts: const <ShortcutActivator, Intent>{
-        SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
-        SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
-      },
-      actions: <Type, Action<Intent>>{
-        ActivateIntent: CallbackAction<ActivateIntent>(
-          onInvoke: (intent) {
-            widget.onTap?.call();
-            return null;
-          },
-        ),
-      },
       child: Semantics(
         button: true,
         label: widget.label,
