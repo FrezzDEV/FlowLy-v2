@@ -1,9 +1,11 @@
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 
 import 'animated_music_player.dart' show AlbumCover;
 import 'player_controller.dart';
+import '../library/playlist_sheets.dart';
 
 /// Один виджет-карточка: мини-плеер и полный плеер — это одно и то же,
 /// все размеры/позиции считаются из одного progress (0 = мини, 1 = полный).
@@ -90,6 +92,33 @@ class DraggableViewState extends State<DraggableView>
 
   static String _format(Duration value) =>
       '${value.inMinutes}:${(value.inSeconds % 60).toString().padLeft(2, '0')}';
+
+  Future<void> _shareCurrentTrack(PlayerTrack track) async {
+    await SharePlus.instance.share(
+      ShareParams(
+        title: 'FlowLy',
+        text: '${track.title} — ${track.artist}\nСлушаю в FlowLy',
+      ),
+    );
+  }
+
+  Future<void> _downloadCurrentTrack(PlayerTrack track) async {
+    final added = await _player.addTrackToPlaylist(
+      PlayerController.downloadsPlaylistId,
+      track,
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          added
+              ? 'Трек сохранён в «Загрузки»'
+              : 'Трек уже есть в «Загрузки»',
+        ),
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -315,18 +344,23 @@ class DraggableViewState extends State<DraggableView>
                             ),
                             const SizedBox(height: 28),
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 _ActionButton(
                                   icon: Icons.skip_previous_rounded,
-                                  size: 64,
+                                  size: 44,
                                   onTap: _player.previous,
+                                ),
+                                _ActionButton(
+                                  icon: Icons.share_rounded,
+                                  size: 44,
+                                  onTap: () => _shareCurrentTrack(track),
                                 ),
                                 GestureDetector(
                                   onTap: _player.togglePlay,
                                   child: Container(
-                                    width: 72,
-                                    height: 72,
+                                    width: 68,
+                                    height: 68,
                                     decoration: const BoxDecoration(
                                       color: Colors.white,
                                       shape: BoxShape.circle,
@@ -336,13 +370,18 @@ class DraggableViewState extends State<DraggableView>
                                           ? Icons.pause_rounded
                                           : Icons.play_arrow_rounded,
                                       color: Colors.black,
-                                      size: 44,
+                                      size: 42,
                                     ),
                                   ),
                                 ),
                                 _ActionButton(
+                                  icon: Icons.download_rounded,
+                                  size: 44,
+                                  onTap: () => _downloadCurrentTrack(track),
+                                ),
+                                _ActionButton(
                                   icon: Icons.skip_next_rounded,
-                                  size: 64,
+                                  size: 44,
                                   onTap: _player.next,
                                 ),
                               ],
@@ -358,17 +397,59 @@ class DraggableViewState extends State<DraggableView>
                       top: safeTop + 8,
                       left: 8,
                       child: IgnorePointer(
-                      ignoring: t < 0.5,
-                      child: Opacity(
-                        opacity: expandedOpacity,
-                        child: _ActionButton(
-                          icon: Icons.keyboard_arrow_down_rounded,
-                          size: 48,
-                          onTap: close,
+                        ignoring: t < 0.5,
+                        child: Opacity(
+                          opacity: expandedOpacity,
+                          child: _ActionButton(
+                            icon: Icons.keyboard_arrow_down_rounded,
+                            size: 48,
+                            onTap: close,
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  if (t >= 0.3)
+                    Positioned(
+                      top: safeTop + 16,
+                      left: 64,
+                      right: 64,
+                      child: IgnorePointer(
+                        ignoring: t < 0.5,
+                        child: Opacity(
+                          opacity: expandedOpacity,
+                          child: const Center(
+                            child: Text(
+                              'Сейчас играет',
+                              maxLines: 1,
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (t >= 0.3)
+                    Positioned(
+                      top: safeTop + 8,
+                      right: 8,
+                      child: IgnorePointer(
+                        ignoring: t < 0.5,
+                        child: Opacity(
+                          opacity: expandedOpacity,
+                          child: _ActionButton(
+                            icon: Icons.more_horiz_rounded,
+                            size: 48,
+                            onTap: () => showSaveTrackToPlaylistSheet(
+                              context,
+                              track,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
