@@ -159,7 +159,7 @@ void main() {
     expect(find.text('Afterlife'), findsOneWidget);
     expect(find.byType(CatalogCollectionScreen), findsOneWidget);
 
-    await tester.pageBack();
+    await tester.tap(find.byIcon(Icons.arrow_back_rounded).last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Альбомы'));
     await tester.pumpAndSettle();
@@ -282,7 +282,7 @@ void main() {
       (element) => (element.widget as IconButton).key != null,
     ), isTrue);
 
-    await tester.pageBack();
+    await tester.tap(find.byIcon(Icons.arrow_back_rounded).last);
     await tester.pumpAndSettle();
     expect(find.byType(PlaylistPage), findsNothing);
     expect(find.text('Подборки'), findsOneWidget);
