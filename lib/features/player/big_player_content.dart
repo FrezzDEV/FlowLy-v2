@@ -600,6 +600,13 @@ class _BigPlayerContentState extends State<BigPlayerContent>
     }
   }
 
+  void _seekBy(double delta) {
+    _t = (_t + delta).clamp(0.0, _durationSeconds).toDouble();
+    _shown = _t;
+    _shownPosition.value = _shown;
+    _player.setExternalProgress(_t / _durationSeconds);
+  }
+
   void _onPrevious() {
     if (_t > 3 || _history.isEmpty) {
       _t = 0;
@@ -654,46 +661,6 @@ class _BigPlayerContentState extends State<BigPlayerContent>
       fit: StackFit.expand,
       clipBehavior: Clip.none,
       children: [
-        Positioned(
-          top: MediaQuery.paddingOf(context).top + 8,
-          left: 8,
-          right: 8,
-          child: Row(
-            children: [
-              _PressScale(
-                label: 'Свернуть плеер',
-                width: 48,
-                height: 48,
-                scaleDown: .88,
-                ink: ink,
-                onTap: widget.onClose,
-                child: Icon(Icons.keyboard_arrow_down_rounded, size: 30, color: ink),
-              ),
-              Expanded(
-                child: Center(
-                  child: Text(
-                    'Сейчас играет',
-                    maxLines: 1,
-                    style: TextStyle(
-                      color: hint,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              _PressScale(
-                label: 'Сохранить в плейлист',
-                width: 48,
-                height: 48,
-                scaleDown: .88,
-                ink: ink,
-                onTap: widget.onMore,
-                child: Icon(Icons.more_horiz_rounded, size: 27, color: ink),
-              ),
-            ],
-          ),
-        ),
         Positioned.fill(
           child: Padding(
             padding: EdgeInsets.fromLTRB(
@@ -805,20 +772,20 @@ class _BigPlayerContentState extends State<BigPlayerContent>
                   left: 0,
                   right: 0,
                   bottom: 8,
-                  child: IgnorePointer(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        _CoverSeekMark(
-                          icon: Icons.skip_previous_rounded,
-                          label: '-10',
-                        ),
-                        _CoverSeekMark(
-                          icon: Icons.skip_next_rounded,
-                          label: '+10',
-                        ),
-                      ],
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _CoverSeekMark(
+                        icon: Icons.skip_previous_rounded,
+                        label: '-10',
+                        onTap: () => _seekBy(-10),
+                      ),
+                      _CoverSeekMark(
+                        icon: Icons.skip_next_rounded,
+                        label: '+10',
+                        onTap: () => _seekBy(10),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -878,7 +845,7 @@ class _BigPlayerContentState extends State<BigPlayerContent>
           ),
         ),
         Positioned(
-          left: width / 2 + 104 + 8,
+          left: width / 2 + 84 + gap + 8,
           top: 10,
           width: 44,
           height: 44,
@@ -1014,7 +981,7 @@ class _TrackImage extends StatelessWidget {
         fit: BoxFit.cover,
         gaplessPlayback: true,
         errorBuilder: (context, error, stackTrace) => Container(
-          color: track.playerTrack.color,
+          color: const Color(0xFF24272B),
           alignment: Alignment.center,
           child: Icon(
             track.playerTrack.icon,
@@ -1026,37 +993,51 @@ class _TrackImage extends StatelessWidget {
 }
 
 class _CoverSeekMark extends StatelessWidget {
-  const _CoverSeekMark({required this.icon, required this.label});
+  const _CoverSeekMark({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
   final IconData icon;
   final String label;
+  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: .4),
-                blurRadius: 8,
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: label == '+10' ? 'Перемотать вперёд на 10 секунд' : 'Перемотать назад на 10 секунд',
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: .4),
+                    blurRadius: 8,
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 19, color: Colors.white),
-              const SizedBox(width: 2),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  shadows: [Shadow(color: Color(0x66000000), blurRadius: 8)],
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, size: 19, color: Colors.white),
+                  const SizedBox(width: 2),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      shadows: [Shadow(color: Color(0x66000000), blurRadius: 8)],
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       );
