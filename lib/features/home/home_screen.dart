@@ -49,7 +49,6 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _header(BuildContext context) {
-    Offset? profileTapPosition;
     return Row(
       children: [
         Container(
@@ -85,21 +84,14 @@ class HomeScreen extends StatelessWidget {
         ),
         const Spacer(),
         Listener(
-          onPointerDown: (event) => profileTapPosition = event.position,
           child: IconButton(
             tooltip: 'Профиль',
             onPressed: () {
-              final origin = profileTapPosition ??
-                  Offset(
-                    MediaQuery.sizeOf(context).width - 32,
-                    MediaQuery.paddingOf(context).top + 32,
-                  );
               final backButtonKey = GlobalKey();
-              context.pushCircleReveal(
-                page: ProfileScreen(backButtonKey: backButtonKey),
-                tapPosition: origin,
-                backButtonKey: backButtonKey,
-                backgroundColor: const Color(0xFF08090B),
+              Navigator.of(context).push<void>(
+                MaterialPageRoute<void>(
+                  builder: (_) => ProfileScreen(backButtonKey: backButtonKey),
+                ),
               );
             },
             icon: const CircleAvatar(
