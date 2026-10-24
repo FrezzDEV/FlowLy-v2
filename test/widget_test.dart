@@ -6,6 +6,7 @@ import 'package:flowly/features/player/player_controller.dart';
 import 'package:flowly/features/player/draggable_player.dart';
 import 'package:flowly/features/library/playlist_detail_screen.dart';
 import 'package:flowly/features/library/catalog_collection_screen.dart';
+import 'package:flowly/features/library/library_screen.dart';
 
 void main() {
   SharedPreferences.setMockInitialValues({});
@@ -163,7 +164,10 @@ void main() {
     await tester.scrollUntilVisible(
       find.text('OutRun'),
       220,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: find.descendant(
+        of: find.byType(LibraryScreen),
+        matching: find.byType(Scrollable),
+      ).first,
     );
     await tester.pumpAndSettle();
     expect(find.text('OutRun'), findsOneWidget);
@@ -186,6 +190,11 @@ void main() {
     await tester.tap(find.text('Создать').last);
     await tester.pumpAndSettle();
 
+    // Creation from the large player should keep the picker open and reveal
+    // the new playlist row after scrolling to the bottom of the list.
+    expect(find.text('Сохранить в плейлист'), findsOneWidget);
+    expect(find.text('Создан из плеера'), findsOneWidget);
+
     final playlist = player.playlists.firstWhere(
       (item) => item.name == 'Создан из плеера',
     );
@@ -200,6 +209,8 @@ void main() {
     expect(find.byType(PlaylistDetailScreen), findsOneWidget);
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.byType(DraggableView), findsOneWidget);
+    expect(draggablePlayerKey.currentState?.isOpen, isFalse);
+    expect(find.byIcon(Icons.skip_next_rounded), findsOneWidget);
   });
 
   testWidgets('playlist picker stays open and toggles track membership', (tester) async {
