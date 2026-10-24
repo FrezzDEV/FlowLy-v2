@@ -160,6 +160,12 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Альбомы'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('OutRun'),
+      220,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     expect(find.text('OutRun'), findsOneWidget);
   });
 
@@ -198,28 +204,31 @@ void main() {
 
   testWidgets('playlist picker stays open and toggles track membership', (tester) async {
     final player = PlayerController.instance;
-    final playlist = await player.createPlaylist('Toggle menu test');
     await tester.pumpWidget(const FlowLyApp());
     await tester.tap(find.text('Midnight Flow').first);
     await tester.pumpAndSettle();
+    await player.removeTrackFromPlaylist(
+      PlayerController.favoritesPlaylistId,
+      player.currentTrack,
+    );
     await tester.tap(find.byIcon(Icons.more_horiz_rounded));
     await tester.pumpAndSettle();
 
     expect(find.text('Сохранить в плейлист'), findsOneWidget);
-    await tester.tap(find.text('Toggle menu test'));
+    await tester.tap(find.text('Избранное').last);
     await tester.pumpAndSettle();
     expect(find.text('Сохранить в плейлист'), findsOneWidget);
     expect(
-      player.playlistById(playlist.id)!.tracks,
+      player.playlistById(PlayerController.favoritesPlaylistId)!.tracks,
       contains(player.currentTrack),
     );
 
-    await tester.tap(find.text('Toggle menu test'));
+    await tester.tap(find.text('Избранное').last);
     await tester.pumpAndSettle();
     expect(find.text('Сохранить в плейлист'), findsOneWidget);
     expect(
-      player.playlistById(playlist.id)!.tracks,
-      isEmpty,
+      player.playlistById(PlayerController.favoritesPlaylistId)!.tracks,
+      isNot(contains(player.currentTrack)),
     );
     expect(find.byType(SnackBar), findsNothing);
   });
