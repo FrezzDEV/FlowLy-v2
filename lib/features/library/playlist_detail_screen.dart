@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../player/player_controller.dart';
+import '../player/draggable_player.dart';
 
 class PlaylistDetailScreen extends StatelessWidget {
   const PlaylistDetailScreen({super.key, required this.playlistId});
@@ -185,14 +186,8 @@ class PlaylistDetailScreen extends StatelessWidget {
                                         PlayerController.downloadsPlaylistId,
                                         playlist.tracks,
                                       );
-                                      if (added == 0 || !context.mounted) return;
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Добавлено в «Скачанные»: $added',
-                                          ),
-                                        ),
-                                      );
+                                      // No toast: the button state and downloads list
+                                      // already reflect the result.
                                     },
                               icon: const Icon(Icons.download_rounded, size: 18),
                               label: Text(
@@ -326,15 +321,30 @@ class PlaylistDetailScreen extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(color: Colors.white60),
                               ),
-                              trailing: Icon(
-                                isCurrent && controller.isPlaying
-                                    ? Icons.equalizer_rounded
-                                    : Icons.play_arrow_rounded,
-                                color: isCurrent
-                                    ? const Color(0xFFB6F36B)
-                                    : Colors.white70,
+                              trailing: IconButton(
+                                tooltip: isCurrent && controller.isPlaying
+                                    ? 'Пауза'
+                                    : 'Воспроизвести',
+                                icon: Icon(
+                                  isCurrent && controller.isPlaying
+                                      ? Icons.pause_rounded
+                                      : Icons.play_arrow_rounded,
+                                  color: isCurrent
+                                      ? const Color(0xFFB6F36B)
+                                      : Colors.white70,
+                                ),
+                                onPressed: () {
+                                  if (isCurrent) {
+                                    controller.togglePlay();
+                                  } else {
+                                    controller.playTrack(track);
+                                  }
+                                },
                               ),
-                              onTap: () => controller.playTrack(track),
+                              onTap: () {
+                                controller.playTrack(track);
+                                draggablePlayerKey.currentState?.open();
+                              },
                             ),
                           );
                         },
