@@ -214,7 +214,7 @@ class PlaylistDetailScreen extends StatelessWidget {
                           const Padding(
                             padding: EdgeInsets.only(top: 8),
                             child: Text(
-                              'Все треки будут добавлены в список «Загрузки».',
+                              'Все треки будут добавлены в список «Скачанные».',
                               style: TextStyle(
                                 color: Colors.white54,
                                 fontSize: 12,
