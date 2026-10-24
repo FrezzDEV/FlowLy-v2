@@ -243,16 +243,19 @@ class DraggableViewState extends State<DraggableView>
                       ignoring: t < 0.5,
                       child: Opacity(
                         opacity: expandedOpacity,
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            24,
-                            artTop + artSize + 32,
-                            24,
-                            16,
-                          ),
-                          child: BigPlayerContent(
-                            player: _player,
-                            active: t > 0.5,
+                        child: Offstage(
+                          offstage: t < 0.3,
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              24,
+                              artTop + artSize + 32,
+                              24,
+                              16,
+                            ),
+                            child: BigPlayerContent(
+                              player: _player,
+                              active: t > 0.5,
+                            ),
                           ),
                         ),
                       ),
