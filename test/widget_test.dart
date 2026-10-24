@@ -7,6 +7,8 @@ import 'package:flowly/features/player/draggable_player.dart';
 import 'package:flowly/features/library/playlist_detail_screen.dart';
 import 'package:flowly/features/library/catalog_collection_screen.dart';
 import 'package:flowly/features/library/library_screen.dart';
+import 'package:flowly/examples/circle_reveal_demo_page.dart';
+import 'package:flowly/examples/playlist_page.dart';
 
 void main() {
   SharedPreferences.setMockInitialValues({});
@@ -261,6 +263,29 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsOneWidget);
+  });
+
+  testWidgets('circular reveal demo opens the selected playlist and exits', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: CircleRevealDemoPage()));
+
+    expect(find.text('Neon Nights'), findsOneWidget);
+    expect(find.text('Ocean Memories'), findsOneWidget);
+    expect(find.byType(PlaylistPage), findsNothing);
+
+    await tester.tap(find.text('Ocean Memories'));
+    await tester.pump();
+    expect(find.byType(PlaylistPage), findsOneWidget);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Low Tide'), findsOneWidget);
+    expect(find.byType(IconButton).evaluate().any(
+      (element) => (element.widget as IconButton).key != null,
+    ), isTrue);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byType(PlaylistPage), findsNothing);
+    expect(find.text('Подборки'), findsOneWidget);
   });
 
   testWidgets('mini player opens and closes the full-screen player', (tester) async {
