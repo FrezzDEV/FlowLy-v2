@@ -16,7 +16,9 @@ class CatalogCollectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = PlayerController.instance;
-    return Scaffold(
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) => Scaffold(
       backgroundColor: const Color(0xFF08090B),
       appBar: AppBar(
         title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -42,7 +44,7 @@ class CatalogCollectionScreen extends StatelessWidget {
             ),
             child: Center(
               child: Icon(
-                title == tracks.firstOrNull?.artist
+                tracks.isNotEmpty && tracks.first.artist == title
                     ? Icons.person_rounded
                     : Icons.album_rounded,
                 size: 72,
@@ -96,6 +98,7 @@ class CatalogCollectionScreen extends StatelessWidget {
               );
             }),
         ],
+      ),
       ),
     );
   }
