@@ -121,7 +121,10 @@ class DraggableViewState extends State<DraggableView>
             lerpDouble(_navBarHeight + safeBottom + 4, 0, t)!;
         final radius = lerpDouble(_miniRadius, 0, t)!;
 
-        final playerBackground = Theme.of(context).colorScheme.surface;
+        final playerBackground = Color.alphaBlend(
+          track.color.withValues(alpha: .35),
+          const Color(0xFF191919),
+        );
         final miniOpacity = 1 - _remap(t, 0, 0.3);
         final expandedOpacity = _remap(t, 0.5, 1);
 
@@ -153,9 +156,13 @@ class DraggableViewState extends State<DraggableView>
                     left: artLeft,
                     width: artSize,
                     height: artSize,
-                    child: Opacity(
-                      opacity: 1 - expandedOpacity,
-                      child: AlbumCover(track: track, size: artSize),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        AlbumCover(track: track, size: artSize),
+                        // DEMO ONLY: remove this tint line at release when final cover art is ready.
+                        ColoredBox(color: track.color.withValues(alpha: .12)),
+                      ],
                     ),
                   ),
                   Positioned(
@@ -231,12 +238,18 @@ class DraggableViewState extends State<DraggableView>
                       ),
                     ),
                   ),
-                  if (t >= 0.3)
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        ignoring: t < 0.5,
-                        child: Opacity(
-                          opacity: expandedOpacity,
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      ignoring: t < 0.5,
+                      child: Opacity(
+                        opacity: expandedOpacity,
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(
+                            24,
+                            artTop + artSize + 32,
+                            24,
+                            16,
+                          ),
                           child: BigPlayerContent(
                             player: _player,
                             active: t > 0.5 || _player.isPlaying,
@@ -244,47 +257,61 @@ class DraggableViewState extends State<DraggableView>
                         ),
                       ),
                     ),
+                  ),
                   if (t >= 0.3)
                     Positioned(
                       top: safeTop + 8,
                       left: 8,
-                      right: 8,
-                      height: 48,
                       child: IgnorePointer(
                         ignoring: t < 0.5,
                         child: Opacity(
                           opacity: expandedOpacity,
-                          child: Row(
-                            children: [
-                              _ActionButton(
-                                icon: Icons.keyboard_arrow_down_rounded,
-                                size: 48,
-                                onTap: close,
+                          child: _ActionButton(
+                            icon: Icons.keyboard_arrow_down_rounded,
+                            size: 48,
+                            onTap: close,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (t >= 0.3)
+                    Positioned(
+                      top: safeTop + 16,
+                      left: 64,
+                      right: 64,
+                      child: IgnorePointer(
+                        ignoring: t < 0.5,
+                        child: Opacity(
+                          opacity: expandedOpacity,
+                          child: const Center(
+                            child: Text(
+                              'Сейчас играет',
+                              maxLines: 1,
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
                               ),
-                              Expanded(
-                                child: Center(
-                                  child: Text(
-                                    'Сейчас играет',
-                                    maxLines: 1,
-                                    style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              _ActionButton(
-                                icon: Icons.more_horiz_rounded,
-                                size: 48,
-                                onTap: () => showSaveTrackToPlaylistSheet(
-                                  context,
-                                  track,
-                                ),
-                              ),
-                            ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (t >= 0.3)
+                    Positioned(
+                      top: safeTop + 8,
+                      right: 8,
+                      child: IgnorePointer(
+                        ignoring: t < 0.5,
+                        child: Opacity(
+                          opacity: expandedOpacity,
+                          child: _ActionButton(
+                            icon: Icons.more_horiz_rounded,
+                            size: 48,
+                            onTap: () => showSaveTrackToPlaylistSheet(
+                              context,
+                              track,
+                            ),
                           ),
                         ),
                       ),
