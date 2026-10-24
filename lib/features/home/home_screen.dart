@@ -20,7 +20,7 @@ class HomeScreen extends StatelessWidget {
         slivers: [
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 22),
-            sliver: SliverToBoxAdapter(child: _header(context)),
+            sliver: SliverToBoxAdapter(child: _header()),
           ),
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -47,7 +47,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _header(BuildContext context) {
+  Widget _header() {
     return Row(
       children: [
         Container(
