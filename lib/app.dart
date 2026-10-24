@@ -134,7 +134,7 @@ class _AppShellState extends State<AppShell> with SingleTickerProviderStateMixin
       duration: _playerTransitionDuration,
       curve: Curves.easeOutCubic,
     );
-    if (mounted) {
+    if (mounted && !_isDraggingPlayer && _playerAnimation.value <= 0.001) {
       setState(() => _showPlayer = false);
     }
   }
