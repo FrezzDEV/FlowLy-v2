@@ -134,19 +134,12 @@ Future<void> showSaveTrackToPlaylistSheet(
                   initialTrack: track,
                 );
                 if (playlist == null || !sheetContext.mounted) return;
-                Navigator.of(sheetContext).pop();
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Трек добавлен в «${playlist.name}»'),
-                  ),
-                );
+                // Controller notifies listeners; the picker stays open and
+                // immediately shows the new playlist with the current track.
               },
             ),
             const Divider(color: Colors.white12),
-            for (final playlist in controller.playlists.where(
-              (item) => item.id != PlayerController.downloadsPlaylistId,
-            ))
+            for (final playlist in controller.playlists)
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: Container(
@@ -177,21 +170,17 @@ Future<void> showSaveTrackToPlaylistSheet(
                   color: const Color(0xFFB6F36B),
                 ),
                 onTap: () async {
-                  Navigator.of(sheetContext).pop();
-                  final added = await controller.addTrackToPlaylist(
-                    playlist.id,
-                    track,
+                  final alreadyInPlaylist = playlist.tracks.any(
+                    (item) =>
+                        item.title == track.title &&
+                        item.artist == track.artist,
                   );
-                  if (!context.mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        added
-                            ? 'Добавлено в «${playlist.name}»'
-                            : 'Этот трек уже есть в «${playlist.name}»',
-                      ),
-                    ),
-                  );
+                  if (alreadyInPlaylist) {
+                    await controller.removeTrackFromPlaylist(playlist.id, track);
+                  } else {
+                    await controller.addTrackToPlaylist(playlist.id, track);
+                  }
+                  // Keep the picker open so the same row can toggle membership.
                 },
               ),
           ],
