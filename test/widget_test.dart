@@ -5,6 +5,7 @@ import 'package:flowly/app.dart';
 import 'package:flowly/features/player/player_controller.dart';
 import 'package:flowly/features/player/draggable_player.dart';
 import 'package:flowly/features/library/playlist_detail_screen.dart';
+import 'package:flowly/features/library/catalog_collection_screen.dart';
 
 void main() {
   SharedPreferences.setMockInitialValues({});
@@ -140,6 +141,26 @@ void main() {
     );
     expect(button.onPressed, isNull);
     expect(find.byType(SnackBar), findsNothing);
+  });
+
+  testWidgets('library categories open artists and albums', (tester) async {
+    await tester.pumpWidget(const FlowLyApp());
+    await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.byType(CustomPaint)));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Исполнители'));
+    await tester.pumpAndSettle();
+    expect(find.text('Ed Sheeran'), findsOneWidget);
+    await tester.tap(find.text('Ed Sheeran'));
+    await tester.pumpAndSettle();
+    expect(find.text('Afterlife'), findsOneWidget);
+    expect(find.byType(CatalogCollectionScreen), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Альбомы'));
+    await tester.pumpAndSettle();
+    expect(find.text('OutRun'), findsOneWidget);
   });
 
   testWidgets('creating a playlist from the full player menu saves the track', (tester) async {
