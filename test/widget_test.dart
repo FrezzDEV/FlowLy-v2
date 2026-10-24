@@ -196,6 +196,48 @@ void main() {
     expect(find.byType(DraggableView), findsOneWidget);
   });
 
+  testWidgets('playlist picker stays open and toggles track membership', (tester) async {
+    final player = PlayerController.instance;
+    final playlist = await player.createPlaylist(
+      'Toggle menu test',
+      initialTrack: player.currentTrack,
+    );
+    await tester.pumpWidget(const FlowLyApp());
+    await tester.tap(find.text('Midnight Flow').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.more_horiz_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Сохранить в плейлист'), findsOneWidget);
+    await tester.tap(find.text('Toggle menu test'));
+    await tester.pumpAndSettle();
+    expect(find.text('Сохранить в плейлист'), findsOneWidget);
+    expect(
+      player.playlistById(playlist.id)!.tracks,
+      isEmpty,
+    );
+
+    await tester.tap(find.text('Toggle menu test'));
+    await tester.pumpAndSettle();
+    expect(find.text('Сохранить в плейлист'), findsOneWidget);
+    expect(
+      player.playlistById(playlist.id)!.tracks,
+      contains(player.currentTrack),
+    );
+    expect(find.byType(SnackBar), findsNothing);
+  });
+
+  testWidgets('tapping any part of the mini player opens the full player', (tester) async {
+    await tester.pumpWidget(const FlowLyApp());
+    await tester.pumpAndSettle();
+
+    // Tap the album art edge rather than the title or transport buttons.
+    await tester.tapAt(const Offset(20, 760));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsOneWidget);
+  });
+
   testWidgets('mini player opens and closes the full-screen player', (tester) async {
     await tester.pumpWidget(const FlowLyApp());
 
