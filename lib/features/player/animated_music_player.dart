@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+import 'dart:math' as math;\nimport 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
@@ -9,20 +9,14 @@ const _playerSurface = Color(0xFF282830);
 const _playerMuted = Color(0xFF9A9AA5);
 const _playerLime = Color(0xFFB6F36B);
 
-/// Persistent compact player with an upward-drag gesture.
+/// Compact player based on the original FlowLy v1.0.15 PlayWidget.
 class MiniPlayer extends StatelessWidget {
   const MiniPlayer({
     super.key,
     required this.onOpen,
-    required this.onDragStart,
-    required this.onDragUpdate,
-    required this.onDragEnd,
   });
 
   final VoidCallback onOpen;
-  final VoidCallback onDragStart;
-  final ValueChanged<double> onDragUpdate;
-  final ValueChanged<double> onDragEnd;
 
   @override
   Widget build(BuildContext context) {
@@ -35,71 +29,92 @@ class MiniPlayer extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
           child: GestureDetector(
             onTap: onOpen,
-            onVerticalDragStart: (_) => onDragStart(),
-            onVerticalDragUpdate: (details) => onDragUpdate(details.delta.dy),
-            onVerticalDragEnd: (details) => onDragEnd(details.primaryVelocity ?? 0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                height: 72,
-                color: _playerSurface,
+            child: Container(
+              height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 3),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.black12, width: 0.5),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: kElevationToShadow[9],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Row(
-                      children: [
-                        const SizedBox(width: 10),
-                        AlbumCover(track: track, size: 52),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                track.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                track.artist,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: _playerMuted,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            track.color.withValues(alpha: .88),
+                            const Color(0xFF191919),
+                          ],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
                         ),
-                        IconButton(
-                          tooltip: player.isPlaying ? 'Пауза' : 'Воспроизвести',
-                          onPressed: player.togglePlay,
-                          icon: Icon(
-                            player.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                            color: Colors.white,
-                            size: 31,
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                      ],
+                      ),
                     ),
                     Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      height: 2,
-                      child: LinearProgressIndicator(
-                        value: player.progress,
-                        backgroundColor: Colors.white12,
-                        valueColor: const AlwaysStoppedAnimation<Color>(_playerLime),
+                      right: -16,
+                      top: -36,
+                      child: Icon(
+                        track.icon,
+                        size: 112,
+                        color: Colors.white.withValues(alpha: .15),
+                      ),
+                    ),
+                    BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+                      child: ColoredBox(
+                        color: Colors.black.withValues(alpha: .32),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 4,
+                        horizontal: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(3),
+                            child: AlbumCover(track: track, size: 40),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  track.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.bodyLarge,
+                                ),
+                                Text(
+                                  track.artist,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            padding: EdgeInsets.zero,
+                            onPressed: player.togglePlay,
+                            tooltip: player.isPlaying ? 'Пауза' : 'Воспроизвести',
+                            icon: Icon(
+                              player.isPlaying ? Icons.pause : Icons.play_arrow,
+                              color: Colors.white,
+                              size: 36,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
