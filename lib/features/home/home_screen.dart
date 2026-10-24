@@ -84,9 +84,8 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        GestureDetector(
-          onTapDown: (details) =>
-              profileTapPosition = details.globalPosition,
+        Listener(
+          onPointerDown: (event) => profileTapPosition = event.position,
           child: IconButton(
             tooltip: 'Профиль',
             onPressed: () {
