@@ -131,15 +131,27 @@ Future<void> showSaveTrackToPlaylistSheet(
               ),
               title: const Text('Создать новый плейлист'),
               onTap: () async {
-                // Keep the playlist sheet mounted under the dialog. Popping the
-                // sheet first could make the dialog close on the same Navigator.
+                // Keep the picker mounted below the dialog and create the new
+                // playlist with the current track before updating this sheet.
                 final playlist = await showCreatePlaylistDialog(
-                  context,
+                  sheetContext,
                   initialTrack: track,
                 );
                 if (playlist == null || !sheetContext.mounted) return;
-                // Controller notifies listeners; the picker stays open and
-                // immediately shows the new playlist with the current track.
+
+                // The newly created playlist is appended at the end. Scroll to
+                // it so the creation is visibly confirmed instead of looking
+                // like the action did nothing when the list is long.
+                await WidgetsBinding.instance.endOfFrame;
+                if (!scrollController.hasClients) return;
+                final position = scrollController.position;
+                if (position.maxScrollExtent > position.pixels) {
+                  await scrollController.animateTo(
+                    position.maxScrollExtent,
+                    duration: const Duration(milliseconds: 240),
+                    curve: Curves.easeOutCubic,
+                  );
+                }
               },
             ),
             const Divider(color: Colors.white12),
