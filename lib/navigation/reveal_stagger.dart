@@ -152,14 +152,21 @@ class RevealHeader extends StatelessWidget {
         curve: Curves.easeOut,
       ),
     );
-    final slide = Tween<Offset>(
-      begin: const Offset(0, 10 / 44),
-      end: Offset.zero,
-    ).animate(headerAnimation);
-
-    return FadeTransition(
-      opacity: headerAnimation,
-      child: SlideTransition(position: slide, child: child),
+    return AnimatedBuilder(
+      animation: headerAnimation,
+      child: child,
+      builder: (context, child) {
+        final progress =
+            headerAnimation.value.clamp(0.0, 1.0).toDouble();
+        return Opacity(
+          opacity: progress,
+          child: Transform.translate(
+            // Это смещение в физических логических пикселях, а не доля высоты.
+            offset: Offset(0, 10 * (1 - progress)),
+            child: child,
+          ),
+        );
+      },
     );
   }
 }
