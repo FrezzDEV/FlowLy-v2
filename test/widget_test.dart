@@ -232,7 +232,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap the album art edge rather than the title or transport buttons.
-    await tester.tapAt(const Offset(20, 760));
+    await tester.tapAt(const Offset(20, 500));
     await tester.pumpAndSettle();
 
     expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsOneWidget);
