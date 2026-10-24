@@ -10,6 +10,12 @@ import 'package:flowly/features/library/library_screen.dart';
 import 'package:flowly/examples/circle_reveal_demo_page.dart';
 import 'package:flowly/examples/playlist_page.dart';
 
+Future<void> pumpPlayerUi(WidgetTester tester) async {
+  // The expanded player deliberately owns a continuously ticking playback clock,
+  // so pumpAndSettle would wait forever while a track is playing.
+  await tester.pump(const Duration(milliseconds: 350));
+}
+
 void main() {
   SharedPreferences.setMockInitialValues({});
   testWidgets('FlowLy opens on home and navigation changes tabs', (tester) async {
@@ -180,17 +186,17 @@ void main() {
     await tester.pumpWidget(const FlowLyApp());
 
     await tester.tap(find.text('Midnight Flow').first);
-    await tester.pumpAndSettle();
+    await pumpPlayerUi(tester);
     await tester.tap(find.byIcon(Icons.more_horiz_rounded));
-    await tester.pumpAndSettle();
+    await pumpPlayerUi(tester);
 
     expect(find.text('Создать новый плейлист'), findsOneWidget);
     await tester.tap(find.text('Создать новый плейлист'));
-    await tester.pumpAndSettle();
+    await pumpPlayerUi(tester);
 
     await tester.enterText(find.byType(TextField).last, 'Создан из плеера');
     await tester.tap(find.text('Создать').last);
-    await tester.pumpAndSettle();
+    await pumpPlayerUi(tester);
 
     // Creation from the large player should keep the picker open and reveal
     // the new playlist row after scrolling to the bottom of the list.
@@ -219,13 +225,13 @@ void main() {
     final player = PlayerController.instance;
     await tester.pumpWidget(const FlowLyApp());
     await tester.tap(find.text('Midnight Flow').first);
-    await tester.pumpAndSettle();
+    await pumpPlayerUi(tester);
     await player.removeTrackFromPlaylist(
       PlayerController.favoritesPlaylistId,
       player.currentTrack,
     );
     await tester.tap(find.byIcon(Icons.more_horiz_rounded));
-    await tester.pumpAndSettle();
+    await pumpPlayerUi(tester);
 
     expect(find.text('Сохранить в плейлист'), findsOneWidget);
     // Downloads remains available in the library, but not as a save target.
@@ -237,7 +243,7 @@ void main() {
       findsNothing,
     );
     await tester.tap(find.text('Избранное').last);
-    await tester.pumpAndSettle();
+    await pumpPlayerUi(tester);
     expect(find.text('Сохранить в плейлист'), findsOneWidget);
     expect(
       player.playlistById(PlayerController.favoritesPlaylistId)!.tracks,
@@ -245,7 +251,7 @@ void main() {
     );
 
     await tester.tap(find.text('Избранное').last);
-    await tester.pumpAndSettle();
+    await pumpPlayerUi(tester);
     expect(find.text('Сохранить в плейлист'), findsOneWidget);
     expect(
       player.playlistById(PlayerController.favoritesPlaylistId)!.tracks,
@@ -260,7 +266,7 @@ void main() {
 
     // Tap the album art edge rather than the title or transport buttons.
     await tester.tapAt(const Offset(20, 500));
-    await tester.pumpAndSettle();
+    await pumpPlayerUi(tester);
 
     expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsOneWidget);
   });
@@ -292,11 +298,11 @@ void main() {
 
     expect(find.text('Midnight Flow'), findsWidgets);
     await tester.tap(find.text('Midnight Flow').first);
-    await tester.pumpAndSettle();
+    await pumpPlayerUi(tester);
 
     expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsOneWidget);
     await tester.tap(find.byIcon(Icons.keyboard_arrow_down_rounded));
-    await tester.pumpAndSettle();
+    await pumpPlayerUi(tester);
 
     expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsNothing);
     expect(find.text('Midnight Flow'), findsWidgets);
