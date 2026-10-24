@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../player/player_controller.dart';
+import '../library/playlist_detail_screen.dart';
 
 const _muted = Color(0xFFA5A6AC);
 const _lime = Color(0xFFB6F36B);
@@ -72,7 +73,7 @@ class HomeScreen extends StatelessWidget {
   Widget _quickGrid() {
     final items = [
       ('Избранное', Icons.favorite_rounded, const Color(0xFF6D4B9D)),
-      ('The Night We Met', Icons.music_note_rounded, const Color(0xFF4D555B)),
+      ('Скачанные', Icons.download_rounded, const Color(0xFF32664E)),
       ('Afterlife', Icons.waves_rounded, const Color(0xFF24617B)),
       ('Chill mix', Icons.bolt_rounded, const Color(0xFF713B36)),
       ('Night Drive', Icons.directions_car_rounded, const Color(0xFF173C65)),
@@ -109,7 +110,21 @@ class HomeScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   clipBehavior: Clip.antiAlias,
                   child: InkWell(
-                    onTap: () => PlayerController.instance.playTrack(playTracks[i]),
+                    onTap: () {
+                      if (i == 0 || i == 1) {
+                        final playlistId = i == 0
+                            ? PlayerController.favoritesPlaylistId
+                            : PlayerController.downloadsPlaylistId;
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                PlaylistDetailScreen(playlistId: playlistId),
+                          ),
+                        );
+                      } else {
+                        PlayerController.instance.playTrack(playTracks[i]);
+                      }
+                    },
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
