@@ -134,7 +134,7 @@ Future<void> showSaveTrackToPlaylistSheet(
                 // Keep the picker mounted below the dialog and create the new
                 // playlist with the current track before updating this sheet.
                 final playlist = await showCreatePlaylistDialog(
-                  sheetContext,
+                  context,
                   initialTrack: track,
                 );
                 if (playlist == null || !sheetContext.mounted) return;
