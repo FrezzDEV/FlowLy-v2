@@ -13,6 +13,7 @@ class AlbumCover extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         width: size,
         height: size,
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(size * 0.08),
           gradient: LinearGradient(
