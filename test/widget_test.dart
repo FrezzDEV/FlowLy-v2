@@ -28,8 +28,18 @@ void main() {
       matching: find.byIcon(Icons.search_rounded),
     ));
     await tester.pumpAndSettle();
-    expect(find.text('Популярные жанры'), findsOneWidget);
+    expect(find.text('Популярные жанры'), findsNothing);
+    expect(find.text('Найди музыку'), findsOneWidget);
   });
+  testWidgets('home favorites quick tile opens the playlist screen', (tester) async {
+    await tester.pumpWidget(const FlowLyApp());
+    await tester.tap(find.text('Избранное').first);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PlaylistDetailScreen), findsOneWidget);
+    expect(find.text('Твои любимые треки'), findsOneWidget);
+  });
+
   testWidgets('playback timer advances and pause freezes it', (tester) async {
     final player = PlayerController.instance;
     if (player.isPlaying) player.togglePlay();
@@ -98,6 +108,37 @@ void main() {
     )!;
     expect(downloads.tracks, contains(PlayerController.catalog.first));
     expect(downloads.tracks, contains(PlayerController.catalog[1]));
+  });
+
+  testWidgets('download all is disabled when every track is already downloaded', (tester) async {
+    final player = PlayerController.instance;
+    await player.addTracksToPlaylist(
+      PlayerController.downloadsPlaylistId,
+      [PlayerController.catalog.first, PlayerController.catalog[1]],
+    );
+    final playlist = await player.createPlaylist(
+      'Уже скачанный набор',
+      initialTrack: PlayerController.catalog.first,
+    );
+    await player.addTrackToPlaylist(
+      playlist.id,
+      PlayerController.catalog[1],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(home: PlaylistDetailScreen(playlistId: playlist.id)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Скачано'), findsOneWidget);
+    final button = tester.widget<FilledButton>(
+      find.ancestor(
+        of: find.text('Скачано'),
+        matching: find.byType(FilledButton),
+      ).first,
+    );
+    expect(button.onPressed, isNull);
+    expect(find.byType(SnackBar), findsNothing);
   });
 
   testWidgets('mini player opens and closes the full-screen player', (tester) async {
