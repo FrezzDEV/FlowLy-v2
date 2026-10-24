@@ -127,6 +127,7 @@ class PlayerController extends ChangeNotifier {
   double _progress = 0;
   Timer? _playbackTimer;
   bool _initialized = false;
+  bool _externalPlaybackClock = false;
   List<MusicPlaylist> _playlists = [
     MusicPlaylist(id: favoritesPlaylistId, name: 'Избранное', isSystem: true),
     MusicPlaylist(id: downloadsPlaylistId, name: 'Скачанные', isSystem: true),
@@ -140,6 +141,22 @@ class PlayerController extends ChangeNotifier {
   double get progress => _progress;
   List<MusicPlaylist> get playlists =>
       List<MusicPlaylist>.unmodifiable(_playlists);
+
+  void setExternalPlaybackClock(bool enabled) {
+    if (_externalPlaybackClock == enabled) return;
+    _externalPlaybackClock = enabled;
+    if (enabled) {
+      _playbackTimer?.cancel();
+      _playbackTimer = null;
+    } else if (_isPlaying) {
+      _startPlaybackTimer();
+    }
+  }
+
+  void setExternalProgress(double value) {
+    _progress = value.clamp(0.0, 1.0).toDouble();
+    notifyListeners();
+  }
 
   MusicPlaylist? playlistById(String id) {
     for (final playlist in _playlists) {
@@ -358,7 +375,7 @@ class PlayerController extends ChangeNotifier {
 
   void _startPlaybackTimer() {
     _playbackTimer?.cancel();
-    if (!_isPlaying || _currentTrack.duration.inSeconds <= 0) {
+    if (_externalPlaybackClock || !_isPlaying || _currentTrack.duration.inSeconds <= 0) {
       _playbackTimer = null;
       return;
     }

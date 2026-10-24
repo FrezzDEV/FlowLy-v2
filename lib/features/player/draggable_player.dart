@@ -1,9 +1,8 @@
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
-import 'package:share_plus/share_plus.dart';
-
 import 'animated_music_player.dart' show AlbumCover;
+import 'big_player_content.dart';
 import 'player_controller.dart';
 import '../library/playlist_sheets.dart';
 
@@ -93,26 +92,6 @@ class DraggableViewState extends State<DraggableView>
   double _remap(double value, double start, double end) =>
       ((value - start) / (end - start)).clamp(0.0, 1.0).toDouble();
 
-  static String _format(Duration value) =>
-      '${value.inMinutes}:${(value.inSeconds % 60).toString().padLeft(2, '0')}';
-
-  Future<void> _shareCurrentTrack(PlayerTrack track) async {
-    await SharePlus.instance.share(
-      ShareParams(
-        title: 'FlowLy',
-        text: '${track.title} — ${track.artist}\nСлушаю в FlowLy',
-      ),
-    );
-  }
-
-  Future<void> _downloadCurrentTrack(PlayerTrack track) async {
-    await _player.addTrackToPlaylist(
-      PlayerController.downloadsPlaylistId,
-      track,
-    );
-    // Adding an existing track is a no-op; no toast is shown.
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -142,10 +121,7 @@ class DraggableViewState extends State<DraggableView>
             lerpDouble(_navBarHeight + safeBottom + 4, 0, t)!;
         final radius = lerpDouble(_miniRadius, 0, t)!;
 
-        final playerBackground = Color.alphaBlend(
-          track.color.withValues(alpha: .35),
-          const Color(0xFF191919),
-        );
+        final playerBackground = Theme.of(context).colorScheme.surface;
         final miniOpacity = 1 - _remap(t, 0, 0.3);
         final expandedOpacity = _remap(t, 0.5, 1);
 
@@ -177,7 +153,10 @@ class DraggableViewState extends State<DraggableView>
                     left: artLeft,
                     width: artSize,
                     height: artSize,
-                    child: AlbumCover(track: track, size: artSize),
+                    child: Opacity(
+                      opacity: 1 - expandedOpacity,
+                      child: AlbumCover(track: track, size: artSize),
+                    ),
                   ),
                   Positioned(
                     left: 56,
@@ -252,196 +231,17 @@ class DraggableViewState extends State<DraggableView>
                       ),
                     ),
                   ),
-                  if (t >= 0.3 && artTop + artSize + 32 <= cardHeight - 16)
-                    Positioned(
-                      top: artTop + artSize + 32,
-                      left: 24,
-                      right: 24,
-                      bottom: 16,
-                    child: IgnorePointer(
-                      ignoring: t < 0.5,
-                      child: Opacity(
-                        opacity: expandedOpacity,
-                        child: SingleChildScrollView(
-                          child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        track.title,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        track.artist,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                _ActionButton(
-                                  icon: _player.isFavorite
-                                      ? Icons.favorite_rounded
-                                      : Icons.favorite_border_rounded,
-                                  onTap: _player.toggleFavorite,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 28),
-                            Material(
-                              color: Colors.transparent,
-                              child: SliderTheme(
-                                data: SliderTheme.of(context).copyWith(
-                                  activeTrackColor: Colors.white,
-                                  inactiveTrackColor: Colors.white24,
-                                  thumbColor: Colors.white,
-                                  overlayColor: Colors.transparent,
-                                  trackHeight: 4,
-                                ),
-                                child: Slider(
-                                  value: _player.progress,
-                                  onChanged: _player.seek,
-                                ),
-                              ),
-                            ),
-                            Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  _format(_player.position),
-                                  style: const TextStyle(
-                                    color: Colors.white60,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                Text(
-                                  _format(track.duration),
-                                  style: const TextStyle(
-                                    color: Colors.white60,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 28),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                _ActionButton(
-                                  icon: Icons.share_rounded,
-                                  size: 44,
-                                  onTap: () => _shareCurrentTrack(track),
-                                ),
-                                _ActionButton(
-                                  icon: Icons.skip_previous_rounded,
-                                  size: 44,
-                                  onTap: _player.previous,
-                                ),
-                                GestureDetector(
-                                  onTap: _player.togglePlay,
-                                  child: Container(
-                                    width: 68,
-                                    height: 68,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      _player.isPlaying
-                                          ? Icons.pause_rounded
-                                          : Icons.play_arrow_rounded,
-                                      color: Colors.black,
-                                      size: 42,
-                                    ),
-                                  ),
-                                ),
-                                _ActionButton(
-                                  icon: Icons.skip_next_rounded,
-                                  size: 44,
-                                  onTap: _player.next,
-                                ),
-                                _ActionButton(
-                                  icon: Icons.download_rounded,
-                                  size: 44,
-                                  onTap: () => _downloadCurrentTrack(track),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        ),
-                      ),
-                    ),
-                  ),
                   if (t >= 0.3)
-                    Positioned(
-                      top: safeTop + 8,
-                      left: 8,
+                    Positioned.fill(
                       child: IgnorePointer(
                         ignoring: t < 0.5,
                         child: Opacity(
                           opacity: expandedOpacity,
-                          child: _ActionButton(
-                            icon: Icons.keyboard_arrow_down_rounded,
-                            size: 48,
-                            onTap: close,
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (t >= 0.3)
-                    Positioned(
-                      top: safeTop + 16,
-                      left: 64,
-                      right: 64,
-                      child: IgnorePointer(
-                        ignoring: t < 0.5,
-                        child: Opacity(
-                          opacity: expandedOpacity,
-                          child: const Center(
-                            child: Text(
-                              'Сейчас играет',
-                              maxLines: 1,
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (t >= 0.3)
-                    Positioned(
-                      top: safeTop + 8,
-                      right: 8,
-                      child: IgnorePointer(
-                        ignoring: t < 0.5,
-                        child: Opacity(
-                          opacity: expandedOpacity,
-                          child: _ActionButton(
-                            icon: Icons.more_horiz_rounded,
-                            size: 48,
-                            onTap: () => showSaveTrackToPlaylistSheet(
+                          child: BigPlayerContent(
+                            player: _player,
+                            active: t > 0.5 || _player.isPlaying,
+                            onClose: close,
+                            onMore: () => showSaveTrackToPlaylistSheet(
                               context,
                               track,
                             ),

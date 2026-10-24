@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../navigation/reveal_stagger.dart';
-
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key, this.backButtonKey});
 
@@ -40,13 +38,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Row(
           children: [
             if (widget.backButtonKey != null)
-              RevealHeader(
-                child: IconButton(
-                  key: widget.backButtonKey,
-                  tooltip: 'Назад',
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.arrow_back_rounded),
-                ),
+              IconButton(
+                key: widget.backButtonKey,
+                tooltip: 'Назад',
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.arrow_back_rounded),
               )
             else
               const SizedBox(width: 48, height: 48),
@@ -59,22 +55,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        const RevealHeader(
-          child: Center(
-            child: CircleAvatar(
-              radius: 42,
-              backgroundColor: Color(0xFF24272B),
-              child: Icon(Icons.person_rounded, size: 44),
-            ),
+        const Center(
+          child: CircleAvatar(
+            radius: 42,
+            backgroundColor: Color(0xFF24272B),
+            child: Icon(Icons.person_rounded, size: 44),
           ),
         ),
         const SizedBox(height: 12),
-        const RevealHeader(
-          child: Center(
-            child: Text(
-              'Слушатель FlowLy',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-            ),
+        const Center(
+          child: Text(
+            'Слушатель FlowLy',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
           ),
         ),
         const Center(
