@@ -46,7 +46,7 @@ class DraggableViewState extends State<DraggableView>
     _progress = AnimationController(vsync: this, value: 0);
     _coverReveal = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1100),
+      duration: const Duration(milliseconds: 1500),
     )..addStatusListener(_onCoverRevealStatus);
     _player.addListener(_onPlayerTrackChanged);
   }
@@ -83,7 +83,7 @@ class DraggableViewState extends State<DraggableView>
     _incomingTrack = next;
     _coverReveal.duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
-        : const Duration(milliseconds: 1100);
+        : const Duration(milliseconds: 1500);
     if (mounted) setState(() {});
     _coverReveal.forward(from: 0);
   }
@@ -216,6 +216,7 @@ class DraggableViewState extends State<DraggableView>
                     width: artSize,
                     height: artSize,
                     child: ClipRRect(
+                      clipBehavior: Clip.antiAliasWithSaveLayer,
                       borderRadius: BorderRadius.circular(artSize * .08),
                       child: AnimatedBuilder(
                         animation: _coverReveal,
@@ -224,7 +225,10 @@ class DraggableViewState extends State<DraggableView>
                           children: [
                             _demoTintedCover(_coverTrack, artSize),
                             if (_incomingTrack != null)
-                              ClipPath(
+                              ClipRRect(
+                                clipBehavior: Clip.antiAliasWithSaveLayer,
+                                borderRadius: BorderRadius.circular(artSize * .08),
+                                child: ClipPath(
                                 clipper: _TrackCircleRevealClipper(
                                   t: Curves.easeInOutCubic.transform(
                                     _coverReveal.value,
@@ -234,6 +238,7 @@ class DraggableViewState extends State<DraggableView>
                                 child: _demoTintedCover(
                                   _incomingTrack!,
                                   artSize,
+                                ),
                                 ),
                               ),
                           ],
@@ -482,16 +487,16 @@ class _TrackCircleRevealClipper extends CustomClipper<Path> {
 
   @override
   Path getClip(Size size) {
-    // Start at a bottom corner so the reveal is visible from its first frames.
+    // Start clearly inside the cover, not on its clipped corner.
     final center = Offset(
-      forward ? size.width : 0,
-      size.height,
+      size.width * (forward ? .82 : .18),
+      size.height * .82,
     );
     return Path()
       ..addOval(
         Rect.fromCircle(
           center: center,
-          radius: size.width * 1.45 * t,
+          radius: size.width * 1.65 * t,
         ),
       );
   }
