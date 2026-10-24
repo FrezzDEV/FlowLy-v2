@@ -36,11 +36,14 @@ class _RevealStaggerState extends State<RevealStagger>
 
   Animation<double>? _routeAnimation;
   bool _hasStarted = false;
+  bool _reduceMotion = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
+    _reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     final nextAnimation = ModalRoute.of(context)?.animation;
     if (nextAnimation != _routeAnimation) {
       _routeAnimation?.removeStatusListener(_handleRouteStatus);
@@ -48,7 +51,7 @@ class _RevealStaggerState extends State<RevealStagger>
       _routeAnimation?.addStatusListener(_handleRouteStatus);
     }
 
-    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+    if (_reduceMotion) {
       _timelineController.value = 1;
       _hasStarted = true;
     } else if (nextAnimation == null ||
@@ -70,8 +73,7 @@ class _RevealStaggerState extends State<RevealStagger>
   }
 
   void _startTimeline() {
-    if (_hasStarted ||
-        (MediaQuery.maybeOf(context)?.disableAnimations ?? false)) {
+    if (_hasStarted || _reduceMotion || !mounted) {
       return;
     }
     _hasStarted = true;
@@ -87,7 +89,7 @@ class _RevealStaggerState extends State<RevealStagger>
 
   @override
   Widget build(BuildContext context) {
-    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+    if (_reduceMotion) {
       return widget.child;
     }
 
