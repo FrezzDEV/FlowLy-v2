@@ -269,15 +269,15 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: CircleRevealDemoPage()));
 
     expect(find.text('Neon Nights'), findsOneWidget);
-    expect(find.text('Ocean Memories'), findsOneWidget);
+    expect(find.text('Dawn Drive'), findsOneWidget);
     expect(find.byType(PlaylistPage), findsNothing);
 
-    await tester.tap(find.text('Ocean Memories'));
+    await tester.tap(find.text('Dawn Drive'));
     await tester.pump();
     expect(find.byType(PlaylistPage), findsOneWidget);
     await tester.pumpAndSettle();
 
-    expect(find.text('Low Tide'), findsOneWidget);
+    expect(find.text('First Light'), findsOneWidget);
     expect(find.byType(IconButton).evaluate().any(
       (element) => (element.widget as IconButton).key != null,
     ), isTrue);
