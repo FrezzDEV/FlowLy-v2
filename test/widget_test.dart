@@ -19,7 +19,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Популярное'), findsOneWidget);
 
-    await tester.tap(find.text('Поиск').last);
+    await tester.tap(find.byIcon(Icons.search_rounded));
     await tester.pumpAndSettle();
     expect(find.text('Популярные жанры'), findsOneWidget);
   });
