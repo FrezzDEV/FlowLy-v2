@@ -110,7 +110,7 @@ class _AppShellState extends State<AppShell> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 60),
+                const SizedBox(height: 56),
                 NavigationBar(
                   height: 54,
                   labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,

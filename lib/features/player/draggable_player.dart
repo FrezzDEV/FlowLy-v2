@@ -26,7 +26,7 @@ class DraggableView extends StatefulWidget {
 class DraggableViewState extends State<DraggableView>
     with TickerProviderStateMixin {
   static const double _miniHeight = 56;
-  static const double _miniMargin = 8;
+  static const double _miniMargin = 0;
   static const double _miniRadius = 12;
   static const double _navBarHeight = 54; // высота NavigationBar в app.dart
 
@@ -188,7 +188,7 @@ class DraggableViewState extends State<DraggableView>
         final cardWidth = size.width - lerpDouble(_miniMargin * 2, 0, t)!;
         final cardHeight = lerpDouble(_miniHeight, size.height, t)!;
         final bottomMargin =
-            lerpDouble(_navBarHeight + safeBottom + 4, 0, t)!;
+            lerpDouble(_navBarHeight + safeBottom, 0, t)!;
         final radius = lerpDouble(_miniRadius, 0, t)!;
 
         final playerBackground = Color.alphaBlend(
@@ -217,7 +217,7 @@ class DraggableViewState extends State<DraggableView>
                 clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 color: playerBackground,
-                borderRadius: BorderRadius.all(Radius.circular(radius)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(radius)),
               ),
               child: Stack(
                 children: [
