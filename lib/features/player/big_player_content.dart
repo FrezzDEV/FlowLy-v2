@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../core/theme/flowly_accent.dart';
 import 'player_controller.dart';
 import 'vertical_track_label.dart';
 
@@ -65,7 +64,6 @@ class _BigPlayerContentState extends State<BigPlayerContent>
   final Map<String, DateTime> _busyStartedAt = <String, DateTime>{};
   DlState _dl = DlState.idle;
   bool _reduceMotion = false;
-  bool _transportPressed = false;
 
   PlayerController get _player => widget.player;
   double get _durationSeconds =>
@@ -529,9 +527,9 @@ class _BigPlayerContentState extends State<BigPlayerContent>
                   color: Colors.transparent,
                   child: SliderTheme(
                     data: SliderTheme.of(context).copyWith(
-                      activeTrackColor: FlowLyAccent.color,
-                      inactiveTrackColor: Colors.black,
-                      thumbColor: FlowLyAccent.color,
+                      activeTrackColor: Colors.white,
+                      inactiveTrackColor: Colors.white24,
+                      thumbColor: Colors.black,
                       overlayColor: Colors.transparent,
                       trackHeight: 4,
                     ),
@@ -588,28 +586,20 @@ class _BigPlayerContentState extends State<BigPlayerContent>
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: _player.togglePlay,
-                  onTapDown: (_) => setState(() => _transportPressed = true),
-                  onTapUp: (_) => setState(() => _transportPressed = false),
-                  onTapCancel: () => setState(() => _transportPressed = false),
-                  child: AnimatedScale(
-                    scale: _transportPressed ? .9 : 1,
-                    duration: const Duration(milliseconds: 90),
-                    curve: Curves.easeOut,
-                    child: Container(
-                      width: 68,
-                      height: 68,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        _player.isPlaying
-                            ? Icons.pause_rounded
-                            : Icons.play_arrow_rounded,
-                        color: Colors.black,
-                        size: 42,
-                      ),
+                  child: Container(
+                    width: 68,
+                    height: 68,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(
+                      _player.isPlaying
+                          ? Icons.pause_rounded
+                          : Icons.play_arrow_rounded,
+                      color: Colors.black,
+                      size: 42,
                     ),
                   ),
                 ),
@@ -639,7 +629,7 @@ class _BigPlayerContentState extends State<BigPlayerContent>
   }
 }
 
-class _RoundAction extends StatefulWidget {
+class _RoundAction extends StatelessWidget {
   const _RoundAction({
     required this.icon,
     required this.label,
@@ -651,32 +641,17 @@ class _RoundAction extends StatefulWidget {
   final VoidCallback onTap;
 
   @override
-  State<_RoundAction> createState() => _RoundActionState();
-}
-
-class _RoundActionState extends State<_RoundAction> {
-  bool _pressed = false;
-
-  @override
   Widget build(BuildContext context) => Semantics(
         button: true,
-        label: widget.label,
+        label: label,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: widget.onTap,
-          onTapDown: (_) => setState(() => _pressed = true),
-          onTapUp: (_) => setState(() => _pressed = false),
-          onTapCancel: () => setState(() => _pressed = false),
+          onTap: onTap,
           child: SizedBox(
             width: 44,
             height: 44,
             child: Center(
-              child: AnimatedScale(
-                scale: _pressed ? .82 : 1,
-                duration: const Duration(milliseconds: 90),
-                curve: Curves.easeOut,
-                child: Icon(widget.icon, color: Colors.white, size: 26),
-              ),
+              child: Icon(icon, color: Colors.white, size: 26),
             ),
           ),
         ),

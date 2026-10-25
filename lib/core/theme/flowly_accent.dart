@@ -17,7 +17,10 @@ class FlowLyAccent {
     try {
       final preferences = await SharedPreferences.getInstance();
       final storedValue = preferences.getInt(_preferenceKey);
-      if (storedValue != null) listenable.value = Color(storedValue);
+      // Always resolve the accent from persistent storage on initialization.
+      // This avoids retaining a stale in-memory color when no preference exists.
+      listenable.value =
+          storedValue == null ? defaultColor : Color(storedValue);
     } catch (_) {
       // Keep the default accent when platform storage is unavailable.
     }
