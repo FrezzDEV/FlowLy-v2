@@ -330,7 +330,8 @@ class DraggableViewState extends State<DraggableView>
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              _MiniTrackLabel(
+                              VerticalTrackLabel(
+                                key: const ValueKey('mini-artist-label'),
                                 text: track.artist,
                                 trackKey: '${track.title}|${track.artist}',
                                 height: 17,
