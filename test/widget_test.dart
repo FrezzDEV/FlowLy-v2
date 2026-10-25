@@ -98,10 +98,19 @@ void main() {
       260,
       scrollable: editorScrollable,
     );
-    expect(find.text('Показывать плейлисты'), findsOneWidget);
-    expect(find.text('Показывать треки'), findsOneWidget);
-    expect(find.text('Показывать альбомы'), findsOneWidget);
-    expect(find.text('Показывать авторов'), findsOneWidget);
+    for (final label in [
+      'Показывать плейлисты',
+      'Показывать треки',
+      'Показывать альбомы',
+      'Показывать авторов',
+    ]) {
+      await tester.scrollUntilVisible(
+        find.text(label),
+        180,
+        scrollable: editorScrollable,
+      );
+      expect(find.text(label), findsOneWidget);
+    }
   });
 
   testWidgets('home favorites quick tile opens the playlist screen', (tester) async {

@@ -319,7 +319,7 @@ class DraggableViewState extends State<DraggableView>
                             children: [
                               _MiniTrackLabel(
                                 text: track.title,
-                                labelKey: 'mini-title-${track.title}|${track.artist}',
+                                labelKey: 'mini-title-${track.title}',
                                 height: 19,
                                 duration: const Duration(milliseconds: 190),
                                 style: const TextStyle(
