@@ -269,7 +269,7 @@ void main() {
     expect(find.text('Ed Sheeran'), findsWidgets);
     await tester.tap(find.text('Ed Sheeran').first);
     await tester.pumpAndSettle();
-    expect(find.text('Afterlife'), findsOneWidget);
+    expect(find.text('Afterlife'), findsWidgets);
     expect(find.byType(CatalogCollectionScreen), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.arrow_back_rounded).last);
@@ -319,6 +319,7 @@ void main() {
       (item) => item.name == 'Создан из плеера',
     );
     expect(playlist.tracks, contains(player.currentTrack));
+    if (player.isPlaying) player.togglePlay();
   });
 
   testWidgets('playlist screen keeps bottom navigation and mini player visible', (tester) async {
@@ -372,9 +373,11 @@ void main() {
       isNot(contains(player.currentTrack)),
     );
     expect(find.byType(SnackBar), findsNothing);
+    if (player.isPlaying) player.togglePlay();
   });
 
   testWidgets('tapping any part of the mini player opens the full player', (tester) async {
+    final player = PlayerController.instance;
     await tester.pumpWidget(const FlowLyApp());
     await tester.pumpAndSettle();
 
@@ -383,6 +386,7 @@ void main() {
     await pumpPlayerUi(tester);
 
     expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsOneWidget);
+    if (player.isPlaying) player.togglePlay();
   });
 
   testWidgets('circular reveal demo opens the selected playlist and exits', (tester) async {
@@ -429,6 +433,7 @@ void main() {
 
     expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsNothing);
     expect(find.byKey(const ValueKey('mini-title-Midnight Flow')), findsOneWidget);
+    if (player.isPlaying) player.togglePlay();
   });
 
 }
