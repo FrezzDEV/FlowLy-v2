@@ -34,7 +34,7 @@ jobs:
         run: flutter test
       - name: Build release APK
         run: |
-          flutter build apk --release
+          flutter build apk --release --build-number "$GITHUB_RUN_NUMBER"
           mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/FlowLy.apk
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -58,3 +58,16 @@ jobs:
           files: build/app/outputs/flutter-apk/FlowLy.apk
           overwrite_files: true
           make_latest: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Add APK download link to summary
+        if: success()
+        shell: bash
+        run: |
+          echo "## FlowLy APK" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
+            echo "[Скачать актуальный APK напрямую](https://github.com/${GITHUB_REPOSITORY}/releases/download/latest/FlowLy.apk)" >> "$GITHUB_STEP_SUMMARY"
+          elif [[ "$GITHUB_REF" == refs/heads/feature/* ]]; then
+            echo "[Скачать тестовый APK напрямую](https://github.com/${GITHUB_REPOSITORY}/releases/download/preview/FlowLy.apk)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Для сборок Pull Request откройте Artifacts этого запуска; GitHub упаковывает артефакты в ZIP." >> "$GITHUB_STEP_SUMMARY"
+          fi
