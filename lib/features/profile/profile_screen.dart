@@ -37,7 +37,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   static const _showTracksKey = 'flowly.profile.showTracks';
   static const _showAlbumsKey = 'flowly.profile.showAlbums';
   static const _showArtistsKey = 'flowly.profile.showArtists';
-  static const _featuredItemsKey = 'flowly.profile.featuredItems';
 
   String _name = 'Слушатель FlowLy';
   String _username = 'flowly_listener';
@@ -54,7 +53,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _showTracks = true;
   bool _showAlbums = true;
   bool _showArtists = true;
-  List<String> _featuredItemIds = <String>[];
 
   @override
   void initState() {
@@ -83,8 +81,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _showTracks = preferences.getBool(_showTracksKey) ?? _showTracks;
         _showAlbums = preferences.getBool(_showAlbumsKey) ?? _showAlbums;
         _showArtists = preferences.getBool(_showArtistsKey) ?? _showArtists;
-        _featuredItemIds =
-            preferences.getStringList(_featuredItemsKey) ?? _featuredItemIds;
       });
     } catch (_) {
       // The local demo profile remains usable without a platform preference store.
@@ -177,7 +173,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           bannerY: _bannerY,
           frameStyle: _frameStyle,
           initialAccentColor: FlowLyAccent.color,
-          initialFeaturedItemIds: _featuredItemIds,
           showPlaylists: _showPlaylists,
           showTracks: _showTracks,
           showAlbums: _showAlbums,
@@ -206,7 +201,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _showTracks = result.showTracks;
       _showAlbums = result.showAlbums;
       _showArtists = result.showArtists;
-      _featuredItemIds = result.featuredItemIds;
     });
     await FlowLyAccent.setColor(result.accentColor);
 
@@ -227,7 +221,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await preferences.setBool(_showTracksKey, _showTracks);
       await preferences.setBool(_showAlbumsKey, _showAlbums);
       await preferences.setBool(_showArtistsKey, _showArtists);
-      await preferences.setStringList(_featuredItemsKey, _featuredItemIds);
     } catch (_) {
       // The profile continues to reflect edits for this session.
     }
@@ -278,9 +271,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             albumsByName.putIfAbsent(track.album, () => track);
             artistsByName.putIfAbsent(track.artist, () => track);
           }
-          final showcase = _allProfileShowcaseItems()
-              .where((item) => _featuredItemIds.contains(item.id))
-              .toList();
 
           return ListView(
             padding: EdgeInsets.zero,
@@ -431,24 +421,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _ProfileSection(
-                      title: 'Избранное в профиле',
-                      emptyText: 'Открой настройки профиля → Карандаш, чтобы добавить любимые треки, плейлисты, альбомы и авторов.',
-                      isEmpty: showcase.isEmpty,
-                      children: [
-                        for (final item in showcase)
-                          _ProfileContentRow(
-                            icon: item.icon,
-                            title: item.title,
-                            subtitle: item.subtitle,
-                            color: item.color,
-                            imagePath: item.imagePath,
-                            onTap: item.playableTrack == null
-                                ? null
-                                : () => player.playTrack(item.playableTrack!),
-                          ),
-                      ],
-                    ),
                     if (_showPlaylists)
                       _ProfileSection(
                         title: 'Плейлисты',
@@ -693,93 +665,6 @@ class _ProfileContentRow extends StatelessWidget {
       );
 }
 
-class _ProfileShowcaseItem {
-  const _ProfileShowcaseItem({
-    required this.id,
-    required this.group,
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.color,
-    this.imagePath,
-    this.playableTrack,
-  });
-
-  final String id;
-  final String group;
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color color;
-  final String? imagePath;
-  final PlayerTrack? playableTrack;
-}
-
-List<_ProfileShowcaseItem> _allProfileShowcaseItems() {
-  final player = PlayerController.instance;
-  final items = <_ProfileShowcaseItem>[];
-
-  for (final track in PlayerController.catalog) {
-    items.add(_ProfileShowcaseItem(
-      id: 'track:${track.title}|${track.artist}',
-      group: 'Трек',
-      title: track.title,
-      subtitle: track.artist,
-      icon: track.icon,
-      color: track.color,
-      playableTrack: track,
-    ));
-  }
-
-  for (final playlist in player.playlists) {
-    final firstTrack = playlist.tracks.isEmpty ? null : playlist.tracks.first;
-    items.add(_ProfileShowcaseItem(
-      id: 'playlist:${playlist.id}',
-      group: 'Плейлист',
-      title: playlist.name,
-      subtitle: '${playlist.tracks.length} треков',
-      icon: playlist.id == PlayerController.favoritesPlaylistId
-          ? Icons.favorite_rounded
-          : playlist.id == PlayerController.downloadsPlaylistId
-              ? Icons.download_rounded
-              : Icons.queue_music_rounded,
-      color: firstTrack?.color ?? const Color(0xFF282A31),
-      imagePath: playlist.coverPath,
-      playableTrack: firstTrack,
-    ));
-  }
-
-  final albums = <String, PlayerTrack>{};
-  final artists = <String, PlayerTrack>{};
-  for (final track in PlayerController.catalog) {
-    albums.putIfAbsent(track.album, () => track);
-    artists.putIfAbsent(track.artist, () => track);
-  }
-  for (final entry in albums.entries) {
-    items.add(_ProfileShowcaseItem(
-      id: 'album:${entry.key}',
-      group: 'Альбом',
-      title: entry.key,
-      subtitle: entry.value.artist,
-      icon: Icons.album_rounded,
-      color: entry.value.color,
-      playableTrack: entry.value,
-    ));
-  }
-  for (final entry in artists.entries) {
-    items.add(_ProfileShowcaseItem(
-      id: 'artist:${entry.key}',
-      group: 'Автор',
-      title: entry.key,
-      subtitle: 'Исполнитель',
-      icon: Icons.person_rounded,
-      color: entry.value.color,
-      playableTrack: entry.value,
-    ));
-  }
-  return items;
-}
-
 class _ProfileEditResult {
   const _ProfileEditResult({
     required this.name,
@@ -794,7 +679,6 @@ class _ProfileEditResult {
     required this.bannerY,
     required this.frameStyle,
     required this.accentColor,
-    required this.featuredItemIds,
     required this.showPlaylists,
     required this.showTracks,
     required this.showAlbums,
@@ -813,7 +697,6 @@ class _ProfileEditResult {
   final double bannerY;
   final String frameStyle;
   final Color accentColor;
-  final List<String> featuredItemIds;
   final bool showPlaylists;
   final bool showTracks;
   final bool showAlbums;
@@ -835,7 +718,6 @@ class ProfileEditorScreen extends StatefulWidget {
     required this.bannerY,
     required this.frameStyle,
     required this.initialAccentColor,
-    required this.initialFeaturedItemIds,
     required this.showPlaylists,
     required this.showTracks,
     required this.showAlbums,
@@ -854,7 +736,6 @@ class ProfileEditorScreen extends StatefulWidget {
   final double bannerY;
   final String frameStyle;
   final Color initialAccentColor;
-  final List<String> initialFeaturedItemIds;
   final bool showPlaylists;
   final bool showTracks;
   final bool showAlbums;
@@ -879,7 +760,6 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
   late double _bannerY = widget.bannerY;
   late String _frameStyle = widget.frameStyle;
   late Color _accentColor = widget.initialAccentColor;
-  late Set<String> _featuredItemIds = widget.initialFeaturedItemIds.toSet();
   late bool _showPlaylists = widget.showPlaylists;
   late bool _showTracks = widget.showTracks;
   late bool _showAlbums = widget.showAlbums;
@@ -960,114 +840,6 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
         ),
       );
 
-  Future<void> _editFeaturedItems() async {
-    final items = _allProfileShowcaseItems();
-    final selected = Set<String>.from(_featuredItemIds);
-    final result = await showModalBottomSheet<List<String>>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFF17181D),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetContext) => StatefulBuilder(
-        builder: (context, setModalState) => SafeArea(
-          child: SizedBox(
-            height: MediaQuery.sizeOf(context).height * .78,
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-                  child: Row(
-                    children: [
-                      const Expanded(
-                        child: Text(
-                          'Добавить в профиль',
-                          style: TextStyle(
-                            fontSize: 21,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: 'Закрыть',
-                        onPressed: () => Navigator.of(sheetContext).pop(),
-                        icon: const Icon(Icons.close_rounded),
-                      ),
-                    ],
-                  ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 0, 20, 10),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Выбери любые треки, плейлисты, альбомы и авторов.',
-                      style: TextStyle(color: Colors.white60),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      final checked = selected.contains(item.id);
-                      return CheckboxListTile(
-                        value: checked,
-                        activeColor: _accentColor,
-                        onChanged: (value) => setModalState(() {
-                          if (value == true) {
-                            selected.add(item.id);
-                          } else {
-                            selected.remove(item.id);
-                          }
-                        }),
-                        secondary: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: item.color.withValues(alpha: .42),
-                            borderRadius: BorderRadius.circular(11),
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: item.imagePath == null
-                              ? Icon(item.icon)
-                              : Image.file(
-                                  File(item.imagePath!),
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) =>
-                                      Icon(item.icon),
-                                ),
-                        ),
-                        title: Text(item.title),
-                        subtitle: Text('${item.group} · ${item.subtitle}'),
-                        controlAffinity: ListTileControlAffinity.trailing,
-                      );
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: () => Navigator.of(sheetContext)
-                          .pop(selected.toList()),
-                      child: Text('Готово · ${selected.length}'),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-    if (result == null || !mounted) return;
-    setState(() => _featuredItemIds = result.toSet());
-  }
-
   Future<void> _chooseAvatar() async {
     try {
       final path = await LocalImageStorage.pickAndPersistImage(folder: 'profile');
@@ -1130,7 +902,6 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
         bannerY: _bannerY,
         frameStyle: _frameStyle,
         accentColor: _accentColor,
-        featuredItemIds: _featuredItemIds.toList(),
         showPlaylists: _showPlaylists,
         showTracks: _showTracks,
         showAlbums: _showAlbums,
@@ -1324,182 +1095,6 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
-              const _EditorSectionTitle(
-                title: 'Баннер',
-                subtitle: 'Выбери изображение. После выбора можно передвинуть его и настроить кадр.',
-              ),
-              SizedBox(
-                height: 150,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: _CropTransformImage(
-                    key: ValueKey('banner-preview:${_bannerPath ?? 'empty'}'),
-                    path: _bannerPath,
-                    scale: _bannerScale,
-                    offsetX: _bannerX,
-                    offsetY: _bannerY,
-                    placeholder: const DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFF55575B),
-                            Color(0xFF383A40),
-                            Color(0xFF15171E),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              OutlinedButton.icon(
-                onPressed: _chooseBanner,
-                icon: const Icon(Icons.photo_library_outlined),
-                label: Text(
-                  _bannerPath == null ? 'Выбрать баннер' : 'Заменить баннер',
-                ),
-              ),
-              if (_bannerPath != null)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton(
-                    onPressed: () => setState(() {
-                      _bannerPath = null;
-                      _bannerScale = 1;
-                      _bannerX = 0;
-                      _bannerY = 0;
-                    }),
-                    child: const Text('Убрать баннер'),
-                  ),
-                ),
-              const SizedBox(height: 26),
-              const _EditorSectionTitle(
-                title: 'Аватарка',
-                subtitle: 'После выбора откроется экран кадрирования с перемещением и масштабированием двумя пальцами.',
-              ),
-              Center(
-                child: Container(
-                  width: 156,
-                  height: 156,
-                  padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: _framePreviewColor(_frameStyle),
-                      width: _frameStyle == 'none' ? 0 : 3,
-                    ),
-                  ),
-                  child: ClipOval(
-                    child: _CropTransformImage(
-                      key: ValueKey('avatar-preview:${_avatarPath ?? 'empty'}'),
-                      path: _avatarPath,
-                      scale: _avatarScale,
-                      offsetX: _avatarX,
-                      offsetY: _avatarY,
-                      placeholder: const ColoredBox(
-                        color: Color(0xFF24272B),
-                        child: Center(
-                          child: Icon(Icons.person_rounded, size: 48),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              OutlinedButton.icon(
-                onPressed: _chooseAvatar,
-                icon: const Icon(Icons.photo_library_outlined),
-                label: Text(
-                  _avatarPath == null ? 'Выбрать аватарку' : 'Заменить аватарку',
-                ),
-              ),
-              if (_avatarPath != null)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton(
-                    onPressed: () => setState(() {
-                      _avatarPath = null;
-                      _avatarScale = 1;
-                      _avatarX = 0;
-                      _avatarY = 0;
-                    }),
-                    child: const Text('Убрать аватарку'),
-                  ),
-                ),
-              const SizedBox(height: 26),
-              TextField(
-                controller: _nameController,
-                maxLength: 40,
-                textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(
-                  labelText: 'Имя',
-                  counterText: '',
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _usernameController,
-                maxLength: 30,
-                autocorrect: false,
-                decoration: const InputDecoration(
-                  labelText: 'Юзернейм',
-                  prefixText: '@',
-                  counterText: '',
-                ),
-              ),
-              const SizedBox(height: 28),
-              const _EditorSectionTitle(
-                title: 'Витрина профиля',
-                subtitle: 'Добавь то, что хочешь показать другим: любимые треки, плейлисты, альбомы и авторов.',
-              ),
-              OutlinedButton.icon(
-                onPressed: _editFeaturedItems,
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('Добавить контент'),
-              ),
-              if (_featuredItemIds.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 10),
-                  child: Text(
-                    'Пока ничего не добавлено. Выбранный контент появится в предпросмотре профиля.',
-                    style: TextStyle(color: Colors.white54, height: 1.4),
-                  ),
-                ),
-              for (final item in _allProfileShowcaseItems()
-                  .where((item) => _featuredItemIds.contains(item.id)))
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: item.color.withValues(alpha: .42),
-                      borderRadius: BorderRadius.circular(11),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: item.imagePath == null
-                        ? Icon(item.icon)
-                        : Image.file(
-                            File(item.imagePath!),
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Icon(item.icon),
-                          ),
-                  ),
-                  title: Text(item.title),
-                  subtitle: Text(item.group),
-                  trailing: IconButton(
-                    tooltip: 'Убрать из профиля',
-                    onPressed: () => setState(
-                      () => _featuredItemIds.remove(item.id),
-                    ),
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-                ),
               if (_validationError != null) ...[
                 const SizedBox(height: 8),
                 Text(

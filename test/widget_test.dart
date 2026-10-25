@@ -73,20 +73,26 @@ void main() {
       matching: find.byType(Scrollable),
     ).first;
 
-    await tester.scrollUntilVisible(
-      find.text('Аватарка'),
-      260,
-      scrollable: editorScrollable,
-    );
-    expect(find.text('Аватарка'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('Витрина профиля'),
-      260,
-      scrollable: editorScrollable,
-    );
-    expect(find.text('Витрина профиля'), findsOneWidget);
-    expect(find.text('Добавить контент'), findsOneWidget);
+    // Avatar, banner, name and username can be edited from the live preview.
+    for (final tooltip in [
+      'Изменить баннер',
+      'Изменить аватар',
+      'Изменить имя',
+      'Изменить юзернейм',
+    ]) {
+      expect(find.byTooltip(tooltip), findsOneWidget);
+    }
+    // The duplicated controls and profile showcase have been removed.
+    expect(find.text('Аватарка'), findsNothing);
+    expect(find.text('Витрина профиля'), findsNothing);
+    expect(find.text('Добавить контент'), findsNothing);
 
+    await tester.scrollUntilVisible(
+      find.text('Акцентный цвет'),
+      260,
+      scrollable: editorScrollable,
+    );
+    expect(find.text('Акцентный цвет'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('Рамка аватарки'),
       260,
