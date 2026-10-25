@@ -44,9 +44,10 @@ class FlowLyApp extends StatelessWidget {
               ),
               sliderTheme: SliderThemeData(
                 activeTrackColor: accent,
-                inactiveTrackColor: Colors.black,
-                secondaryActiveTrackColor: Colors.black,
-                thumbColor: accent,
+                inactiveTrackColor: const Color(0xFF383A40),
+                secondaryActiveTrackColor: const Color(0xFF383A40),
+                // Keep the thumb dark even when the selected accent is white.
+                thumbColor: Colors.black,
                 overlayColor: Colors.transparent,
                 trackHeight: 3,
               ),
