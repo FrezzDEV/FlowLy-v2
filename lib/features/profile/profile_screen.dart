@@ -8,7 +8,6 @@ import '../../core/storage/local_image_storage.dart';
 import '../player/player_controller.dart';
 
 const _profileBackground = Color(0xFF08090B);
-const _profilePanel = Color(0xFF17191D);
 const _profileLime = Color(0xFFB6F36B);
 const _profileMuted = Color(0xFF9B9DA4);
 
