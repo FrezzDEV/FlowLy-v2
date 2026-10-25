@@ -319,6 +319,7 @@ class DraggableViewState extends State<DraggableView>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               VerticalTrackLabel(
+                                key: const ValueKey('mini-title-label'),
                                 text: track.title,
                                 trackKey: '${track.title}|${track.artist}',
                                 height: 19,
