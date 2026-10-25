@@ -170,7 +170,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Color _frameColor(String style) {
     switch (style) {
       case 'lime':
-        return const Color(0xFFB6F36B);
+        return const Color(0xFFF5F5F5);
       case 'violet':
         return const Color(0xFFB28BFF);
       case 'blue':
@@ -252,8 +252,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
                                         colors: [
-                                          Color(0xFF345B56),
-                                          Color(0xFF263047),
+                                          Color(0xFF55575B),
+                                          Color(0xFF383A40),
                                           Color(0xFF15171E),
                                         ],
                                       ),
@@ -781,8 +781,8 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            Color(0xFF345B56),
-                            Color(0xFF263047),
+                            Color(0xFF55575B),
+                            Color(0xFF383A40),
                             Color(0xFF15171E),
                           ],
                         ),
@@ -953,10 +953,10 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                   ),
                   _AccentChoice(
                     title: 'Лайм',
-                    color: const Color(0xFFB6F36B),
-                    selected: _accentColor.toARGB32() == 0xFFB6F36B,
+                    color: const Color(0xFFF5F5F5),
+                    selected: _accentColor.toARGB32() == 0xFFF5F5F5,
                     onTap: () => setState(
-                      () => _accentColor = const Color(0xFFB6F36B),
+                      () => _accentColor = const Color(0xFFF5F5F5),
                     ),
                   ),
                 ],
@@ -980,7 +980,7 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                   _FrameChoice(
                     title: 'Лайм',
                     style: 'lime',
-                    color: const Color(0xFFB6F36B),
+                    color: const Color(0xFFF5F5F5),
                     selected: _frameStyle == 'lime',
                     onTap: () => setState(() => _frameStyle = 'lime'),
                   ),
@@ -1063,7 +1063,7 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
   Color _framePreviewColor(String style) {
     switch (style) {
       case 'lime':
-        return const Color(0xFFB6F36B);
+        return const Color(0xFFF5F5F5);
       case 'violet':
         return const Color(0xFFB28BFF);
       case 'blue':
