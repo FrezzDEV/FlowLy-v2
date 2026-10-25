@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flowly/app.dart';
 import 'package:flowly/features/player/player_controller.dart';
 import 'package:flowly/features/player/draggable_player.dart';
+import 'package:flowly/features/player/vertical_track_label.dart';
 import 'package:flowly/features/library/playlist_detail_screen.dart';
 import 'package:flowly/features/library/catalog_collection_screen.dart';
 import 'package:flowly/features/library/library_screen.dart';
@@ -142,6 +143,29 @@ void main() {
     expect(player.isPlaying, isTrue);
     expect(player.progress, closeTo(0.4, 0.02));
     player.togglePlay();
+  });
+
+  testWidgets('track metadata does not duplicate unchanged labels when switching tracks', (tester) async {
+    Widget buildLabel(String trackKey) => MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: VerticalTrackLabel(
+                text: 'Unknown Artist',
+                trackKey: trackKey,
+                height: 24,
+                duration: const Duration(milliseconds: 260),
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
+          ),
+        );
+
+    await tester.pumpWidget(buildLabel('track-one'));
+    await tester.pumpWidget(buildLabel('track-two'));
+
+    // The same artist should remain a single rendered label, not two layers
+    // animating on top of each other just because the song identity changed.
+    expect(find.text('Unknown Artist'), findsOneWidget);
   });
 
   testWidgets('profile accent defaults to white', (tester) async {

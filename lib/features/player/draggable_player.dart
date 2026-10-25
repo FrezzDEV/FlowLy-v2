@@ -48,7 +48,7 @@ class DraggableViewState extends State<DraggableView>
     _progress = AnimationController(vsync: this, value: 0);
     _coverReveal = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 320),
+      duration: const Duration(milliseconds: 220),
     )..addStatusListener(_onCoverRevealStatus);
     _player.addListener(_onPlayerTrackChanged);
   }
@@ -110,7 +110,7 @@ class DraggableViewState extends State<DraggableView>
     _incomingTrack = next;
     _coverReveal.duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
-        : const Duration(milliseconds: 320);
+        : const Duration(milliseconds: 220);
     if (mounted) setState(() {});
     _coverReveal.forward(from: 0);
   }
@@ -529,7 +529,7 @@ class _TrackCircleRevealClipper extends CustomClipper<Path> {
     // Start clearly inside the cover, not on its clipped corner.
     final center = Offset(
       size.width * (forward ? .79 : .21),
-      size.height * .62,
+      size.height * .50,
     );
     return Path()
       ..addOval(

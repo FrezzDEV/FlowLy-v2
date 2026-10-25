@@ -43,6 +43,20 @@ jobs:
           path: build/app/outputs/flutter-apk/FlowLy.apk
           if-no-files-found: error
           retention-days: 14
+      - name: Remove obsolete APK asset
+        if: (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/feature/'))) || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=latest
+          if [[ "$GITHUB_REF" == refs/heads/feature/* ]]; then
+            tag=preview
+          fi
+          asset_id="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${tag}" --jq '.assets[]? | select(.name == "app-release.apk") | .id' 2>/dev/null || true)"
+          if [[ -n "$asset_id" ]]; then
+            gh api --method DELETE "repos/${GITHUB_REPOSITORY}/releases/assets/${asset_id}"
+          fi
+
       - name: Publish APK to GitHub Releases
         if: (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/feature/'))) || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
         uses: softprops/action-gh-release@v2
