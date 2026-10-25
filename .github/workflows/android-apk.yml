@@ -34,7 +34,7 @@ jobs:
         run: flutter test
       - name: Build release APK
         run: |
-          flutter build apk --release
+          flutter build apk --release --build-number "$GITHUB_RUN_NUMBER"
           mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/FlowLy.apk
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -44,17 +44,30 @@ jobs:
           if-no-files-found: error
           retention-days: 14
       - name: Publish APK to GitHub Releases
-        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        if: (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/feature/'))) || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: latest
-          name: FlowLy APK — latest build
+          tag_name: ${{ github.ref == 'refs/heads/main' && 'latest' || 'preview' }}
+          name: ${{ github.ref == 'refs/heads/main' && 'FlowLy APK — latest build' || 'FlowLy APK — preview build' }}
           body: |
-            Автоматическая сборка FlowLy из ветки main.
+            Автоматическая сборка FlowLy из ветки ${{ github.ref_name }}.
 
-            APK: FlowLy.apk
-            Для установки скачайте APK из Assets ниже.
+            APK-файл: FlowLy.apk
+            Скачать APK напрямую можно из раздела Assets этого релиза.
           target_commitish: ${{ github.sha }}
           files: build/app/outputs/flutter-apk/FlowLy.apk
           overwrite_files: true
-          make_latest: true
+          make_latest: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Add APK download link to summary
+        if: success()
+        shell: bash
+        run: |
+          echo "## FlowLy APK" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
+            echo "[Скачать актуальный APK напрямую](https://github.com/${GITHUB_REPOSITORY}/releases/download/latest/FlowLy.apk)" >> "$GITHUB_STEP_SUMMARY"
+          elif [[ "$GITHUB_REF" == refs/heads/feature/* ]]; then
+            echo "[Скачать тестовый APK напрямую](https://github.com/${GITHUB_REPOSITORY}/releases/download/preview/FlowLy.apk)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Для сборок Pull Request откройте Artifacts этого запуска; GitHub упаковывает артефакты в ZIP." >> "$GITHUB_STEP_SUMMARY"
+          fi

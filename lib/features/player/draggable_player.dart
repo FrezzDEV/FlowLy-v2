@@ -3,6 +3,7 @@ import 'dart:ui' show lerpDouble;
 import 'package:flutter/material.dart';
 import 'animated_music_player.dart' show AlbumCover;
 import 'big_player_content.dart';
+import 'vertical_track_label.dart';
 import 'player_controller.dart';
 import '../library/playlist_sheets.dart';
 
@@ -35,6 +36,7 @@ class DraggableViewState extends State<DraggableView>
   final PlayerController _player = PlayerController.instance;
   late PlayerTrack _coverTrack;
   PlayerTrack? _incomingTrack;
+  final List<({PlayerTrack track, bool forward})> _queuedCoverTracks = [];
   bool _coverForward = true;
 
   bool get isOpen => _progress.value > 0.5;
@@ -46,7 +48,7 @@ class DraggableViewState extends State<DraggableView>
     _progress = AnimationController(vsync: this, value: 0);
     _coverReveal = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 320),
     )..addStatusListener(_onCoverRevealStatus);
     _player.addListener(_onPlayerTrackChanged);
   }
@@ -58,13 +60,15 @@ class DraggableViewState extends State<DraggableView>
     setState(() {
       _coverTrack = incoming;
       _incomingTrack = null;
+      _queuedCoverTracks.clear();
     });
     _coverReveal.value = 0;
   }
 
   void _onPlayerTrackChanged() {
     final next = _player.currentTrack;
-    if (identical(next, _coverTrack) || identical(next, _incomingTrack)) return;
+    if (identical(next, _incomingTrack)) return;
+    if (identical(next, _coverTrack) && _incomingTrack == null) return;
 
     // In the collapsed mini-player, swap the cover immediately without a reveal.
     if (_progress.value < 0.5) {
@@ -73,20 +77,32 @@ class DraggableViewState extends State<DraggableView>
         ..value = 0;
       _coverTrack = next;
       _incomingTrack = null;
+      _queuedCoverTracks.clear();
       if (mounted) setState(() {});
       return;
     }
 
-    // Finish an interrupted reveal first, so rapid next/previous taps never leave stale art.
+    // Keep interrupted reveals underneath the latest cover, so rapid skips
+    // form a short stack instead of abruptly discarding the previous artwork.
+    final previousVisualTrack = _incomingTrack ??
+        (_queuedCoverTracks.isNotEmpty
+            ? _queuedCoverTracks.last.track
+            : _coverTrack);
     if (_incomingTrack != null) {
-      _coverTrack = _incomingTrack!;
+      _queuedCoverTracks.add((
+        track: _incomingTrack!,
+        forward: _coverForward,
+      ));
+      if (_queuedCoverTracks.length > 6) {
+        _queuedCoverTracks.removeAt(0);
+      }
       _incomingTrack = null;
       _coverReveal.stop();
       _coverReveal.value = 0;
     }
 
     final catalog = PlayerController.catalog;
-    final oldIndex = catalog.indexOf(_coverTrack);
+    final oldIndex = catalog.indexOf(previousVisualTrack);
     final newIndex = catalog.indexOf(next);
     _coverForward = oldIndex < 0 || newIndex < 0
         ? true
@@ -94,7 +110,7 @@ class DraggableViewState extends State<DraggableView>
     _incomingTrack = next;
     _coverReveal.duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
-        : const Duration(milliseconds: 1500);
+        : const Duration(milliseconds: 320);
     if (mounted) setState(() {});
     _coverReveal.forward(from: 0);
   }
@@ -241,13 +257,35 @@ class DraggableViewState extends State<DraggableView>
                             fit: StackFit.expand,
                             children: [
                               _demoTintedCover(_coverTrack, artSize),
+                              for (var layerIndex = 0;
+                                  layerIndex < _queuedCoverTracks.length;
+                                  layerIndex++)
+                                ClipRRect(
+                                  clipBehavior: Clip.antiAliasWithSaveLayer,
+                                  borderRadius: BorderRadius.circular(artSize * .08),
+                                  child: ClipPath(
+                                    clipper: _TrackCircleRevealClipper(
+                                      t: (Curves.easeOutCubic.transform(
+                                                _coverReveal.value,
+                                              ) +
+                                              .16 * (layerIndex + 1))
+                                          .clamp(0.0, 1.0)
+                                          .toDouble(),
+                                      forward: _queuedCoverTracks[layerIndex].forward,
+                                    ),
+                                    child: _demoTintedCover(
+                                      _queuedCoverTracks[layerIndex].track,
+                                      artSize,
+                                    ),
+                                  ),
+                                ),
                               if (_incomingTrack != null)
                                 ClipRRect(
                                   clipBehavior: Clip.antiAliasWithSaveLayer,
                                   borderRadius: BorderRadius.circular(artSize * .08),
                                   child: ClipPath(
                                     clipper: _TrackCircleRevealClipper(
-                                      t: Curves.easeInOutCubic.transform(
+                                      t: Curves.easeOutCubic.transform(
                                         _coverReveal.value,
                                       ),
                                       forward: _coverForward,
@@ -280,57 +318,27 @@ class DraggableViewState extends State<DraggableView>
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 360),
-                                switchInCurve: Curves.easeOutCubic,
-                                switchOutCurve: Curves.easeInCubic,
-                                transitionBuilder: (child, animation) =>
-                                    FadeTransition(
-                                  opacity: animation,
-                                  child: SlideTransition(
-                                    position: Tween<Offset>(
-                                      begin: const Offset(0, .18),
-                                      end: Offset.zero,
-                                    ).animate(animation),
-                                    child: child,
-                                  ),
-                                ),
-                                child: Text(
-                                  track.title,
-                                  key: ValueKey('mini-title-${track.title}'),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              VerticalTrackLabel(
+                                key: const ValueKey('mini-title-label'),
+                                text: track.title,
+                                trackKey: '${track.title}|${track.artist}',
+                                height: 19,
+                                duration: const Duration(milliseconds: 190),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 420),
-                                switchInCurve: Curves.easeOutCubic,
-                                switchOutCurve: Curves.easeInCubic,
-                                transitionBuilder: (child, animation) =>
-                                    FadeTransition(
-                                  opacity: animation,
-                                  child: SlideTransition(
-                                    position: Tween<Offset>(
-                                      begin: const Offset(0, .18),
-                                      end: Offset.zero,
-                                    ).animate(animation),
-                                    child: child,
-                                  ),
-                                ),
-                                child: Text(
-                                  track.artist,
-                                  key: ValueKey('mini-artist-${track.artist}'),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 12,
-                                  ),
+                              VerticalTrackLabel(
+                                key: const ValueKey('mini-artist-label'),
+                                text: track.artist,
+                                trackKey: '${track.title}|${track.artist}',
+                                height: 17,
+                                duration: const Duration(milliseconds: 210),
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
@@ -464,7 +472,7 @@ class DraggableViewState extends State<DraggableView>
   }
 }
 
-class _ActionButton extends StatelessWidget {
+class _ActionButton extends StatefulWidget {
   const _ActionButton({
     required this.icon,
     required this.onTap,
@@ -476,23 +484,36 @@ class _ActionButton extends StatelessWidget {
   final double size;
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: Center(
-          child: Icon(
-            icon,
-            color: onTap == null ? Colors.white24 : Colors.white,
-            size: size * 0.6,
+  State<_ActionButton> createState() => _ActionButtonState();
+}
+
+class _ActionButtonState extends State<_ActionButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
+        onTapDown: (_) => setState(() => _pressed = true),
+        onTapUp: (_) => setState(() => _pressed = false),
+        onTapCancel: () => setState(() => _pressed = false),
+        child: SizedBox(
+          width: widget.size,
+          height: widget.size,
+          child: Center(
+            child: AnimatedScale(
+              scale: _pressed ? .86 : 1,
+              duration: const Duration(milliseconds: 90),
+              curve: Curves.easeOut,
+              child: Icon(
+                widget.icon,
+                color: widget.onTap == null ? Colors.white24 : Colors.white,
+                size: widget.size * 0.6,
+              ),
+            ),
           ),
         ),
-      ),
-    );
-  }
+      );
 }
 
 
@@ -507,8 +528,8 @@ class _TrackCircleRevealClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     // Start clearly inside the cover, not on its clipped corner.
     final center = Offset(
-      size.width * (forward ? .82 : .18),
-      size.height * .82,
+      size.width * (forward ? .79 : .21),
+      size.height * .62,
     );
     return Path()
       ..addOval(

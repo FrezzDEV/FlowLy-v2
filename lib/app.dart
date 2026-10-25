@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'core/theme/flowly_accent.dart';
+
 import 'features/home/home_screen.dart';
 import 'features/search/search_screen.dart';
 import 'features/library/library_screen.dart';
@@ -10,56 +12,114 @@ class FlowLyApp extends StatelessWidget {
   const FlowLyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    const background = Color(0xFF08090B);
-    return MaterialApp(
-      title: 'FlowLy',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: background,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFB6F36B),
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-        // Disable route transitions globally: no zoom, swipe, or tinted
-        // predictive-back animation when opening playlists, collections,
-        // the profile, or other pages.
-        pageTransitionsTheme: const PageTransitionsTheme(
-          builders: {
-            TargetPlatform.android: _NoPageTransitionsBuilder(),
-            TargetPlatform.iOS: _NoPageTransitionsBuilder(),
-            TargetPlatform.fuchsia: _NoPageTransitionsBuilder(),
-            TargetPlatform.linux: _NoPageTransitionsBuilder(),
-            TargetPlatform.macOS: _NoPageTransitionsBuilder(),
-            TargetPlatform.windows: _NoPageTransitionsBuilder(),
-          },
-        ),
-        fontFamily: 'Roboto',
-        splashFactory: NoSplash.splashFactory,
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        hoverColor: Colors.transparent,
-        focusColor: Colors.transparent,
-        navigationBarTheme: const NavigationBarThemeData(
-          indicatorColor: Colors.transparent,
-          overlayColor: WidgetStatePropertyAll(Colors.transparent),
-          labelTextStyle: WidgetStatePropertyAll(
-            TextStyle(fontSize: 10, height: 1),
-          ),
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
-        ),
-        iconButtonTheme: const IconButtonThemeData(
-          style: ButtonStyle(
-            overlayColor: WidgetStatePropertyAll(Colors.transparent),
-            splashFactory: NoSplash.splashFactory,
-          ),
-        ),
-      ),
-      home: const AppShell(),
-    );
-  }
+  Widget build(BuildContext context) => ValueListenableBuilder<Color>(
+        valueListenable: FlowLyAccent.listenable,
+        builder: (context, accent, _) {
+          const background = Color(0xFF08090B);
+          return MaterialApp(
+            title: 'FlowLy',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              brightness: Brightness.dark,
+              scaffoldBackgroundColor: background,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: accent,
+                brightness: Brightness.dark,
+              ).copyWith(
+                primary: accent,
+                onPrimary: accent.computeLuminance() > .55
+                    ? const Color(0xFF08090B)
+                    : Colors.white,
+                secondary: accent,
+                onSecondary: accent.computeLuminance() > .55
+                    ? const Color(0xFF08090B)
+                    : Colors.white,
+                tertiary: accent,
+                onTertiary: accent.computeLuminance() > .55
+                    ? const Color(0xFF08090B)
+                    : Colors.white,
+                primaryContainer: accent.withValues(alpha: .18),
+                secondaryContainer: accent.withValues(alpha: .18),
+                surfaceTint: Colors.transparent,
+              ),
+              sliderTheme: SliderThemeData(
+                activeTrackColor: accent,
+                inactiveTrackColor: Colors.black,
+                secondaryActiveTrackColor: Colors.black,
+                thumbColor: accent,
+                overlayColor: Colors.transparent,
+                trackHeight: 3,
+              ),
+              filledButtonTheme: FilledButtonThemeData(
+                style: FilledButton.styleFrom(
+                  backgroundColor: accent,
+                  foregroundColor: accent.computeLuminance() > .55
+                      ? const Color(0xFF08090B)
+                      : Colors.white,
+                ),
+              ),
+              textButtonTheme: TextButtonThemeData(
+                style: TextButton.styleFrom(foregroundColor: accent),
+              ),
+              outlinedButtonTheme: OutlinedButtonThemeData(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: accent,
+                  side: const BorderSide(color: Colors.white24),
+                ),
+              ),
+              textSelectionTheme: TextSelectionThemeData(
+                cursorColor: accent,
+                selectionColor: accent.withValues(alpha: .28),
+                selectionHandleColor: accent,
+              ),
+              switchTheme: SwitchThemeData(
+                thumbColor: WidgetStateProperty.resolveWith<Color?>(
+                  (states) => states.contains(WidgetState.selected)
+                      ? accent
+                      : const Color(0xFF8D9096),
+                ),
+                trackColor: WidgetStateProperty.resolveWith<Color?>(
+                  (states) => states.contains(WidgetState.selected)
+                      ? accent.withValues(alpha: .42)
+                      : const Color(0xFF292B30),
+                ),
+              ),
+              useMaterial3: true,
+              pageTransitionsTheme: const PageTransitionsTheme(
+                builders: {
+                  TargetPlatform.android: _NoPageTransitionsBuilder(),
+                  TargetPlatform.iOS: _NoPageTransitionsBuilder(),
+                  TargetPlatform.fuchsia: _NoPageTransitionsBuilder(),
+                  TargetPlatform.linux: _NoPageTransitionsBuilder(),
+                  TargetPlatform.macOS: _NoPageTransitionsBuilder(),
+                  TargetPlatform.windows: _NoPageTransitionsBuilder(),
+                },
+              ),
+              fontFamily: 'Roboto',
+              splashFactory: NoSplash.splashFactory,
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+              hoverColor: Colors.transparent,
+              focusColor: Colors.transparent,
+              navigationBarTheme: const NavigationBarThemeData(
+                indicatorColor: Colors.transparent,
+                overlayColor: WidgetStatePropertyAll(Colors.transparent),
+                labelTextStyle: WidgetStatePropertyAll(
+                  TextStyle(fontSize: 10, height: 1),
+                ),
+                labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+              ),
+              iconButtonTheme: const IconButtonThemeData(
+                style: ButtonStyle(
+                  overlayColor: WidgetStatePropertyAll(Colors.transparent),
+                  splashFactory: NoSplash.splashFactory,
+                ),
+              ),
+            ),
+            home: const AppShell(),
+          );
+        },
+      );
 }
 
 class AppShell extends StatefulWidget {

@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../core/theme/flowly_accent.dart';
 import 'player_controller.dart';
+import 'vertical_track_label.dart';
 
 class Track {
   const Track(
@@ -63,6 +65,7 @@ class _BigPlayerContentState extends State<BigPlayerContent>
   final Map<String, DateTime> _busyStartedAt = <String, DateTime>{};
   DlState _dl = DlState.idle;
   bool _reduceMotion = false;
+  bool _transportPressed = false;
 
   PlayerController get _player => widget.player;
   double get _durationSeconds =>
@@ -475,58 +478,31 @@ class _BigPlayerContentState extends State<BigPlayerContent>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 460),
-                      switchInCurve: Curves.easeOutCubic,
-                      switchOutCurve: Curves.easeInCubic,
-                      transitionBuilder: (child, animation) =>
-                          FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0, .2),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
-                        ),
-                      ),
-                      child: Text(
-                        _track.title,
-                        key: ValueKey('player-title-${_track.id}'),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                        ),
+                    VerticalTrackLabel(
+                      text: _track.title,
+                      trackKey: _track.id,
+                      height: 58,
+                      duration: _reduceMotion
+                          ? Duration.zero
+                          : const Duration(milliseconds: 230),
+                      maxLines: 2,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 6),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 500),
-                      switchInCurve: Curves.easeOutCubic,
-                      switchOutCurve: Curves.easeInCubic,
-                      transitionBuilder: (child, animation) =>
-                          FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0, .2),
-                            end: Offset.zero,
-                          ).animate(animation),
-                          child: child,
-                        ),
-                      ),
-                      child: Text(
-                        _track.artist,
-                        key: ValueKey('player-artist-${_track.id}'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 16,
-                        ),
+                    VerticalTrackLabel(
+                      text: _track.artist,
+                      trackKey: _track.id,
+                      height: 24,
+                      duration: _reduceMotion
+                          ? Duration.zero
+                          : const Duration(milliseconds: 210),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 16,
                       ),
                     ),
                   ],
@@ -553,9 +529,9 @@ class _BigPlayerContentState extends State<BigPlayerContent>
                   color: Colors.transparent,
                   child: SliderTheme(
                     data: SliderTheme.of(context).copyWith(
-                      activeTrackColor: Colors.white,
-                      inactiveTrackColor: Colors.white24,
-                      thumbColor: Colors.white,
+                      activeTrackColor: FlowLyAccent.color,
+                      inactiveTrackColor: Colors.black,
+                      thumbColor: FlowLyAccent.color,
                       overlayColor: Colors.transparent,
                       trackHeight: 4,
                     ),
@@ -612,20 +588,28 @@ class _BigPlayerContentState extends State<BigPlayerContent>
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: _player.togglePlay,
-                  child: Container(
-                    width: 68,
-                    height: 68,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      _player.isPlaying
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded,
-                      color: Colors.black,
-                      size: 42,
+                  onTapDown: (_) => setState(() => _transportPressed = true),
+                  onTapUp: (_) => setState(() => _transportPressed = false),
+                  onTapCancel: () => setState(() => _transportPressed = false),
+                  child: AnimatedScale(
+                    scale: _transportPressed ? .9 : 1,
+                    duration: const Duration(milliseconds: 90),
+                    curve: Curves.easeOut,
+                    child: Container(
+                      width: 68,
+                      height: 68,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        _player.isPlaying
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
+                        color: Colors.black,
+                        size: 42,
+                      ),
                     ),
                   ),
                 ),
@@ -655,7 +639,7 @@ class _BigPlayerContentState extends State<BigPlayerContent>
   }
 }
 
-class _RoundAction extends StatelessWidget {
+class _RoundAction extends StatefulWidget {
   const _RoundAction({
     required this.icon,
     required this.label,
@@ -667,17 +651,32 @@ class _RoundAction extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
+  State<_RoundAction> createState() => _RoundActionState();
+}
+
+class _RoundActionState extends State<_RoundAction> {
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) => Semantics(
         button: true,
-        label: label,
+        label: widget.label,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: onTap,
+          onTap: widget.onTap,
+          onTapDown: (_) => setState(() => _pressed = true),
+          onTapUp: (_) => setState(() => _pressed = false),
+          onTapCancel: () => setState(() => _pressed = false),
           child: SizedBox(
             width: 44,
             height: 44,
             child: Center(
-              child: Icon(icon, color: Colors.white, size: 26),
+              child: AnimatedScale(
+                scale: _pressed ? .82 : 1,
+                duration: const Duration(milliseconds: 90),
+                curve: Curves.easeOut,
+                child: Icon(widget.icon, color: Colors.white, size: 26),
+              ),
             ),
           ),
         ),

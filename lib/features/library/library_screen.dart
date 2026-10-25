@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
+import '../../core/theme/flowly_accent.dart';
 import '../../navigation/circle_reveal_route.dart';
 import '../player/player_controller.dart';
 import '../player/draggable_player.dart';
@@ -148,6 +151,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         : const Color(0xFF275F7D),
                     playlist.name,
                     '${playlist.tracks.length} треков',
+                    imagePath: playlist.coverPath,
                     onTapAt: (position) =>
                         _openPlaylist(context, playlist.id, position),
                   ),
@@ -254,10 +258,10 @@ class _FilterChip extends StatelessWidget {
         child: Chip(
           label: Text(label),
           backgroundColor: selected
-              ? const Color(0xFFB6F36B).withValues(alpha: .18)
+              ? FlowLyAccent.color.withValues(alpha: .18)
               : const Color(0xFF1A1C20),
           side: BorderSide(
-            color: selected ? const Color(0xFFB6F36B) : Colors.white12,
+            color: selected ? FlowLyAccent.color : Colors.white12,
           ),
         ),
       );
@@ -271,6 +275,7 @@ class _LibraryRow extends StatelessWidget {
     this.subtitle, {
     this.onTap,
     this.onTapAt,
+    this.imagePath,
   }) : assert(onTap != null || onTapAt != null);
 
   final IconData icon;
@@ -279,6 +284,7 @@ class _LibraryRow extends StatelessWidget {
   final String subtitle;
   final VoidCallback? onTap;
   final ValueChanged<Offset>? onTapAt;
+  final String? imagePath;
 
   @override
   Widget build(BuildContext context) {
@@ -305,7 +311,17 @@ class _LibraryRow extends StatelessWidget {
             color: color,
             borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(icon, size: 27, color: Colors.white),
+          child: imagePath == null
+              ? Icon(icon, size: 27, color: Colors.white)
+              : ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Image.file(
+                    File(imagePath!),
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) =>
+                        Icon(icon, size: 27, color: Colors.white),
+                  ),
+                ),
         ),
         title: Text(
           title,
