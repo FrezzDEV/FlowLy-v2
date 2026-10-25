@@ -818,7 +818,6 @@ class _ProfileEditResult {
   final bool showTracks;
   final bool showAlbums;
   final bool showArtists;
-  final List<String> featuredItemIds;
 }
 
 class ProfileEditorScreen extends StatefulWidget {
