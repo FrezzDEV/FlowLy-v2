@@ -83,7 +83,7 @@ class _VerticalTrackLabelState extends State<VerticalTrackLabel>
         value,
         maxLines: widget.maxLines,
         overflow: TextOverflow.ellipsis,
-        softWrap: false,
+        softWrap: widget.maxLines > 1,
         style: widget.style,
       );
 
