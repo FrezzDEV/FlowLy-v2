@@ -264,8 +264,8 @@ void main() {
 
     await tester.tap(find.text('Исполнители'));
     await tester.pumpAndSettle();
-    expect(find.text('Ed Sheeran'), findsOneWidget);
-    await tester.tap(find.text('Ed Sheeran'));
+    expect(find.text('Ed Sheeran'), findsWidgets);
+    await tester.tap(find.text('Ed Sheeran').first);
     await tester.pumpAndSettle();
     expect(find.text('Afterlife'), findsOneWidget);
     expect(find.byType(CatalogCollectionScreen), findsOneWidget);
@@ -290,7 +290,12 @@ void main() {
     final player = PlayerController.instance;
     await tester.pumpWidget(const FlowLyApp());
 
-    await tester.tap(find.text('Midnight Flow').first);
+    if (player.currentTrack.title != PlayerController.catalog.first.title) {
+      player.playTrack(PlayerController.catalog.first);
+    }
+    await draggablePlayerKey.currentState?.close();
+    await pumpPlayerUi(tester);
+    await draggablePlayerKey.currentState?.open();
     await pumpPlayerUi(tester);
     await tester.tap(find.byIcon(Icons.more_horiz_rounded));
     await pumpPlayerUi(tester);
@@ -329,12 +334,14 @@ void main() {
   testWidgets('playlist picker stays open and toggles track membership', (tester) async {
     final player = PlayerController.instance;
     await tester.pumpWidget(const FlowLyApp());
-    await tester.tap(find.text('Midnight Flow').first);
+    await draggablePlayerKey.currentState?.close();
     await pumpPlayerUi(tester);
     await player.removeTrackFromPlaylist(
       PlayerController.favoritesPlaylistId,
       player.currentTrack,
     );
+    await draggablePlayerKey.currentState?.open();
+    await pumpPlayerUi(tester);
     await tester.tap(find.byIcon(Icons.more_horiz_rounded));
     await pumpPlayerUi(tester);
 
@@ -399,10 +406,19 @@ void main() {
   });
 
   testWidgets('mini player opens and closes the full-screen player', (tester) async {
+    final player = PlayerController.instance;
+    if (player.currentTrack.title != PlayerController.catalog.first.title) {
+      player.playTrack(PlayerController.catalog.first);
+    }
     await tester.pumpWidget(const FlowLyApp());
+    await draggablePlayerKey.currentState?.close();
+    await pumpPlayerUi(tester);
 
-    expect(find.text('Midnight Flow'), findsWidgets);
-    await tester.tap(find.text('Midnight Flow').first);
+    final miniTitle = find.byKey(
+      const ValueKey('mini-title-Midnight Flow'),
+    );
+    expect(miniTitle, findsOneWidget);
+    await tester.tap(miniTitle);
     await pumpPlayerUi(tester);
 
     expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsOneWidget);
@@ -410,7 +426,7 @@ void main() {
     await pumpPlayerUi(tester);
 
     expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsNothing);
-    expect(find.text('Midnight Flow'), findsWidgets);
+    expect(find.byKey(const ValueKey('mini-title-Midnight Flow')), findsOneWidget);
   });
 
 }
