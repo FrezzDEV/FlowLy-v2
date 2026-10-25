@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../core/theme/flowly_accent.dart';
 import 'player_controller.dart';
+import 'vertical_track_label.dart';
 
 class Track {
   const Track(
@@ -476,98 +478,31 @@ class _BigPlayerContentState extends State<BigPlayerContent>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(
+                    VerticalTrackLabel(
+                      text: _track.title,
+                      trackKey: _track.id,
                       height: 58,
-                      child: ClipRect(
-                        child: AnimatedSwitcher(
-                          duration: _reduceMotion
-                              ? Duration.zero
-                              : const Duration(milliseconds: 230),
-                          switchInCurve: Curves.easeOutCubic,
-                          switchOutCurve: Curves.easeInCubic,
-                          layoutBuilder: (current, previous) => Stack(
-                            alignment: AlignmentDirectional.centerStart,
-                            children: [
-                              for (final child in previous)
-                                Positioned.fill(child: child),
-                              if (current != null) Positioned.fill(child: current),
-                            ],
-                          ),
-                          transitionBuilder: (child, animation) {
-                            final motion = CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeOutCubic,
-                            );
-                            return FadeTransition(
-                              opacity: animation,
-                              child: SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: const Offset(0, .65),
-                                  end: Offset.zero,
-                                ).animate(motion),
-                                child: child,
-                              ),
-                            );
-                          },
-                          child: Text(
-                            _track.title,
-                            key: ValueKey('player-title-${_track.id}'),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
+                      duration: _reduceMotion
+                          ? Duration.zero
+                          : const Duration(milliseconds: 230),
+                      maxLines: 2,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 6),
-                    SizedBox(
+                    VerticalTrackLabel(
+                      text: _track.artist,
+                      trackKey: _track.id,
                       height: 24,
-                      child: ClipRect(
-                        child: AnimatedSwitcher(
-                          duration: _reduceMotion
-                              ? Duration.zero
-                              : const Duration(milliseconds: 210),
-                          switchInCurve: Curves.easeOutCubic,
-                          switchOutCurve: Curves.easeInCubic,
-                          layoutBuilder: (current, previous) => Stack(
-                            alignment: AlignmentDirectional.centerStart,
-                            children: [
-                              for (final child in previous)
-                                Positioned.fill(child: child),
-                              if (current != null) Positioned.fill(child: current),
-                            ],
-                          ),
-                          transitionBuilder: (child, animation) {
-                            final motion = CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeOutCubic,
-                            );
-                            return FadeTransition(
-                              opacity: animation,
-                              child: SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: const Offset(0, .65),
-                                  end: Offset.zero,
-                                ).animate(motion),
-                                child: child,
-                              ),
-                            );
-                          },
-                          child: Text(
-                            _track.artist,
-                            key: ValueKey('player-artist-${_track.id}'),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
+                      duration: _reduceMotion
+                          ? Duration.zero
+                          : const Duration(milliseconds: 210),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 16,
                       ),
                     ),
                   ],
@@ -594,9 +529,9 @@ class _BigPlayerContentState extends State<BigPlayerContent>
                   color: Colors.transparent,
                   child: SliderTheme(
                     data: SliderTheme.of(context).copyWith(
-                      activeTrackColor: Colors.white,
-                      inactiveTrackColor: Colors.white24,
-                      thumbColor: Colors.white,
+                      activeTrackColor: FlowLyAccent.color,
+                      inactiveTrackColor: Colors.black,
+                      thumbColor: FlowLyAccent.color,
                       overlayColor: Colors.transparent,
                       trackHeight: 4,
                     ),
