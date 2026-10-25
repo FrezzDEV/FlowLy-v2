@@ -113,6 +113,29 @@ void main() {
     }
   });
 
+  testWidgets('profile shows the five showcase sections with edit buttons', (tester) async {
+    await tester.pumpWidget(const FlowLyApp());
+
+    await tester.tap(find.descendant(
+      of: find.byType(NavigationBar),
+      matching: find.byIcon(Icons.person_outline_rounded),
+    ));
+    await tester.pumpAndSettle();
+
+    for (final title in ['Избранное', 'Плейлисты', 'Треки', 'Альбомы', 'Авторы']) {
+      expect(find.text(title), findsOneWidget, reason: title);
+    }
+    expect(find.text('Редактировать'), findsNWidgets(5));
+    expect(find.text('Любимые треки'), findsOneWidget);
+    expect(find.text('Мой Микс'), findsOneWidget);
+    expect(find.text('27 подписчиков'), findsOneWidget);
+    expect(find.text('Lord Huron'), findsOneWidget);
+
+    await tester.tap(find.text('Редактировать').first);
+    await tester.pumpAndSettle();
+    expect(find.byType(ProfileEditorScreen), findsOneWidget);
+  });
+
   testWidgets('home favorites quick tile opens the playlist screen', (tester) async {
     await tester.pumpWidget(const FlowLyApp());
     await tester.tap(find.text('Избранное').first);
