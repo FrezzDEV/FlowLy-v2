@@ -25,6 +25,64 @@ class FlowLyApp extends StatelessWidget {
               colorScheme: ColorScheme.fromSeed(
                 seedColor: accent,
                 brightness: Brightness.dark,
+              ).copyWith(
+                primary: accent,
+                onPrimary: accent.computeLuminance() > .55
+                    ? const Color(0xFF08090B)
+                    : Colors.white,
+                secondary: accent,
+                onSecondary: accent.computeLuminance() > .55
+                    ? const Color(0xFF08090B)
+                    : Colors.white,
+                tertiary: accent,
+                onTertiary: accent.computeLuminance() > .55
+                    ? const Color(0xFF08090B)
+                    : Colors.white,
+                primaryContainer: accent.withValues(alpha: .18),
+                secondaryContainer: accent.withValues(alpha: .18),
+                surfaceTint: Colors.transparent,
+              ),
+              sliderTheme: SliderThemeData(
+                activeTrackColor: accent,
+                inactiveTrackColor: Colors.black,
+                secondaryActiveTrackColor: Colors.black,
+                thumbColor: accent,
+                overlayColor: Colors.transparent,
+                trackHeight: 3,
+              ),
+              filledButtonTheme: FilledButtonThemeData(
+                style: FilledButton.styleFrom(
+                  backgroundColor: accent,
+                  foregroundColor: accent.computeLuminance() > .55
+                      ? const Color(0xFF08090B)
+                      : Colors.white,
+                ),
+              ),
+              textButtonTheme: TextButtonThemeData(
+                style: TextButton.styleFrom(foregroundColor: accent),
+              ),
+              outlinedButtonTheme: OutlinedButtonThemeData(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: accent,
+                  side: const BorderSide(color: Colors.white24),
+                ),
+              ),
+              textSelectionTheme: TextSelectionThemeData(
+                cursorColor: accent,
+                selectionColor: accent.withValues(alpha: .28),
+                selectionHandleColor: accent,
+              ),
+              switchTheme: SwitchThemeData(
+                thumbColor: WidgetStateProperty.resolveWith<Color?>(
+                  (states) => states.contains(WidgetState.selected)
+                      ? accent
+                      : const Color(0xFF8D9096),
+                ),
+                trackColor: WidgetStateProperty.resolveWith<Color?>(
+                  (states) => states.contains(WidgetState.selected)
+                      ? accent.withValues(alpha: .42)
+                      : const Color(0xFF292B30),
+                ),
               ),
               useMaterial3: true,
               pageTransitionsTheme: const PageTransitionsTheme(

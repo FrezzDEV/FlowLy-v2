@@ -48,7 +48,7 @@ void main() {
     expect(find.text('Популярные жанры'), findsNothing);
     expect(find.text('Найди музыку'), findsOneWidget);
   });
-  testWidgets('profile editor opens from the pencil and includes crop controls', (tester) async {
+  testWidgets('profile settings menu offers settings, editor and share', (tester) async {
     await tester.pumpWidget(const FlowLyApp());
 
     await tester.tap(find.descendant(
@@ -57,31 +57,42 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.byTooltip('Настройки'), findsNothing);
-    await tester.tap(find.byTooltip('Редактировать профиль'));
+    await tester.tap(find.byTooltip('Настройки профиля'));
+    await tester.pumpAndSettle();
+    expect(find.text('Настройки'), findsOneWidget);
+    expect(find.text('Карандаш'), findsOneWidget);
+    expect(find.text('Поделиться профилем'), findsOneWidget);
+
+    await tester.tap(find.text('Карандаш'));
     await tester.pumpAndSettle();
 
     expect(find.byType(ProfileEditorScreen), findsOneWidget);
-    expect(find.text('Редактировать профиль'), findsOneWidget);
-    expect(find.text('Аватарка'), findsOneWidget);
-
+    expect(find.text('Предпросмотр профиля'), findsOneWidget);
     final editorScrollable = find.descendant(
       of: find.byType(ProfileEditorScreen),
       matching: find.byType(Scrollable),
     ).first;
+
     await tester.scrollUntilVisible(
-      find.text('Баннер'),
+      find.text('Аватарка'),
       260,
       scrollable: editorScrollable,
     );
-    expect(find.text('Баннер'), findsOneWidget);
+    expect(find.text('Аватарка'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Витрина профиля'),
+      260,
+      scrollable: editorScrollable,
+    );
+    expect(find.text('Витрина профиля'), findsOneWidget);
+    expect(find.text('Добавить контент'), findsOneWidget);
+
     await tester.scrollUntilVisible(
       find.text('Рамка аватарки'),
       260,
       scrollable: editorScrollable,
     );
     expect(find.text('Рамка аватарки'), findsOneWidget);
-
     await tester.scrollUntilVisible(
       find.text('Показывать плейлисты'),
       260,

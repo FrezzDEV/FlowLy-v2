@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/storage/local_image_storage.dart';
@@ -36,6 +37,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   static const _showTracksKey = 'flowly.profile.showTracks';
   static const _showAlbumsKey = 'flowly.profile.showAlbums';
   static const _showArtistsKey = 'flowly.profile.showArtists';
+  static const _featuredItemsKey = 'flowly.profile.featuredItems';
 
   String _name = 'Слушатель FlowLy';
   String _username = 'flowly_listener';
@@ -52,6 +54,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _showTracks = true;
   bool _showAlbums = true;
   bool _showArtists = true;
+  List<String> _featuredItemIds = <String>[];
 
   @override
   void initState() {
@@ -80,9 +83,81 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _showTracks = preferences.getBool(_showTracksKey) ?? _showTracks;
         _showAlbums = preferences.getBool(_showAlbumsKey) ?? _showAlbums;
         _showArtists = preferences.getBool(_showArtistsKey) ?? _showArtists;
+        _featuredItemIds =
+            preferences.getStringList(_featuredItemsKey) ?? _featuredItemIds;
       });
     } catch (_) {
       // The local demo profile remains usable without a platform preference store.
+    }
+  }
+
+  Future<void> _openProfileMenu() async {
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: const Color(0xFF17181D),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 38,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              const SizedBox(height: 14),
+              ListTile(
+                leading: const Icon(Icons.settings_rounded),
+                title: const Text('Настройки'),
+                onTap: () => Navigator.of(sheetContext).pop('settings'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.edit_rounded),
+                title: const Text('Карандаш'),
+                subtitle: const Text('Предпросмотр и редактирование профиля'),
+                onTap: () => Navigator.of(sheetContext).pop('editor'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.ios_share_rounded),
+                title: const Text('Поделиться профилем'),
+                onTap: () => Navigator.of(sheetContext).pop('share'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (!mounted || action == null) return;
+
+    switch (action) {
+      case 'settings':
+        await Navigator.of(context).push<void>(
+          PageRouteBuilder<void>(
+            pageBuilder: (_, __, ___) => const ProfileSettingsScreen(),
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: Duration.zero,
+            transitionsBuilder: (_, __, ___, child) => child,
+          ),
+        );
+        break;
+      case 'editor':
+        await _editProfile();
+        break;
+      case 'share':
+        await SharePlus.instance.share(
+          ShareParams(
+            title: 'Профиль FlowLy',
+            text: '$_name\n@$_username\nПрофиль в FlowLy',
+          ),
+        );
+        break;
     }
   }
 
@@ -102,6 +177,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           bannerY: _bannerY,
           frameStyle: _frameStyle,
           initialAccentColor: FlowLyAccent.color,
+          initialFeaturedItemIds: _featuredItemIds,
           showPlaylists: _showPlaylists,
           showTracks: _showTracks,
           showAlbums: _showAlbums,
@@ -130,6 +206,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _showTracks = result.showTracks;
       _showAlbums = result.showAlbums;
       _showArtists = result.showArtists;
+      _featuredItemIds = result.featuredItemIds;
     });
     await FlowLyAccent.setColor(result.accentColor);
 
@@ -150,6 +227,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await preferences.setBool(_showTracksKey, _showTracks);
       await preferences.setBool(_showAlbumsKey, _showAlbums);
       await preferences.setBool(_showArtistsKey, _showArtists);
+      await preferences.setStringList(_featuredItemsKey, _featuredItemIds);
     } catch (_) {
       // The profile continues to reflect edits for this session.
     }
@@ -170,7 +248,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Color _frameColor(String style) {
     switch (style) {
       case 'lime':
-        return const Color(0xFFF5F5F5);
+        return const Color(0xFFB6F36B);
       case 'violet':
         return const Color(0xFFB28BFF);
       case 'blue':
@@ -185,237 +263,314 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final player = PlayerController.instance;
+    final statusInset = MediaQuery.paddingOf(context).top;
+
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                if (widget.backButtonKey != null)
-                  IconButton(
-                    key: widget.backButtonKey,
-                    tooltip: 'Назад',
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.arrow_back_rounded),
-                  )
-                else
-                  const SizedBox(width: 48, height: 48),
-                const Spacer(),
-                IconButton(
-                  tooltip: 'Редактировать профиль',
-                  onPressed: _editProfile,
-                  icon: Icon(
-                    Icons.edit_rounded,
-                    size: 25,
-                    color: FlowLyAccent.color,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: AnimatedBuilder(
-                animation: player,
-                builder: (context, _) {
-                  final customPlaylists =
-                      player.playlists.where((item) => !item.isSystem).toList();
-                  final albumsByName = <String, PlayerTrack>{};
-                  final artistsByName = <String, PlayerTrack>{};
-                  for (final track in PlayerController.catalog) {
-                    albumsByName.putIfAbsent(track.album, () => track);
-                    artistsByName.putIfAbsent(track.artist, () => track);
-                  }
-                  return ListView(
-                    padding: const EdgeInsets.only(bottom: 28),
-                    children: [
-                      SizedBox(
-                        height: 206,
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Positioned(
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              height: 158,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(22),
-                                child: _CropTransformImage(
-                                  path: _bannerPath,
-                                  scale: _bannerScale,
-                                  offsetX: _bannerX,
-                                  offsetY: _bannerY,
-                                  placeholder: const DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [
-                                          Color(0xFF55575B),
-                                          Color(0xFF383A40),
-                                          Color(0xFF15171E),
-                                        ],
-                                      ),
-                                    ),
+      top: false,
+      child: AnimatedBuilder(
+        animation: player,
+        builder: (context, _) {
+          final customPlaylists =
+              player.playlists.where((item) => !item.isSystem).toList();
+          final albumsByName = <String, PlayerTrack>{};
+          final artistsByName = <String, PlayerTrack>{};
+          for (final track in PlayerController.catalog) {
+            albumsByName.putIfAbsent(track.album, () => track);
+            artistsByName.putIfAbsent(track.artist, () => track);
+          }
+          final showcase = _allProfileShowcaseItems()
+              .where((item) => _featuredItemIds.contains(item.id))
+              .toList();
+
+          return ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              SizedBox(
+                height: 206 + statusInset,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: 158 + statusInset,
+                      child: ClipRect(
+                        child: _CropTransformImage(
+                          path: _bannerPath,
+                          scale: _bannerScale,
+                          offsetX: _bannerX,
+                          offsetY: _bannerY,
+                          placeholder: const DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFF345B56),
+                                  Color(0xFF263047),
+                                  Color(0xFF15171E),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (widget.backButtonKey != null)
+                      Positioned(
+                        top: statusInset + 2,
+                        left: 12,
+                        child: IconButton(
+                          key: widget.backButtonKey,
+                          tooltip: 'Назад',
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.arrow_back_rounded),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.black.withValues(alpha: .28),
+                          ),
+                        ),
+                      ),
+                    Positioned(
+                      top: statusInset + 2,
+                      right: 12,
+                      child: IconButton(
+                        tooltip: 'Настройки профиля',
+                        onPressed: _openProfileMenu,
+                        icon: Icon(
+                          Icons.settings_rounded,
+                          size: 25,
+                          color: FlowLyAccent.color,
+                        ),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.black.withValues(alpha: .28),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      height: 108,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _SocialCount(
+                              value: '0',
+                              label: 'подписчиков',
+                            ),
+                          ),
+                          Container(
+                            width: 108,
+                            height: 108,
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: _profileBackground,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: _frameColor(_frameStyle),
+                                width: _frameStyle == 'none' ? 0 : 3,
+                              ),
+                            ),
+                            child: ClipOval(
+                              child: _CropTransformImage(
+                                path: _avatarPath,
+                                scale: _avatarScale,
+                                offsetX: _avatarX,
+                                offsetY: _avatarY,
+                                placeholder: const ColoredBox(
+                                  color: Color(0xFF24272B),
+                                  child: Center(
+                                    child: Icon(Icons.person_rounded, size: 44),
                                   ),
                                 ),
                               ),
                             ),
-                            Positioned(
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              height: 108,
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: _SocialCount(
-                                      value: '0',
-                                      label: 'подписчиков',
-                                    ),
-                                  ),
-                                  Container(
-                                    width: 108,
-                                    height: 108,
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: _profileBackground,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: _frameColor(_frameStyle),
-                                        width: _frameStyle == 'none' ? 0 : 3,
-                                      ),
-                                    ),
-                                    child: ClipOval(
-                                      child: _CropTransformImage(
-                                        path: _avatarPath,
-                                        scale: _avatarScale,
-                                        offsetX: _avatarX,
-                                        offsetY: _avatarY,
-                                        placeholder: const ColoredBox(
-                                          color: Color(0xFF24272B),
-                                          child: Center(
-                                            child: Icon(
-                                              Icons.person_rounded,
-                                              size: 44,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: _SocialCount(
-                                      value: '0',
-                                      label: 'подписок',
-                                    ),
-                                  ),
-                                ],
-                              ),
+                          ),
+                          Expanded(
+                            child: _SocialCount(
+                              value: '0',
+                              label: 'подписок',
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 12),
-                      Text(
-                        _name,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -.3,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        '@$_username',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white60,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      if (_showPlaylists)
-                        _ProfileSection(
-                          title: 'Плейлисты',
-                          emptyText: 'Созданные плейлисты появятся здесь.',
-                          isEmpty: customPlaylists.isEmpty,
-                          children: [
-                            for (final playlist in customPlaylists)
-                              _ProfileContentRow(
-                                icon: Icons.queue_music_rounded,
-                                title: playlist.name,
-                                subtitle: '${playlist.tracks.length} треков',
-                                color: playlist.tracks.isEmpty
-                                    ? const Color(0xFF275F7D)
-                                    : playlist.tracks.first.color,
-                                imagePath: playlist.coverPath,
-                              ),
-                          ],
-                        ),
-                      if (_showTracks)
-                        _ProfileSection(
-                          title: 'Треки',
-                          emptyText: 'Треки пока не добавлены.',
-                          isEmpty: PlayerController.catalog.isEmpty,
-                          children: [
-                            for (final track
-                                in PlayerController.catalog.take(5))
-                              _ProfileContentRow(
-                                icon: track.icon,
-                                title: track.title,
-                                subtitle: track.artist,
-                                color: track.color,
-                                onTap: () => player.playTrack(track),
-                              ),
-                          ],
-                        ),
-                      if (_showAlbums)
-                        _ProfileSection(
-                          title: 'Альбомы',
-                          emptyText: 'Альбомы не найдены.',
-                          isEmpty: albumsByName.isEmpty,
-                          children: [
-                            for (final entry in albumsByName.entries)
-                              _ProfileContentRow(
-                                icon: Icons.album_rounded,
-                                title: entry.key,
-                                subtitle: entry.value.artist,
-                                color: entry.value.color,
-                                onTap: () => player.playTrack(entry.value),
-                              ),
-                          ],
-                        ),
-                      if (_showArtists)
-                        _ProfileSection(
-                          title: 'Авторы',
-                          emptyText: 'Авторы не найдены.',
-                          isEmpty: artistsByName.isEmpty,
-                          children: [
-                            for (final entry in artistsByName.entries)
-                              _ProfileContentRow(
-                                icon: Icons.person_rounded,
-                                title: entry.key,
-                                subtitle: 'Исполнитель',
-                                color: entry.value.color,
-                                onTap: () => player.playTrack(entry.value),
-                              ),
-                          ],
-                        ),
-                    ],
-                  );
-                },
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: Column(
+                  children: [
+                    Text(
+                      _name,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -.3,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      '@$_username',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white60,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _ProfileSection(
+                      title: 'Избранное в профиле',
+                      emptyText: 'Открой настройки профиля → Карандаш, чтобы добавить любимые треки, плейлисты, альбомы и авторов.',
+                      isEmpty: showcase.isEmpty,
+                      children: [
+                        for (final item in showcase)
+                          _ProfileContentRow(
+                            icon: item.icon,
+                            title: item.title,
+                            subtitle: item.subtitle,
+                            color: item.color,
+                            imagePath: item.imagePath,
+                            onTap: item.playableTrack == null
+                                ? null
+                                : () => player.playTrack(item.playableTrack!),
+                          ),
+                      ],
+                    ),
+                    if (_showPlaylists)
+                      _ProfileSection(
+                        title: 'Плейлисты',
+                        emptyText: 'Созданные плейлисты появятся здесь.',
+                        isEmpty: customPlaylists.isEmpty,
+                        children: [
+                          for (final playlist in customPlaylists)
+                            _ProfileContentRow(
+                              icon: Icons.queue_music_rounded,
+                              title: playlist.name,
+                              subtitle: '${playlist.tracks.length} треков',
+                              color: playlist.tracks.isEmpty
+                                  ? const Color(0xFF275F7D)
+                                  : playlist.tracks.first.color,
+                              imagePath: playlist.coverPath,
+                              onTap: playlist.tracks.isEmpty
+                                  ? null
+                                  : () => player.playTrack(playlist.tracks.first),
+                            ),
+                        ],
+                      ),
+                    if (_showTracks)
+                      _ProfileSection(
+                        title: 'Треки',
+                        emptyText: 'Треки пока не добавлены.',
+                        isEmpty: PlayerController.catalog.isEmpty,
+                        children: [
+                          for (final track in PlayerController.catalog.take(5))
+                            _ProfileContentRow(
+                              icon: track.icon,
+                              title: track.title,
+                              subtitle: track.artist,
+                              color: track.color,
+                              onTap: () => player.playTrack(track),
+                            ),
+                        ],
+                      ),
+                    if (_showAlbums)
+                      _ProfileSection(
+                        title: 'Альбомы',
+                        emptyText: 'Альбомы не найдены.',
+                        isEmpty: albumsByName.isEmpty,
+                        children: [
+                          for (final entry in albumsByName.entries)
+                            _ProfileContentRow(
+                              icon: Icons.album_rounded,
+                              title: entry.key,
+                              subtitle: entry.value.artist,
+                              color: entry.value.color,
+                              onTap: () => player.playTrack(entry.value),
+                            ),
+                        ],
+                      ),
+                    if (_showArtists)
+                      _ProfileSection(
+                        title: 'Авторы',
+                        emptyText: 'Авторы не найдены.',
+                        isEmpty: artistsByName.isEmpty,
+                        children: [
+                          for (final entry in artistsByName.entries)
+                            _ProfileContentRow(
+                              icon: Icons.person_rounded,
+                              title: entry.key,
+                              subtitle: 'Исполнитель',
+                              color: entry.value.color,
+                              onTap: () => player.playTrack(entry.value),
+                            ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
+}
+
+class ProfileSettingsScreen extends StatelessWidget {
+  const ProfileSettingsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        backgroundColor: _profileBackground,
+        appBar: AppBar(
+          title: const Text('Настройки'),
+          backgroundColor: _profileBackground,
+          surfaceTintColor: Colors.transparent,
+        ),
+        body: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+          children: const [
+            ListTile(
+              leading: Icon(Icons.palette_outlined),
+              title: Text('Внешний вид'),
+              subtitle: Text('Акцентный цвет настраивается в «Карандаше».'),
+            ),
+            ListTile(
+              leading: Icon(Icons.notifications_none_rounded),
+              title: Text('Уведомления'),
+              subtitle: Text('Появятся после подключения сервера.'),
+            ),
+            ListTile(
+              leading: Icon(Icons.high_quality_outlined),
+              title: Text('Качество звука'),
+              subtitle: Text('Плеер пока работает в демонстрационном режиме.'),
+            ),
+            ListTile(
+              leading: Icon(Icons.language_rounded),
+              title: Text('Язык'),
+              subtitle: Text('Русский'),
+            ),
+            ListTile(
+              leading: Icon(Icons.info_outline_rounded),
+              title: Text('О приложении'),
+              subtitle: Text('FlowLy · 0.1.0'),
+            ),
+          ],
+        ),
+      );
 }
 
 class _SocialCount extends StatelessWidget {
@@ -538,6 +693,93 @@ class _ProfileContentRow extends StatelessWidget {
       );
 }
 
+class _ProfileShowcaseItem {
+  const _ProfileShowcaseItem({
+    required this.id,
+    required this.group,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    this.imagePath,
+    this.playableTrack,
+  });
+
+  final String id;
+  final String group;
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final String? imagePath;
+  final PlayerTrack? playableTrack;
+}
+
+List<_ProfileShowcaseItem> _allProfileShowcaseItems() {
+  final player = PlayerController.instance;
+  final items = <_ProfileShowcaseItem>[];
+
+  for (final track in PlayerController.catalog) {
+    items.add(_ProfileShowcaseItem(
+      id: 'track:${track.title}|${track.artist}',
+      group: 'Трек',
+      title: track.title,
+      subtitle: track.artist,
+      icon: track.icon,
+      color: track.color,
+      playableTrack: track,
+    ));
+  }
+
+  for (final playlist in player.playlists) {
+    final firstTrack = playlist.tracks.isEmpty ? null : playlist.tracks.first;
+    items.add(_ProfileShowcaseItem(
+      id: 'playlist:${playlist.id}',
+      group: 'Плейлист',
+      title: playlist.name,
+      subtitle: '${playlist.tracks.length} треков',
+      icon: playlist.id == PlayerController.favoritesPlaylistId
+          ? Icons.favorite_rounded
+          : playlist.id == PlayerController.downloadsPlaylistId
+              ? Icons.download_rounded
+              : Icons.queue_music_rounded,
+      color: firstTrack?.color ?? const Color(0xFF282A31),
+      imagePath: playlist.coverPath,
+      playableTrack: firstTrack,
+    ));
+  }
+
+  final albums = <String, PlayerTrack>{};
+  final artists = <String, PlayerTrack>{};
+  for (final track in PlayerController.catalog) {
+    albums.putIfAbsent(track.album, () => track);
+    artists.putIfAbsent(track.artist, () => track);
+  }
+  for (final entry in albums.entries) {
+    items.add(_ProfileShowcaseItem(
+      id: 'album:${entry.key}',
+      group: 'Альбом',
+      title: entry.key,
+      subtitle: entry.value.artist,
+      icon: Icons.album_rounded,
+      color: entry.value.color,
+      playableTrack: entry.value,
+    ));
+  }
+  for (final entry in artists.entries) {
+    items.add(_ProfileShowcaseItem(
+      id: 'artist:${entry.key}',
+      group: 'Автор',
+      title: entry.key,
+      subtitle: 'Исполнитель',
+      icon: Icons.person_rounded,
+      color: entry.value.color,
+      playableTrack: entry.value,
+    ));
+  }
+  return items;
+}
+
 class _ProfileEditResult {
   const _ProfileEditResult({
     required this.name,
@@ -552,6 +794,7 @@ class _ProfileEditResult {
     required this.bannerY,
     required this.frameStyle,
     required this.accentColor,
+    required this.featuredItemIds,
     required this.showPlaylists,
     required this.showTracks,
     required this.showAlbums,
@@ -570,10 +813,12 @@ class _ProfileEditResult {
   final double bannerY;
   final String frameStyle;
   final Color accentColor;
+  final List<String> featuredItemIds;
   final bool showPlaylists;
   final bool showTracks;
   final bool showAlbums;
   final bool showArtists;
+  final List<String> featuredItemIds;
 }
 
 class ProfileEditorScreen extends StatefulWidget {
@@ -591,6 +836,7 @@ class ProfileEditorScreen extends StatefulWidget {
     required this.bannerY,
     required this.frameStyle,
     required this.initialAccentColor,
+    required this.initialFeaturedItemIds,
     required this.showPlaylists,
     required this.showTracks,
     required this.showAlbums,
@@ -609,6 +855,7 @@ class ProfileEditorScreen extends StatefulWidget {
   final double bannerY;
   final String frameStyle;
   final Color initialAccentColor;
+  final List<String> initialFeaturedItemIds;
   final bool showPlaylists;
   final bool showTracks;
   final bool showAlbums;
@@ -633,6 +880,7 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
   late double _bannerY = widget.bannerY;
   late String _frameStyle = widget.frameStyle;
   late Color _accentColor = widget.initialAccentColor;
+  late Set<String> _featuredItemIds = widget.initialFeaturedItemIds.toSet();
   late bool _showPlaylists = widget.showPlaylists;
   late bool _showTracks = widget.showTracks;
   late bool _showAlbums = widget.showAlbums;
@@ -662,6 +910,114 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
           transitionsBuilder: (_, __, ___, child) => child,
         ),
       );
+
+  Future<void> _editFeaturedItems() async {
+    final items = _allProfileShowcaseItems();
+    final selected = Set<String>.from(_featuredItemIds);
+    final result = await showModalBottomSheet<List<String>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF17181D),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setModalState) => SafeArea(
+          child: SizedBox(
+            height: MediaQuery.sizeOf(context).height * .78,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Добавить в профиль',
+                          style: TextStyle(
+                            fontSize: 21,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Закрыть',
+                        onPressed: () => Navigator.of(sheetContext).pop(),
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+                    ],
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 20, 10),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Выбери любые треки, плейлисты, альбомы и авторов.',
+                      style: TextStyle(color: Colors.white60),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      final checked = selected.contains(item.id);
+                      return CheckboxListTile(
+                        value: checked,
+                        activeColor: _accentColor,
+                        onChanged: (value) => setModalState(() {
+                          if (value == true) {
+                            selected.add(item.id);
+                          } else {
+                            selected.remove(item.id);
+                          }
+                        }),
+                        secondary: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: item.color.withValues(alpha: .42),
+                            borderRadius: BorderRadius.circular(11),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: item.imagePath == null
+                              ? Icon(item.icon)
+                              : Image.file(
+                                  File(item.imagePath!),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) =>
+                                      Icon(item.icon),
+                                ),
+                        ),
+                        title: Text(item.title),
+                        subtitle: Text('${item.group} · ${item.subtitle}'),
+                        controlAffinity: ListTileControlAffinity.trailing,
+                      );
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: () => Navigator.of(sheetContext)
+                          .pop(selected.toList()),
+                      child: Text('Готово · ${selected.length}'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    if (result == null || !mounted) return;
+    setState(() => _featuredItemIds = result.toSet());
+  }
 
   Future<void> _chooseAvatar() async {
     try {
@@ -725,6 +1081,7 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
         bannerY: _bannerY,
         frameStyle: _frameStyle,
         accentColor: _accentColor,
+        featuredItemIds: _featuredItemIds.toList(),
         showPlaylists: _showPlaylists,
         showTracks: _showTracks,
         showAlbums: _showAlbums,
@@ -740,7 +1097,7 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
           backgroundColor: _profileBackground,
           surfaceTintColor: Colors.transparent,
           title: const Text(
-            'Редактировать профиль',
+            'Предпросмотр профиля',
             style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
           ),
           actions: [
@@ -888,6 +1245,54 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                   counterText: '',
                 ),
               ),
+              const SizedBox(height: 28),
+              const _EditorSectionTitle(
+                title: 'Витрина профиля',
+                subtitle: 'Добавь то, что хочешь показать другим: любимые треки, плейлисты, альбомы и авторов.',
+              ),
+              OutlinedButton.icon(
+                onPressed: _editFeaturedItems,
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Добавить контент'),
+              ),
+              if (_featuredItemIds.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 10),
+                  child: Text(
+                    'Пока ничего не добавлено. Выбранный контент появится в предпросмотре профиля.',
+                    style: TextStyle(color: Colors.white54, height: 1.4),
+                  ),
+                ),
+              for (final item in _allProfileShowcaseItems()
+                  .where((item) => _featuredItemIds.contains(item.id)))
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: item.color.withValues(alpha: .42),
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: item.imagePath == null
+                        ? Icon(item.icon)
+                        : Image.file(
+                            File(item.imagePath!),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Icon(item.icon),
+                          ),
+                  ),
+                  title: Text(item.title),
+                  subtitle: Text(item.group),
+                  trailing: IconButton(
+                    tooltip: 'Убрать из профиля',
+                    onPressed: () => setState(
+                      () => _featuredItemIds.remove(item.id),
+                    ),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ),
               if (_validationError != null) ...[
                 const SizedBox(height: 8),
                 Text(
@@ -953,10 +1358,10 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                   ),
                   _AccentChoice(
                     title: 'Лайм',
-                    color: const Color(0xFFF5F5F5),
-                    selected: _accentColor.toARGB32() == 0xFFF5F5F5,
+                    color: const Color(0xFFB6F36B),
+                    selected: _accentColor.toARGB32() == 0xFFB6F36B,
                     onTap: () => setState(
-                      () => _accentColor = const Color(0xFFF5F5F5),
+                      () => _accentColor = const Color(0xFFB6F36B),
                     ),
                   ),
                 ],
@@ -980,7 +1385,7 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                   _FrameChoice(
                     title: 'Лайм',
                     style: 'lime',
-                    color: const Color(0xFFF5F5F5),
+                    color: const Color(0xFFB6F36B),
                     selected: _frameStyle == 'lime',
                     onTap: () => setState(() => _frameStyle = 'lime'),
                   ),
