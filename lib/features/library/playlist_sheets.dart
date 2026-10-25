@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../core/theme/flowly_accent.dart';
+
 import '../../core/storage/local_image_storage.dart';
 import '../player/player_controller.dart';
 import '../player/draggable_player.dart';
@@ -298,10 +300,10 @@ Future<void> showSaveTrackToPlaylistSheet(
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFB6F36B).withValues(alpha: .16),
+                  color: FlowLyAccent.color.withValues(alpha: .16),
                   borderRadius: BorderRadius.circular(13),
                 ),
-                child: const Icon(Icons.add_rounded, color: Color(0xFFB6F36B)),
+                child: Icon(Icons.add_rounded, color: FlowLyAccent.color),
               ),
               title: const Text('Создать новый плейлист'),
               onTap: () async {
@@ -357,7 +359,7 @@ Future<void> showSaveTrackToPlaylistSheet(
                   )
                       ? Icons.check_circle_rounded
                       : Icons.add_circle_outline_rounded,
-                  color: const Color(0xFFB6F36B),
+                  color: FlowLyAccent.color,
                 ),
                 onTap: () async {
                   final alreadyInPlaylist = playlist.tracks.any(

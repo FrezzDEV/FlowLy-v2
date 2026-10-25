@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../core/theme/flowly_accent.dart';
 import '../../navigation/circle_reveal_route.dart';
 import '../player/player_controller.dart';
 import '../player/draggable_player.dart';
@@ -257,10 +258,10 @@ class _FilterChip extends StatelessWidget {
         child: Chip(
           label: Text(label),
           backgroundColor: selected
-              ? const Color(0xFFB6F36B).withValues(alpha: .18)
+              ? FlowLyAccent.color.withValues(alpha: .18)
               : const Color(0xFF1A1C20),
           side: BorderSide(
-            color: selected ? const Color(0xFFB6F36B) : Colors.white12,
+            color: selected ? FlowLyAccent.color : Colors.white12,
           ),
         ),
       );
