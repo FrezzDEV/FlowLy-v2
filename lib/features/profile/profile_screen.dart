@@ -888,7 +888,20 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
   String? _imageError;
 
   @override
+  void initState() {
+    super.initState();
+    _nameController.addListener(_refreshPreview);
+    _usernameController.addListener(_refreshPreview);
+  }
+
+  void _refreshPreview() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   void dispose() {
+    _nameController.removeListener(_refreshPreview);
+    _usernameController.removeListener(_refreshPreview);
     _nameController.dispose();
     _usernameController.dispose();
     super.dispose();
@@ -1117,6 +1130,113 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 36),
             children: [
+              // Combined profile preview: banner, avatar, name and username
+              // stay in the same order as the actual profile screen.
+              SizedBox(
+                height: 232,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: 132,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: _CropTransformImage(
+                          key: ValueKey('profile-preview-banner:${_bannerPath ?? 'empty'}'),
+                          path: _bannerPath,
+                          scale: _bannerScale,
+                          offsetX: _bannerX,
+                          offsetY: _bannerY,
+                          placeholder: const DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFF55575B),
+                                  Color(0xFF383A40),
+                                  Color(0xFF15171E),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 88,
+                      left: 0,
+                      right: 0,
+                      child: Center(
+                        child: Container(
+                          width: 88,
+                          height: 88,
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            color: _profileBackground,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: _framePreviewColor(_frameStyle),
+                              width: _frameStyle == 'none' ? 0 : 3,
+                            ),
+                          ),
+                          child: ClipOval(
+                            child: _CropTransformImage(
+                              key: ValueKey('profile-preview-avatar:${_avatarPath ?? 'empty'}'),
+                              path: _avatarPath,
+                              scale: _avatarScale,
+                              offsetX: _avatarX,
+                              offsetY: _avatarY,
+                              placeholder: const ColoredBox(
+                                color: Color(0xFF24272B),
+                                child: Center(
+                                  child: Icon(Icons.person_rounded, size: 40),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      top: 178,
+                      child: Text(
+                        _nameController.text.trim().isEmpty
+                            ? 'Имя профиля'
+                            : _nameController.text.trim(),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      top: 204,
+                      child: Text(
+                        '@${_usernameController.text.trim().replaceFirst(RegExp(r'^@+'), '')}',
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
               const _EditorSectionTitle(
                 title: 'Баннер',
                 subtitle: 'Выбери изображение. После выбора можно передвинуть его и настроить кадр.',
