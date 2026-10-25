@@ -898,6 +898,39 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _editPreviewText(TextEditingController controller) async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        final temporary = TextEditingController(text: controller.text);
+        return AlertDialog(
+          title: Text(controller == _nameController ? 'Имя профиля' : 'Юзернейм'),
+          content: TextField(
+            controller: temporary,
+            autofocus: true,
+            maxLength: controller == _nameController ? 40 : 30,
+            decoration: InputDecoration(
+              prefixText: controller == _usernameController ? '@' : null,
+              hintText: controller == _nameController ? 'Имя' : 'username',
+            ),
+            onSubmitted: (value) => Navigator.pop(dialogContext, value),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Отмена'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, temporary.text),
+              child: const Text('Сохранить'),
+            ),
+          ],
+        );
+      },
+    );
+    if (result != null && mounted) controller.text = result;
+  }
+
   @override
   void dispose() {
     _nameController.removeListener(_refreshPreview);
@@ -1142,28 +1175,42 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                       left: 0,
                       right: 0,
                       height: 132,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(18),
-                        child: _CropTransformImage(
-                          key: ValueKey('profile-preview-banner:${_bannerPath ?? 'empty'}'),
-                          path: _bannerPath,
-                          scale: _bannerScale,
-                          offsetX: _bannerX,
-                          offsetY: _bannerY,
-                          placeholder: const DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Color(0xFF55575B),
-                                  Color(0xFF383A40),
-                                  Color(0xFF15171E),
-                                ],
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(18),
+                              child: _CropTransformImage(
+                                key: ValueKey('profile-preview-banner:${_bannerPath ?? 'empty'}'),
+                                path: _bannerPath,
+                                scale: _bannerScale,
+                                offsetX: _bannerX,
+                                offsetY: _bannerY,
+                                placeholder: const DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Color(0xFF55575B),
+                                        Color(0xFF383A40),
+                                        Color(0xFF15171E),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: _PreviewEditButton(
+                              onPressed: _chooseBanner,
+                              tooltip: 'Изменить баннер',
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     Positioned(
@@ -1171,66 +1218,103 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                       left: 0,
                       right: 0,
                       child: Center(
-                        child: Container(
-                          width: 88,
-                          height: 88,
-                          padding: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            color: _profileBackground,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: _framePreviewColor(_frameStyle),
-                              width: _frameStyle == 'none' ? 0 : 3,
-                            ),
-                          ),
-                          child: ClipOval(
-                            child: _CropTransformImage(
-                              key: ValueKey('profile-preview-avatar:${_avatarPath ?? 'empty'}'),
-                              path: _avatarPath,
-                              scale: _avatarScale,
-                              offsetX: _avatarX,
-                              offsetY: _avatarY,
-                              placeholder: const ColoredBox(
-                                color: Color(0xFF24272B),
-                                child: Center(
-                                  child: Icon(Icons.person_rounded, size: 40),
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              width: 88,
+                              height: 88,
+                              padding: const EdgeInsets.all(3),
+                              decoration: BoxDecoration(
+                                color: _profileBackground,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: _framePreviewColor(_frameStyle),
+                                  width: _frameStyle == 'none' ? 0 : 3,
+                                ),
+                              ),
+                              child: ClipOval(
+                                child: _CropTransformImage(
+                                  key: ValueKey('profile-preview-avatar:${_avatarPath ?? 'empty'}'),
+                                  path: _avatarPath,
+                                  scale: _avatarScale,
+                                  offsetX: _avatarX,
+                                  offsetY: _avatarY,
+                                  placeholder: const ColoredBox(
+                                    color: Color(0xFF24272B),
+                                    child: Center(
+                                      child: Icon(Icons.person_rounded, size: 40),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                            Positioned(
+                              right: -8,
+                              bottom: -2,
+                              child: _PreviewEditButton(
+                                onPressed: _chooseAvatar,
+                                tooltip: 'Изменить аватар',
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                     Positioned(
-                      left: 0,
-                      right: 0,
+                      left: 12,
+                      right: 12,
                       top: 178,
-                      child: Text(
-                        _nameController.text.trim().isEmpty
-                            ? 'Имя профиля'
-                            : _nameController.text.trim(),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 19,
-                          fontWeight: FontWeight.w800,
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              _nameController.text.trim().isEmpty
+                                  ? 'Имя профиля'
+                                  : _nameController.text.trim(),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          _PreviewEditButton(
+                            onPressed: () => _editPreviewText(_nameController),
+                            tooltip: 'Изменить имя',
+                          ),
+                        ],
                       ),
                     ),
                     Positioned(
-                      left: 0,
-                      right: 0,
+                      left: 12,
+                      right: 12,
                       top: 204,
-                      child: Text(
-                        '@${_usernameController.text.trim().replaceFirst(RegExp(r'^@+'), '')}',
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white60,
-                          fontSize: 13,
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              '@${_usernameController.text.trim().replaceFirst(RegExp(r'^@+'), '')}',
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white60,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          _PreviewEditButton(
+                            onPressed: () => _editPreviewText(_usernameController),
+                            tooltip: 'Изменить юзернейм',
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -1822,6 +1906,30 @@ class _AccentChoice extends StatelessWidget {
         selectedColor: color.withValues(alpha: .18),
         side: BorderSide(
           color: selected ? color : Colors.white24,
+        ),
+      );
+}
+
+class _PreviewEditButton extends StatelessWidget {
+  const _PreviewEditButton({
+    required this.onPressed,
+    required this.tooltip,
+  });
+
+  final VoidCallback onPressed;
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: Colors.black.withValues(alpha: .72),
+        shape: const CircleBorder(),
+        child: IconButton(
+          onPressed: onPressed,
+          tooltip: tooltip,
+          visualDensity: VisualDensity.compact,
+          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+          padding: EdgeInsets.zero,
+          icon: const Icon(Icons.edit_rounded, size: 15, color: Colors.white),
         ),
       );
 }
