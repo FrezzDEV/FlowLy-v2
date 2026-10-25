@@ -529,9 +529,9 @@ class _BigPlayerContentState extends State<BigPlayerContent>
                   color: Colors.transparent,
                   child: SliderTheme(
                     data: SliderTheme.of(context).copyWith(
-                      activeTrackColor: FlowLyAccent.color,
+                      activeTrackColor: Colors.white,
                       inactiveTrackColor: Colors.black,
-                      thumbColor: FlowLyAccent.color,
+                      thumbColor: Colors.black,
                       overlayColor: Colors.transparent,
                       trackHeight: 4,
                     ),
