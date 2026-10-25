@@ -490,7 +490,7 @@ class PlaylistDetailScreen extends StatelessWidget {
                                         color: Colors.white60,
                                       ),
                                     ),
-                                    trailing: const Icon(
+                                    trailing: Icon(
                                       Icons.drag_handle_rounded,
                                       color: FlowLyAccent.color,
                                     ),
