@@ -902,9 +902,13 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
     final result = await showDialog<String>(
       context: context,
       builder: (dialogContext) {
-        final temporary = TextEditingController(text: controller.text);
+        final isUsername = controller == _usernameController;
+        final initialText = isUsername
+            ? controller.text.replaceFirst(RegExp(r'^@+'), '')
+            : controller.text;
+        final temporary = TextEditingController(text: initialText);
         return AlertDialog(
-          title: Text(controller == _nameController ? 'Имя профиля' : 'Юзернейм'),
+          title: Text(isUsername ? 'Юзернейм' : 'Имя профиля'),
           content: TextField(
             controller: temporary,
             autofocus: true,
