@@ -454,6 +454,17 @@ class PlayerController extends ChangeNotifier {
       );
 
   void playTrack(PlayerTrack track) {
+    final isSameTrack =
+        track.title == _currentTrack.title &&
+        track.artist == _currentTrack.artist;
+
+    if (isSameTrack) {
+      // A tap on the current track pauses; the next tap resumes from its
+      // current position rather than restarting the song.
+      togglePlay();
+      return;
+    }
+
     _currentTrack = track;
     final index = catalog.indexWhere(
       (item) => item.title == track.title && item.artist == track.artist,

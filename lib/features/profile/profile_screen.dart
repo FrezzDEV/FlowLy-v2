@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/storage/local_image_storage.dart';
+import '../../core/theme/flowly_accent.dart';
 import '../player/player_controller.dart';
 
 const _profileBackground = Color(0xFF08090B);
-const _profileLime = Color(0xFFB6F36B);
 const _profileMuted = Color(0xFF9B9DA4);
 
 class ProfileScreen extends StatefulWidget {
@@ -101,6 +101,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           bannerX: _bannerX,
           bannerY: _bannerY,
           frameStyle: _frameStyle,
+          initialAccentColor: FlowLyAccent.color,
           showPlaylists: _showPlaylists,
           showTracks: _showTracks,
           showAlbums: _showAlbums,
@@ -130,6 +131,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _showAlbums = result.showAlbums;
       _showArtists = result.showArtists;
     });
+    await FlowLyAccent.setColor(result.accentColor);
 
     try {
       final preferences = await SharedPreferences.getInstance();
@@ -168,7 +170,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Color _frameColor(String style) {
     switch (style) {
       case 'lime':
-        return _profileLime;
+        return const Color(0xFFB6F36B);
       case 'violet':
         return const Color(0xFFB28BFF);
       case 'blue':
@@ -203,7 +205,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 IconButton(
                   tooltip: 'Редактировать профиль',
                   onPressed: _editProfile,
-                  icon: const Icon(Icons.edit_rounded, size: 25),
+                  icon: Icon(
+                    Icons.edit_rounded,
+                    size: 25,
+                    color: FlowLyAccent.color,
+                  ),
                 ),
               ],
             ),
@@ -545,6 +551,7 @@ class _ProfileEditResult {
     required this.bannerX,
     required this.bannerY,
     required this.frameStyle,
+    required this.accentColor,
     required this.showPlaylists,
     required this.showTracks,
     required this.showAlbums,
@@ -562,6 +569,7 @@ class _ProfileEditResult {
   final double bannerX;
   final double bannerY;
   final String frameStyle;
+  final Color accentColor;
   final bool showPlaylists;
   final bool showTracks;
   final bool showAlbums;
@@ -582,6 +590,7 @@ class ProfileEditorScreen extends StatefulWidget {
     required this.bannerX,
     required this.bannerY,
     required this.frameStyle,
+    required this.initialAccentColor,
     required this.showPlaylists,
     required this.showTracks,
     required this.showAlbums,
@@ -599,6 +608,7 @@ class ProfileEditorScreen extends StatefulWidget {
   final double bannerX;
   final double bannerY;
   final String frameStyle;
+  final Color initialAccentColor;
   final bool showPlaylists;
   final bool showTracks;
   final bool showAlbums;
@@ -622,6 +632,7 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
   late double _bannerX = widget.bannerX;
   late double _bannerY = widget.bannerY;
   late String _frameStyle = widget.frameStyle;
+  late Color _accentColor = widget.initialAccentColor;
   late bool _showPlaylists = widget.showPlaylists;
   late bool _showTracks = widget.showTracks;
   late bool _showAlbums = widget.showAlbums;
@@ -636,37 +647,57 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
     super.dispose();
   }
 
+  Future<_CropSelection?> _openCropper(
+    String path, {
+    required bool isAvatar,
+  }) =>
+      Navigator.of(context).push<_CropSelection>(
+        PageRouteBuilder<_CropSelection>(
+          pageBuilder: (_, __, ___) => _ImageCropScreen(
+            path: path,
+            isAvatar: isAvatar,
+          ),
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          transitionsBuilder: (_, __, ___, child) => child,
+        ),
+      );
+
   Future<void> _chooseAvatar() async {
     try {
       final path = await LocalImageStorage.pickAndPersistImage(folder: 'profile');
-      if (!mounted || path == null) return;
+      if (path == null || !mounted) return;
+      final crop = await _openCropper(path, isAvatar: true);
+      if (crop == null || !mounted) return;
       setState(() {
         _avatarPath = path;
-        _avatarScale = 1;
-        _avatarX = 0;
-        _avatarY = 0;
+        _avatarScale = crop.scale;
+        _avatarX = crop.offsetX;
+        _avatarY = crop.offsetY;
         _imageError = null;
       });
     } catch (_) {
       if (!mounted) return;
-      setState(() => _imageError = 'Не удалось открыть галерею.');
+      setState(() => _imageError = 'Не удалось открыть или обрезать фото.');
     }
   }
 
   Future<void> _chooseBanner() async {
     try {
       final path = await LocalImageStorage.pickAndPersistImage(folder: 'profile');
-      if (!mounted || path == null) return;
+      if (path == null || !mounted) return;
+      final crop = await _openCropper(path, isAvatar: false);
+      if (crop == null || !mounted) return;
       setState(() {
         _bannerPath = path;
-        _bannerScale = 1;
-        _bannerX = 0;
-        _bannerY = 0;
+        _bannerScale = crop.scale;
+        _bannerX = crop.offsetX;
+        _bannerY = crop.offsetY;
         _imageError = null;
       });
     } catch (_) {
       if (!mounted) return;
-      setState(() => _imageError = 'Не удалось открыть галерею.');
+      setState(() => _imageError = 'Не удалось открыть или обрезать фото.');
     }
   }
 
@@ -693,6 +724,7 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
         bannerX: _bannerX,
         bannerY: _bannerY,
         frameStyle: _frameStyle,
+        accentColor: _accentColor,
         showPlaylists: _showPlaylists,
         showTracks: _showTracks,
         showAlbums: _showAlbums,
@@ -714,10 +746,10 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
           actions: [
             TextButton(
               onPressed: _save,
-              child: const Text(
+              child: Text(
                 'Сохранить',
                 style: TextStyle(
-                  color: _profileLime,
+                  color: _accentColor,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -729,6 +761,113 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 36),
             children: [
+              const _EditorSectionTitle(
+                title: 'Баннер',
+                subtitle: 'Выбери изображение. После выбора можно передвинуть его и настроить кадр.',
+              ),
+              SizedBox(
+                height: 150,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: _CropTransformImage(
+                    key: ValueKey('banner-preview:${_bannerPath ?? 'empty'}'),
+                    path: _bannerPath,
+                    scale: _bannerScale,
+                    offsetX: _bannerX,
+                    offsetY: _bannerY,
+                    placeholder: const DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF345B56),
+                            Color(0xFF263047),
+                            Color(0xFF15171E),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: _chooseBanner,
+                icon: const Icon(Icons.photo_library_outlined),
+                label: Text(
+                  _bannerPath == null ? 'Выбрать баннер' : 'Заменить баннер',
+                ),
+              ),
+              if (_bannerPath != null)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () => setState(() {
+                      _bannerPath = null;
+                      _bannerScale = 1;
+                      _bannerX = 0;
+                      _bannerY = 0;
+                    }),
+                    child: const Text('Убрать баннер'),
+                  ),
+                ),
+              const SizedBox(height: 26),
+              const _EditorSectionTitle(
+                title: 'Аватарка',
+                subtitle: 'После выбора откроется экран кадрирования с перемещением и масштабированием двумя пальцами.',
+              ),
+              Center(
+                child: Container(
+                  width: 156,
+                  height: 156,
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: _framePreviewColor(_frameStyle),
+                      width: _frameStyle == 'none' ? 0 : 3,
+                    ),
+                  ),
+                  child: ClipOval(
+                    child: _CropTransformImage(
+                      key: ValueKey('avatar-preview:${_avatarPath ?? 'empty'}'),
+                      path: _avatarPath,
+                      scale: _avatarScale,
+                      offsetX: _avatarX,
+                      offsetY: _avatarY,
+                      placeholder: const ColoredBox(
+                        color: Color(0xFF24272B),
+                        child: Center(
+                          child: Icon(Icons.person_rounded, size: 48),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: _chooseAvatar,
+                icon: const Icon(Icons.photo_library_outlined),
+                label: Text(
+                  _avatarPath == null ? 'Выбрать аватарку' : 'Заменить аватарку',
+                ),
+              ),
+              if (_avatarPath != null)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () => setState(() {
+                      _avatarPath = null;
+                      _avatarScale = 1;
+                      _avatarX = 0;
+                      _avatarY = 0;
+                    }),
+                    child: const Text('Убрать аватарку'),
+                  ),
+                ),
+              const SizedBox(height: 26),
               TextField(
                 controller: _nameController,
                 maxLength: 40,
@@ -756,154 +895,6 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                   style: const TextStyle(color: Colors.redAccent),
                 ),
               ],
-              const SizedBox(height: 26),
-              const _EditorSectionTitle(
-                title: 'Аватарка',
-                subtitle: 'Перетащи фотографию и измени масштаб внутри круга.',
-              ),
-              Center(
-                child: SizedBox(
-                  width: 184,
-                  height: 184,
-                  child: ClipOval(
-                    child: _CropTransformImage(
-                      key: ValueKey('avatar-crop:${_avatarPath ?? 'empty'}'),
-                      path: _avatarPath,
-                      scale: _avatarScale,
-                      offsetX: _avatarX,
-                      offsetY: _avatarY,
-                      interactive: true,
-                      onTransformChanged: (scale, x, y) => setState(() {
-                        _avatarScale = scale;
-                        _avatarX = x;
-                        _avatarY = y;
-                      }),
-                      placeholder: const ColoredBox(
-                        color: Color(0xFF24272B),
-                        child: Center(
-                          child: Icon(Icons.person_rounded, size: 54),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Center(
-                child: OutlinedButton.icon(
-                  onPressed: _chooseAvatar,
-                  icon: const Icon(Icons.photo_library_outlined),
-                  label: Text(
-                    _avatarPath == null ? 'Выбрать фото' : 'Заменить фото',
-                  ),
-                ),
-              ),
-              if (_avatarPath != null)
-                Center(
-                  child: TextButton(
-                    onPressed: () => setState(() {
-                      _avatarPath = null;
-                      _avatarScale = 1;
-                      _avatarX = 0;
-                      _avatarY = 0;
-                    }),
-                    child: const Text('Убрать аватарку'),
-                  ),
-                ),
-              _CropControls(
-                scale: _avatarScale,
-                onScaleChanged: (value) => setState(() {
-                  _avatarScale = value;
-                  if (value == 1) {
-                    _avatarX = 0;
-                    _avatarY = 0;
-                  }
-                }),
-                onMove: (dx, dy) => setState(() {
-                  _avatarX = (_avatarX + dx).clamp(-1.0, 1.0).toDouble();
-                  _avatarY = (_avatarY + dy).clamp(-1.0, 1.0).toDouble();
-                }),
-                onCenter: () => setState(() {
-                  _avatarX = 0;
-                  _avatarY = 0;
-                }),
-              ),
-              const SizedBox(height: 30),
-              const _EditorSectionTitle(
-                title: 'Баннер',
-                subtitle: 'Перемещай фото и увеличивай его, чтобы выбрать нужную область.',
-              ),
-              SizedBox(
-                height: 150,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: _CropTransformImage(
-                    key: ValueKey('banner-crop:${_bannerPath ?? 'empty'}'),
-                    path: _bannerPath,
-                    scale: _bannerScale,
-                    offsetX: _bannerX,
-                    offsetY: _bannerY,
-                    interactive: true,
-                    onTransformChanged: (scale, x, y) => setState(() {
-                      _bannerScale = scale;
-                      _bannerX = x;
-                      _bannerY = y;
-                    }),
-                    placeholder: const DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFF345B56),
-                            Color(0xFF263047),
-                            Color(0xFF15171E),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: _chooseBanner,
-                icon: const Icon(Icons.photo_library_outlined),
-                label: Text(
-                  _bannerPath == null ? 'Выбрать баннер' : 'Заменить баннер',
-                ),
-              ),
-              if (_bannerPath != null)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton(
-                    onPressed: () => setState(() {
-                      _bannerPath = null;
-                      _bannerScale = 1;
-                      _bannerX = 0;
-                      _bannerY = 0;
-                    }),
-                    child: const Text('Убрать баннер'),
-                  ),
-                ),
-              _CropControls(
-                scale: _bannerScale,
-                onScaleChanged: (value) => setState(() {
-                  _bannerScale = value;
-                  if (value == 1) {
-                    _bannerX = 0;
-                    _bannerY = 0;
-                  }
-                }),
-                onMove: (dx, dy) => setState(() {
-                  _bannerX = (_bannerX + dx).clamp(-1.0, 1.0).toDouble();
-                  _bannerY = (_bannerY + dy).clamp(-1.0, 1.0).toDouble();
-                }),
-                onCenter: () => setState(() {
-                  _bannerX = 0;
-                  _bannerY = 0;
-                }),
-              ),
               if (_imageError != null) ...[
                 const SizedBox(height: 8),
                 Text(
@@ -911,6 +902,65 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                   style: const TextStyle(color: Colors.redAccent),
                 ),
               ],
+              const SizedBox(height: 30),
+              const _EditorSectionTitle(
+                title: 'Акцентный цвет',
+                subtitle: 'Меняет цвет кнопок, выделений и активных элементов во всём приложении.',
+              ),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  _AccentChoice(
+                    title: 'Белый',
+                    color: const Color(0xFFF5F5F5),
+                    selected: _accentColor.toARGB32() == 0xFFF5F5F5,
+                    onTap: () => setState(
+                      () => _accentColor = const Color(0xFFF5F5F5),
+                    ),
+                  ),
+                  _AccentChoice(
+                    title: 'Голубой',
+                    color: const Color(0xFF73C9FF),
+                    selected: _accentColor.toARGB32() == 0xFF73C9FF,
+                    onTap: () => setState(
+                      () => _accentColor = const Color(0xFF73C9FF),
+                    ),
+                  ),
+                  _AccentChoice(
+                    title: 'Фиолетовый',
+                    color: const Color(0xFFB28BFF),
+                    selected: _accentColor.toARGB32() == 0xFFB28BFF,
+                    onTap: () => setState(
+                      () => _accentColor = const Color(0xFFB28BFF),
+                    ),
+                  ),
+                  _AccentChoice(
+                    title: 'Розовый',
+                    color: const Color(0xFFFF70A6),
+                    selected: _accentColor.toARGB32() == 0xFFFF70A6,
+                    onTap: () => setState(
+                      () => _accentColor = const Color(0xFFFF70A6),
+                    ),
+                  ),
+                  _AccentChoice(
+                    title: 'Золотой',
+                    color: const Color(0xFFFFC66D),
+                    selected: _accentColor.toARGB32() == 0xFFFFC66D,
+                    onTap: () => setState(
+                      () => _accentColor = const Color(0xFFFFC66D),
+                    ),
+                  ),
+                  _AccentChoice(
+                    title: 'Лайм',
+                    color: const Color(0xFFB6F36B),
+                    selected: _accentColor.toARGB32() == 0xFFB6F36B,
+                    onTap: () => setState(
+                      () => _accentColor = const Color(0xFFB6F36B),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 30),
               const _EditorSectionTitle(
                 title: 'Рамка аватарки',
@@ -930,7 +980,7 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                   _FrameChoice(
                     title: 'Лайм',
                     style: 'lime',
-                    color: _profileLime,
+                    color: const Color(0xFFB6F36B),
                     selected: _frameStyle == 'lime',
                     onTap: () => setState(() => _frameStyle = 'lime'),
                   ),
@@ -967,35 +1017,37 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                 title: const Text('Показывать плейлисты'),
                 value: _showPlaylists,
                 onChanged: (value) => setState(() => _showPlaylists = value),
-                activeTrackColor: _profileLime,
+                activeTrackColor: _accentColor,
               ),
               SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Показывать треки'),
                 value: _showTracks,
                 onChanged: (value) => setState(() => _showTracks = value),
-                activeTrackColor: _profileLime,
+                activeTrackColor: _accentColor,
               ),
               SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Показывать альбомы'),
                 value: _showAlbums,
                 onChanged: (value) => setState(() => _showAlbums = value),
-                activeTrackColor: _profileLime,
+                activeTrackColor: _accentColor,
               ),
               SwitchListTile.adaptive(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Показывать авторов'),
                 value: _showArtists,
                 onChanged: (value) => setState(() => _showArtists = value),
-                activeTrackColor: _profileLime,
+                activeTrackColor: _accentColor,
               ),
               const SizedBox(height: 20),
               FilledButton(
                 onPressed: _save,
                 style: FilledButton.styleFrom(
-                  backgroundColor: _profileLime,
-                  foregroundColor: const Color(0xFF11130D),
+                  backgroundColor: _accentColor,
+                  foregroundColor: _accentColor.computeLuminance() > .55
+                      ? const Color(0xFF11130D)
+                      : Colors.white,
                   minimumSize: const Size.fromHeight(50),
                 ),
                 child: const Text(
@@ -1005,6 +1057,247 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
               ),
             ],
           ),
+        ),
+      );
+
+  Color _framePreviewColor(String style) {
+    switch (style) {
+      case 'lime':
+        return const Color(0xFFB6F36B);
+      case 'violet':
+        return const Color(0xFFB28BFF);
+      case 'blue':
+        return const Color(0xFF73C9FF);
+      case 'gold':
+        return const Color(0xFFFFC66D);
+      default:
+        return Colors.transparent;
+    }
+  }
+}
+
+class _CropSelection {
+  const _CropSelection({
+    required this.scale,
+    required this.offsetX,
+    required this.offsetY,
+  });
+
+  final double scale;
+  final double offsetX;
+  final double offsetY;
+}
+
+class _ImageCropScreen extends StatefulWidget {
+  const _ImageCropScreen({
+    required this.path,
+    required this.isAvatar,
+  });
+
+  final String path;
+  final bool isAvatar;
+
+  @override
+  State<_ImageCropScreen> createState() => _ImageCropScreenState();
+}
+
+class _ImageCropScreenState extends State<_ImageCropScreen> {
+  double _scale = 1;
+  double _offsetX = 0;
+  double _offsetY = 0;
+
+  void _save() {
+    Navigator.of(context).pop(
+      _CropSelection(
+        scale: _scale,
+        offsetX: _offsetX,
+        offsetY: _offsetY,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        backgroundColor: _profileBackground,
+        appBar: AppBar(
+          centerTitle: true,
+          backgroundColor: _profileBackground,
+          surfaceTintColor: Colors.transparent,
+          title: Text(widget.isAvatar ? 'Обрезать аватар' : 'Обрезать баннер'),
+        ),
+        body: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final availableWidth =
+                        math.max(0.0, constraints.maxWidth - 32).toDouble();
+                    final availableHeight =
+                        math.max(0.0, constraints.maxHeight - 32).toDouble();
+                    final width = widget.isAvatar
+                        ? math.min(
+                            availableWidth,
+                            availableHeight * .84,
+                          ).toDouble()
+                        : math.min(
+                            availableWidth,
+                            availableHeight * 2.15,
+                          ).toDouble();
+                    final height = widget.isAvatar ? width : width / 2.15;
+                    return Center(
+                      child: SizedBox(
+                        width: width,
+                        height: height,
+                        child: ClipRect(
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              _CropTransformImage(
+                                path: widget.path,
+                                scale: _scale,
+                                offsetX: _offsetX,
+                                offsetY: _offsetY,
+                                interactive: true,
+                                onTransformChanged: (scale, x, y) {
+                                  setState(() {
+                                    _scale = scale;
+                                    _offsetX = x;
+                                    _offsetY = y;
+                                  });
+                                },
+                                placeholder: const ColoredBox(
+                                  color: Color(0xFF24272B),
+                                ),
+                              ),
+                              IgnorePointer(
+                                child: CustomPaint(
+                                  painter: _CropOverlayPainter(
+                                    isCircle: widget.isAvatar,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 28, vertical: 10),
+                child: Text(
+                  'Перемещайте фото одним пальцем и меняйте масштаб двумя пальцами. Можно оставить центр без изменений.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white70, height: 1.35),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(52),
+                        ),
+                        child: const Text('Отмена'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: _save,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: FlowLyAccent.color,
+                          foregroundColor:
+                              FlowLyAccent.color.computeLuminance() > .55
+                                  ? const Color(0xFF11130D)
+                                  : Colors.white,
+                          minimumSize: const Size.fromHeight(52),
+                        ),
+                        child: const Text('Использовать фото'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+}
+
+class _CropOverlayPainter extends CustomPainter {
+  const _CropOverlayPainter({required this.isCircle});
+
+  final bool isCircle;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final bounds = Offset.zero & size;
+    final cropPath = isCircle
+        ? (Path()..addOval(bounds))
+        : (Path()
+          ..addRRect(
+            RRect.fromRectAndRadius(bounds, const Radius.circular(12)),
+          ));
+    final outside = Path.combine(
+      PathOperation.difference,
+      Path()..addRect(bounds),
+      cropPath,
+    );
+    canvas.drawPath(
+      outside,
+      Paint()..color = Colors.black.withValues(alpha: .58),
+    );
+    canvas.drawPath(
+      cropPath,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.8
+        ..color = Colors.white.withValues(alpha: .92),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _CropOverlayPainter oldDelegate) =>
+      oldDelegate.isCircle != isCircle;
+}
+
+class _AccentChoice extends StatelessWidget {
+  const _AccentChoice({
+    required this.title,
+    required this.color,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String title;
+  final Color color;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => ChoiceChip(
+        avatar: Container(
+          width: 13,
+          height: 13,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color,
+            border: Border.all(color: Colors.white54),
+          ),
+        ),
+        label: Text(title),
+        selected: selected,
+        onSelected: (_) => onTap(),
+        selectedColor: color.withValues(alpha: .18),
+        side: BorderSide(
+          color: selected ? color : Colors.white24,
         ),
       );
 }
@@ -1068,86 +1361,10 @@ class _FrameChoice extends StatelessWidget {
         label: Text(title),
         selected: selected,
         onSelected: (_) => onTap(),
-        selectedColor: _profileLime.withValues(alpha: .16),
+        selectedColor: FlowLyAccent.color.withValues(alpha: .16),
         side: BorderSide(
-          color: selected ? _profileLime : Colors.white24,
+          color: selected ? FlowLyAccent.color : Colors.white24,
         ),
-      );
-}
-
-class _CropControls extends StatelessWidget {
-  const _CropControls({
-    required this.scale,
-    required this.onScaleChanged,
-    required this.onMove,
-    required this.onCenter,
-  });
-
-  final double scale;
-  final ValueChanged<double> onScaleChanged;
-  final void Function(double dx, double dy) onMove;
-  final VoidCallback onCenter;
-
-  @override
-  Widget build(BuildContext context) => Column(
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.zoom_out_rounded, color: Colors.white60),
-              Expanded(
-                child: Slider(
-                  min: 1,
-                  max: 4,
-                  divisions: 30,
-                  value: scale.clamp(1.0, 4.0).toDouble(),
-                  activeColor: _profileLime,
-                  onChanged: onScaleChanged,
-                ),
-              ),
-              const Icon(Icons.zoom_in_rounded, color: Colors.white60),
-            ],
-          ),
-          const Text(
-            'Можно также перетаскивать фото и менять масштаб двумя пальцами.',
-            style: TextStyle(color: Colors.white54, fontSize: 11),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                tooltip: 'Сдвинуть влево',
-                onPressed: scale <= 1 ? null : () => onMove(-.18, 0),
-                icon: const Icon(Icons.chevron_left_rounded),
-              ),
-              Column(
-                children: [
-                  IconButton(
-                    tooltip: 'Сдвинуть вверх',
-                    onPressed: scale <= 1 ? null : () => onMove(0, -.18),
-                    icon: const Icon(Icons.keyboard_arrow_up_rounded),
-                  ),
-                  IconButton(
-                    tooltip: 'Вернуть по центру',
-                    onPressed: onCenter,
-                    icon: const Icon(Icons.center_focus_strong_rounded),
-                  ),
-                  IconButton(
-                    tooltip: 'Сдвинуть вниз',
-                    onPressed: scale <= 1 ? null : () => onMove(0, .18),
-                    icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                  ),
-                ],
-              ),
-              IconButton(
-                tooltip: 'Сдвинуть вправо',
-                onPressed: scale <= 1 ? null : () => onMove(.18, 0),
-                icon: const Icon(Icons.chevron_right_rounded),
-              ),
-            ],
-          ),
-        ],
       );
 }
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'core/theme/flowly_accent.dart';
+
 import 'features/home/home_screen.dart';
 import 'features/search/search_screen.dart';
 import 'features/library/library_screen.dart';
@@ -10,56 +12,56 @@ class FlowLyApp extends StatelessWidget {
   const FlowLyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    const background = Color(0xFF08090B);
-    return MaterialApp(
-      title: 'FlowLy',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: background,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFB6F36B),
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-        // Disable route transitions globally: no zoom, swipe, or tinted
-        // predictive-back animation when opening playlists, collections,
-        // the profile, or other pages.
-        pageTransitionsTheme: const PageTransitionsTheme(
-          builders: {
-            TargetPlatform.android: _NoPageTransitionsBuilder(),
-            TargetPlatform.iOS: _NoPageTransitionsBuilder(),
-            TargetPlatform.fuchsia: _NoPageTransitionsBuilder(),
-            TargetPlatform.linux: _NoPageTransitionsBuilder(),
-            TargetPlatform.macOS: _NoPageTransitionsBuilder(),
-            TargetPlatform.windows: _NoPageTransitionsBuilder(),
-          },
-        ),
-        fontFamily: 'Roboto',
-        splashFactory: NoSplash.splashFactory,
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        hoverColor: Colors.transparent,
-        focusColor: Colors.transparent,
-        navigationBarTheme: const NavigationBarThemeData(
-          indicatorColor: Colors.transparent,
-          overlayColor: WidgetStatePropertyAll(Colors.transparent),
-          labelTextStyle: WidgetStatePropertyAll(
-            TextStyle(fontSize: 10, height: 1),
-          ),
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
-        ),
-        iconButtonTheme: const IconButtonThemeData(
-          style: ButtonStyle(
-            overlayColor: WidgetStatePropertyAll(Colors.transparent),
-            splashFactory: NoSplash.splashFactory,
-          ),
-        ),
-      ),
-      home: const AppShell(),
-    );
-  }
+  Widget build(BuildContext context) => ValueListenableBuilder<Color>(
+        valueListenable: FlowLyAccent.listenable,
+        builder: (context, accent, _) {
+          const background = Color(0xFF08090B);
+          return MaterialApp(
+            title: 'FlowLy',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              brightness: Brightness.dark,
+              scaffoldBackgroundColor: background,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: accent,
+                brightness: Brightness.dark,
+              ),
+              useMaterial3: true,
+              pageTransitionsTheme: const PageTransitionsTheme(
+                builders: {
+                  TargetPlatform.android: _NoPageTransitionsBuilder(),
+                  TargetPlatform.iOS: _NoPageTransitionsBuilder(),
+                  TargetPlatform.fuchsia: _NoPageTransitionsBuilder(),
+                  TargetPlatform.linux: _NoPageTransitionsBuilder(),
+                  TargetPlatform.macOS: _NoPageTransitionsBuilder(),
+                  TargetPlatform.windows: _NoPageTransitionsBuilder(),
+                },
+              ),
+              fontFamily: 'Roboto',
+              splashFactory: NoSplash.splashFactory,
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+              hoverColor: Colors.transparent,
+              focusColor: Colors.transparent,
+              navigationBarTheme: const NavigationBarThemeData(
+                indicatorColor: Colors.transparent,
+                overlayColor: WidgetStatePropertyAll(Colors.transparent),
+                labelTextStyle: WidgetStatePropertyAll(
+                  TextStyle(fontSize: 10, height: 1),
+                ),
+                labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+              ),
+              iconButtonTheme: const IconButtonThemeData(
+                style: ButtonStyle(
+                  overlayColor: WidgetStatePropertyAll(Colors.transparent),
+                  splashFactory: NoSplash.splashFactory,
+                ),
+              ),
+            ),
+            home: const AppShell(),
+          );
+        },
+      );
 }
 
 class AppShell extends StatefulWidget {

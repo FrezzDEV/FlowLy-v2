@@ -100,6 +100,28 @@ void main() {
     expect(find.text('Твои любимые треки'), findsOneWidget);
   });
 
+  testWidgets('tapping the currently playing track pauses and resumes it', (tester) async {
+    final player = PlayerController.instance;
+    if (player.isPlaying) player.togglePlay();
+
+    final current = player.currentTrack;
+    final track = PlayerController.catalog.firstWhere(
+      (item) => item.title != current.title || item.artist != current.artist,
+    );
+    player.playTrack(track);
+    expect(player.isPlaying, isTrue);
+
+    player.seek(0.4);
+    player.playTrack(track);
+    expect(player.isPlaying, isFalse);
+    expect(player.progress, closeTo(0.4, 0.02));
+
+    player.playTrack(track);
+    expect(player.isPlaying, isTrue);
+    expect(player.progress, closeTo(0.4, 0.02));
+    player.togglePlay();
+  });
+
   testWidgets('playback timer advances and pause freezes it', (tester) async {
     final player = PlayerController.instance;
     if (player.isPlaying) player.togglePlay();
