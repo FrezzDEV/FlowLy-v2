@@ -3,6 +3,7 @@ import 'dart:ui' show lerpDouble;
 import 'package:flutter/material.dart';
 import 'animated_music_player.dart' show AlbumCover;
 import 'big_player_content.dart';
+import 'vertical_track_label.dart';
 import 'player_controller.dart';
 import '../library/playlist_sheets.dart';
 
@@ -47,7 +48,7 @@ class DraggableViewState extends State<DraggableView>
     _progress = AnimationController(vsync: this, value: 0);
     _coverReveal = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 420),
+      duration: const Duration(milliseconds: 320),
     )..addStatusListener(_onCoverRevealStatus);
     _player.addListener(_onPlayerTrackChanged);
   }
@@ -109,7 +110,7 @@ class DraggableViewState extends State<DraggableView>
     _incomingTrack = next;
     _coverReveal.duration = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
-        : const Duration(milliseconds: 420);
+        : const Duration(milliseconds: 320);
     if (mounted) setState(() {});
     _coverReveal.forward(from: 0);
   }
@@ -317,9 +318,9 @@ class DraggableViewState extends State<DraggableView>
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _MiniTrackLabel(
+                              VerticalTrackLabel(
                                 text: track.title,
-                                labelKey: 'mini-title-${track.title}',
+                                trackKey: '${track.title}|${track.artist}',
                                 height: 19,
                                 duration: const Duration(milliseconds: 190),
                                 style: const TextStyle(
@@ -330,7 +331,7 @@ class DraggableViewState extends State<DraggableView>
                               ),
                               _MiniTrackLabel(
                                 text: track.artist,
-                                labelKey: 'mini-artist-${track.title}|${track.artist}',
+                                trackKey: '${track.title}|${track.artist}',
                                 height: 17,
                                 duration: const Duration(milliseconds: 210),
                                 style: const TextStyle(
@@ -469,64 +470,6 @@ class DraggableViewState extends State<DraggableView>
   }
 }
 
-class _MiniTrackLabel extends StatelessWidget {
-  const _MiniTrackLabel({
-    required this.text,
-    required this.labelKey,
-    required this.height,
-    required this.duration,
-    required this.style,
-  });
-
-  final String text;
-  final String labelKey;
-  final double height;
-  final Duration duration;
-  final TextStyle style;
-
-  @override
-  Widget build(BuildContext context) => SizedBox(
-        height: height,
-        child: ClipRect(
-          child: AnimatedSwitcher(
-            duration: duration,
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            layoutBuilder: (current, previous) => Stack(
-              alignment: AlignmentDirectional.centerStart,
-              children: [
-                for (final child in previous) Positioned.fill(child: child),
-                if (current != null) Positioned.fill(child: current),
-              ],
-            ),
-            transitionBuilder: (child, animation) {
-              final motion = CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
-              );
-              return FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, .58),
-                    end: Offset.zero,
-                  ).animate(motion),
-                  child: child,
-                ),
-              );
-            },
-            child: Text(
-              text,
-              key: ValueKey(labelKey),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: style,
-            ),
-          ),
-        ),
-      );
-}
-
 class _ActionButton extends StatefulWidget {
   const _ActionButton({
     required this.icon,
@@ -584,7 +527,7 @@ class _TrackCircleRevealClipper extends CustomClipper<Path> {
     // Start clearly inside the cover, not on its clipped corner.
     final center = Offset(
       size.width * (forward ? .79 : .21),
-      size.height * .70,
+      size.height * .62,
     );
     return Path()
       ..addOval(
