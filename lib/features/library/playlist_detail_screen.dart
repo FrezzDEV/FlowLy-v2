@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../../core/storage/image_store.dart';
 import '../../navigation/reveal_stagger.dart';
 import '../player/player_controller.dart';
 import '../player/draggable_player.dart';
+import 'playlist_sheets.dart';
 
 class PlaylistDetailScreen extends StatelessWidget {
   const PlaylistDetailScreen({
@@ -88,6 +91,14 @@ class PlaylistDetailScreen extends StatelessWidget {
             centerTitle: true,
             backgroundColor: const Color(0xFF08090B),
             surfaceTintColor: Colors.transparent,
+            actions: [
+              if (!playlist.isSystem)
+                IconButton(
+                  tooltip: 'Изменить плейлист',
+                  onPressed: () => showEditPlaylistSheet(context, playlistId),
+                  icon: const Icon(Icons.edit_rounded),
+                ),
+            ],
           ),
           body: SafeArea(
             top: false,
@@ -120,6 +131,31 @@ class PlaylistDetailScreen extends StatelessWidget {
                           ),
                           child: Stack(
                             children: [
+                              if (playlist.coverPath != null)
+                                Positioned.fill(
+                                  child: Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      FileImageBox(
+                                        path: playlist.coverPath!,
+                                        cacheWidth: 900,
+                                        fallback: const SizedBox.shrink(),
+                                      ),
+                                      DecoratedBox(
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              Colors.black.withValues(alpha: .25),
+                                              Colors.black.withValues(alpha: .78),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               Positioned(
                                 right: -26,
                                 top: -36,
@@ -139,11 +175,18 @@ class PlaylistDetailScreen extends StatelessWidget {
                                     Container(
                                       width: 72,
                                       height: 72,
+                                      clipBehavior: Clip.antiAlias,
                                       decoration: BoxDecoration(
                                         color: Colors.white.withValues(alpha: .13),
                                         borderRadius: BorderRadius.circular(16),
                                       ),
-                                      child: Icon(bannerIcon, size: 38),
+                                      child: playlist.coverPath == null
+                                          ? Icon(bannerIcon, size: 38)
+                                          : FileImageBox(
+                                              path: playlist.coverPath!,
+                                              cacheWidth: 240,
+                                              fallback: Icon(bannerIcon, size: 38),
+                                            ),
                                     ),
                                     const SizedBox(width: 14),
                                     Expanded(
@@ -245,6 +288,17 @@ class PlaylistDetailScreen extends StatelessWidget {
                               ),
                             ),
                           ),
+                        if (playlist.tracks.length > 1)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 4),
+                            child: Text(
+                              'Удерживай трек и перетащи, чтобы изменить порядок.',
+                              style: TextStyle(
+                                color: Colors.white54,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -284,9 +338,33 @@ class PlaylistDetailScreen extends StatelessWidget {
                 else
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(12, 0, 12, 28),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
+                    sliver: SliverReorderableList(
+                      itemCount: playlist.tracks.length,
+                      onReorderStart: (_) => HapticFeedback.mediumImpact(),
+                      onReorder: (oldIndex, newIndex) {
+                        // Как в ReorderableListView: при переносе вниз индекс
+                        // назначения считается до удаления элемента.
+                        if (newIndex > oldIndex) newIndex -= 1;
+                        controller.moveTrackInPlaylist(
+                          playlistId,
+                          oldIndex,
+                          newIndex,
+                        );
+                      },
+                      proxyDecorator: (child, index, animation) =>
+                          AnimatedBuilder(
+                        animation: animation,
+                        builder: (context, child) => Material(
+                          color: const Color(0xFF1C1E24),
+                          elevation:
+                              8 * Curves.easeInOut.transform(animation.value),
+                          shadowColor: Colors.black,
+                          borderRadius: BorderRadius.circular(14),
+                          child: child,
+                        ),
+                        child: child,
+                      ),
+                      itemBuilder: (context, index) {
                           final track = playlist.tracks[index];
                           final isCurrent =
                               track.title == controller.currentTrack.title &&
@@ -294,8 +372,10 @@ class PlaylistDetailScreen extends StatelessWidget {
                           final trackKey = ValueKey(
                             '$playlistId:${track.title}:${track.artist}',
                           );
-                          return RevealStagger(
+                          return ReorderableDelayedDragStartListener(
                             key: trackKey,
+                            index: index,
+                            child: RevealStagger(
                             index: index,
                             child: Dismissible(
                             key: trackKey,
@@ -380,10 +460,9 @@ class PlaylistDetailScreen extends StatelessWidget {
                               },
                             ),
                             ),
+                            ),
                           );
-                        },
-                        childCount: playlist.tracks.length,
-                      ),
+                      },
                     ),
                   ),
               ],

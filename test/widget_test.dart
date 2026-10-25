@@ -7,6 +7,7 @@ import 'package:flowly/features/player/draggable_player.dart';
 import 'package:flowly/features/library/playlist_detail_screen.dart';
 import 'package:flowly/features/library/catalog_collection_screen.dart';
 import 'package:flowly/features/library/library_screen.dart';
+import 'package:flowly/features/profile/profile_controller.dart';
 import 'package:flowly/features/profile/profile_screen.dart';
 import 'package:flowly/examples/circle_reveal_demo_page.dart';
 import 'package:flowly/examples/playlist_page.dart';
@@ -337,6 +338,81 @@ void main() {
 
     expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsNothing);
     expect(find.text('Midnight Flow'), findsWidgets);
+  });
+
+  testWidgets('playlist tracks can be reordered, renamed and given a cover', (tester) async {
+    final player = PlayerController.instance;
+    final first = PlayerController.catalog[0];
+    final second = PlayerController.catalog[1];
+    final third = PlayerController.catalog[2];
+    final playlist = await player.createPlaylist(
+      'Порядок треков FlowLy',
+      initialTrack: first,
+    );
+    await player.addTrackToPlaylist(playlist.id, second);
+    await player.addTrackToPlaylist(playlist.id, third);
+
+    expect(await player.moveTrackInPlaylist(playlist.id, 0, 2), isTrue);
+    expect(player.playlistById(playlist.id)!.tracks, [second, third, first]);
+    expect(await player.moveTrackInPlaylist(playlist.id, 2, 0), isTrue);
+    expect(player.playlistById(playlist.id)!.tracks, [first, second, third]);
+    expect(await player.moveTrackInPlaylist(playlist.id, 1, 1), isFalse);
+    expect(await player.moveTrackInPlaylist(playlist.id, 5, 0), isFalse);
+
+    expect(await player.renamePlaylist(playlist.id, '  Новое имя  '), isTrue);
+    expect(player.playlistById(playlist.id)!.name, 'Новое имя');
+    expect(await player.renamePlaylist(playlist.id, '   '), isFalse);
+    expect(await player.renamePlaylist(playlist.id, 'избранное'), isFalse);
+    expect(
+      await player.renamePlaylist(
+        PlayerController.favoritesPlaylistId,
+        'Другое имя',
+      ),
+      isFalse,
+    );
+
+    expect(await player.setPlaylistCover(playlist.id, '/tmp/cover.jpg'), isNull);
+    expect(player.playlistById(playlist.id)!.coverPath, '/tmp/cover.jpg');
+    expect(await player.setPlaylistCover(playlist.id, null), '/tmp/cover.jpg');
+    expect(player.playlistById(playlist.id)!.coverPath, isNull);
+  });
+
+  testWidgets('profile shows editable name and username', (tester) async {
+    expect(ProfileController.validateUsername('ab'), isNotNull);
+    expect(ProfileController.validateUsername('bad name'), isNotNull);
+    expect(ProfileController.validateUsername('@Flowly_User'), isNull);
+    expect(ProfileController.normalizeUsername(' @Flow_User '), 'flow_user');
+
+    final profile = ProfileController.instance;
+    expect(
+      await profile.updateIdentity(name: '', username: 'abc'),
+      isFalse,
+    );
+    expect(
+      await profile.updateIdentity(name: 'Костя', username: 'a!'),
+      isFalse,
+    );
+    expect(
+      await profile.updateIdentity(name: '  Костя ', username: '@Kosta_99'),
+      isTrue,
+    );
+    expect(profile.name, 'Костя');
+    expect(profile.username, 'kosta_99');
+
+    await tester.pumpWidget(const FlowLyApp());
+    await tester.tap(find.descendant(
+      of: find.byType(NavigationBar),
+      matching: find.byIcon(Icons.person_outline_rounded),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Костя'), findsOneWidget);
+    expect(find.text('@kosta_99'), findsOneWidget);
+    expect(find.text('Редактировать профиль'), findsOneWidget);
+
+    await tester.tap(find.text('Редактировать профиль'));
+    await tester.pumpAndSettle();
+    expect(find.text('Юзернейм'), findsOneWidget);
   });
 
 }
