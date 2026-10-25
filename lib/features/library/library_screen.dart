@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../../navigation/circle_reveal_route.dart';
@@ -148,6 +150,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         : const Color(0xFF275F7D),
                     playlist.name,
                     '${playlist.tracks.length} треков',
+                    imagePath: playlist.coverPath,
                     onTapAt: (position) =>
                         _openPlaylist(context, playlist.id, position),
                   ),
@@ -271,6 +274,7 @@ class _LibraryRow extends StatelessWidget {
     this.subtitle, {
     this.onTap,
     this.onTapAt,
+    this.imagePath,
   }) : assert(onTap != null || onTapAt != null);
 
   final IconData icon;
@@ -279,6 +283,7 @@ class _LibraryRow extends StatelessWidget {
   final String subtitle;
   final VoidCallback? onTap;
   final ValueChanged<Offset>? onTapAt;
+  final String? imagePath;
 
   @override
   Widget build(BuildContext context) {
@@ -305,7 +310,17 @@ class _LibraryRow extends StatelessWidget {
             color: color,
             borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(icon, size: 27, color: Colors.white),
+          child: imagePath == null
+              ? Icon(icon, size: 27, color: Colors.white)
+              : ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Image.file(
+                    File(imagePath!),
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) =>
+                        Icon(icon, size: 27, color: Colors.white),
+                  ),
+                ),
         ),
         title: Text(
           title,

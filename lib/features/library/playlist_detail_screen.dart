@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../../navigation/reveal_stagger.dart';
 import '../player/player_controller.dart';
 import '../player/draggable_player.dart';
+import 'playlist_sheets.dart';
 
 class PlaylistDetailScreen extends StatelessWidget {
   const PlaylistDetailScreen({
@@ -88,6 +91,16 @@ class PlaylistDetailScreen extends StatelessWidget {
             centerTitle: true,
             backgroundColor: const Color(0xFF08090B),
             surfaceTintColor: Colors.transparent,
+            actions: [
+              if (!playlist.isSystem)
+                IconButton(
+                  tooltip: 'Изменить плейлист',
+                  onPressed: () async {
+                    await showEditPlaylistDialog(context, playlistId);
+                  },
+                  icon: const Icon(Icons.edit_rounded),
+                ),
+            ],
           ),
           body: SafeArea(
             top: false,
@@ -120,6 +133,29 @@ class PlaylistDetailScreen extends StatelessWidget {
                           ),
                           child: Stack(
                             children: [
+                              if (playlist.coverPath != null)
+                                Positioned.fill(
+                                  child: Image.file(
+                                    File(playlist.coverPath!),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        const SizedBox.shrink(),
+                                  ),
+                                ),
+                              const Positioned.fill(
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Color(0x22000000),
+                                        Color(0xCC000000),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
                               Positioned(
                                 right: -26,
                                 top: -36,
@@ -291,14 +327,10 @@ class PlaylistDetailScreen extends StatelessWidget {
                           final isCurrent =
                               track.title == controller.currentTrack.title &&
                               track.artist == controller.currentTrack.artist;
-                          final trackKey = ValueKey(
-                            '$playlistId:${track.title}:${track.artist}',
-                          );
-                          return RevealStagger(
-                            key: trackKey,
-                            index: index,
-                            child: Dismissible(
-                            key: trackKey,
+                          final itemId =
+                              '$playlistId:${track.title}:${track.artist}';
+                          final row = Dismissible(
+                            key: ValueKey('dismiss:$itemId'),
                             direction: DismissDirection.endToStart,
                             background: Container(
                               alignment: Alignment.centerRight,
@@ -309,7 +341,8 @@ class PlaylistDetailScreen extends StatelessWidget {
                                 color: Colors.redAccent,
                               ),
                             ),
-                            onDismissed: (_) => controller.removeTrackFromPlaylist(
+                            onDismissed: (_) =>
+                                controller.removeTrackFromPlaylist(
                               playlistId,
                               track,
                             ),
@@ -354,31 +387,116 @@ class PlaylistDetailScreen extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(color: Colors.white60),
                               ),
-                              trailing: IconButton(
-                                tooltip: isCurrent && controller.isPlaying
-                                    ? 'Пауза'
-                                    : 'Воспроизвести',
-                                icon: Icon(
-                                  isCurrent && controller.isPlaying
-                                      ? Icons.pause_rounded
-                                      : Icons.play_arrow_rounded,
-                                  color: isCurrent
-                                      ? const Color(0xFFB6F36B)
-                                      : Colors.white70,
-                                ),
-                                onPressed: () {
-                                  if (isCurrent) {
-                                    controller.togglePlay();
-                                  } else {
-                                    controller.playTrack(track);
-                                  }
-                                },
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (!playlist.isSystem)
+                                    const Padding(
+                                      padding: EdgeInsets.only(right: 4),
+                                      child: Icon(
+                                        Icons.drag_handle_rounded,
+                                        color: Colors.white38,
+                                      ),
+                                    ),
+                                  IconButton(
+                                    tooltip: isCurrent && controller.isPlaying
+                                        ? 'Пауза'
+                                        : 'Воспроизвести',
+                                    icon: Icon(
+                                      isCurrent && controller.isPlaying
+                                          ? Icons.pause_rounded
+                                          : Icons.play_arrow_rounded,
+                                      color: isCurrent
+                                          ? const Color(0xFFB6F36B)
+                                          : Colors.white70,
+                                    ),
+                                    onPressed: () {
+                                      if (isCurrent) {
+                                        controller.togglePlay();
+                                      } else {
+                                        controller.playTrack(track);
+                                      }
+                                    },
+                                  ),
+                                ],
                               ),
                               onTap: () {
                                 controller.playTrack(track);
                                 draggablePlayerKey.currentState?.open();
                               },
                             ),
+                          );
+
+                          if (playlist.isSystem) {
+                            return KeyedSubtree(
+                              key: ValueKey('row:$itemId'),
+                              child: row,
+                            );
+                          }
+
+                          return DragTarget<int>(
+                            key: ValueKey('target:$itemId'),
+                            onWillAcceptWithDetails: (details) =>
+                                details.data != index,
+                            onAcceptWithDetails: (details) {
+                              controller.movePlaylistTrack(
+                                playlistId,
+                                details.data,
+                                index,
+                              );
+                            },
+                            builder: (context, candidates, rejected) =>
+                                LongPressDraggable<int>(
+                              data: index,
+                              dragAnchorStrategy: pointerDragAnchorStrategy,
+                              feedback: Material(
+                                color: const Color(0xFF17181D),
+                                borderRadius: BorderRadius.circular(12),
+                                elevation: 0,
+                                child: SizedBox(
+                                  width: MediaQuery.sizeOf(context).width - 24,
+                                  child: ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 3,
+                                    ),
+                                    leading: Container(
+                                      width: 52,
+                                      height: 52,
+                                      decoration: BoxDecoration(
+                                        color: track.color,
+                                        borderRadius: BorderRadius.circular(11),
+                                      ),
+                                      child: Icon(track.icon, size: 28),
+                                    ),
+                                    title: Text(
+                                      track.title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      track.artist,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.white60,
+                                      ),
+                                    ),
+                                    trailing: const Icon(
+                                      Icons.drag_handle_rounded,
+                                      color: Color(0xFFB6F36B),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              childWhenDragging: Opacity(
+                                opacity: .18,
+                                child: row,
+                              ),
+                              child: row,
                             ),
                           );
                         },

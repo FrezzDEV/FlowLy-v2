@@ -46,15 +46,8 @@ void main() {
     expect(find.text('Популярные жанры'), findsNothing);
     expect(find.text('Найди музыку'), findsOneWidget);
   });
-  testWidgets('profile opens a separate settings screen', (tester) async {
+  testWidgets('profile editor opens from the pencil and includes crop controls', (tester) async {
     await tester.pumpWidget(const FlowLyApp());
-
-    expect(
-      find.byWidgetPredicate(
-        (widget) => widget is IconButton && widget.tooltip == 'Профиль',
-      ),
-      findsNothing,
-    );
 
     await tester.tap(find.descendant(
       of: find.byType(NavigationBar),
@@ -62,15 +55,40 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Настройки'));
+    expect(find.byTooltip('Настройки'), findsNothing);
+    await tester.tap(find.byTooltip('Редактировать профиль'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(SettingsScreen), findsOneWidget);
-    expect(find.text('Внешний вид'), findsOneWidget);
-    expect(find.text('Уведомления'), findsOneWidget);
-    expect(find.text('Качество звука'), findsOneWidget);
-    expect(find.text('Язык'), findsOneWidget);
-    expect(find.text('О приложении'), findsOneWidget);
+    expect(find.byType(ProfileEditorScreen), findsOneWidget);
+    expect(find.text('Редактировать профиль'), findsOneWidget);
+    expect(find.text('Аватарка'), findsOneWidget);
+
+    final editorScrollable = find.descendant(
+      of: find.byType(ProfileEditorScreen),
+      matching: find.byType(Scrollable),
+    ).first;
+    await tester.scrollUntilVisible(
+      find.text('Баннер'),
+      260,
+      scrollable: editorScrollable,
+    );
+    expect(find.text('Баннер'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Рамка аватарки'),
+      260,
+      scrollable: editorScrollable,
+    );
+    expect(find.text('Рамка аватарки'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Показывать плейлисты'),
+      260,
+      scrollable: editorScrollable,
+    );
+    expect(find.text('Показывать плейлисты'), findsOneWidget);
+    expect(find.text('Показывать треки'), findsOneWidget);
+    expect(find.text('Показывать альбомы'), findsOneWidget);
+    expect(find.text('Показывать авторов'), findsOneWidget);
   });
 
   testWidgets('home favorites quick tile opens the playlist screen', (tester) async {
@@ -119,6 +137,40 @@ void main() {
 
     await player.removeTrackFromPlaylist(playlist.id, PlayerController.catalog.first);
     expect(player.playlistById(playlist.id)!.tracks, hasLength(1));
+  });
+
+  testWidgets('custom playlists support editing and track reordering', (tester) async {
+    final player = PlayerController.instance;
+    final playlist = await player.createPlaylist(
+      'Плейлист для изменения и порядка',
+      initialTrack: PlayerController.catalog[0],
+    );
+    await player.addTracksToPlaylist(
+      playlist.id,
+      [PlayerController.catalog[1], PlayerController.catalog[2]],
+    );
+
+    await player.reorderPlaylistTracks(playlist.id, 0, 3);
+    expect(
+      player.playlistById(playlist.id)!.tracks.map((track) => track.title),
+      [
+        PlayerController.catalog[1].title,
+        PlayerController.catalog[2].title,
+        PlayerController.catalog[0].title,
+      ],
+    );
+
+    final updated = await player.updatePlaylistDetails(
+      playlist.id,
+      name: 'Новое имя плейлиста',
+      coverPath: '/test/playlist-cover.png',
+    );
+    expect(updated, isTrue);
+    expect(player.playlistById(playlist.id)!.name, 'Новое имя плейлиста');
+    expect(
+      player.playlistById(playlist.id)!.coverPath,
+      '/test/playlist-cover.png',
+    );
   });
 
   testWidgets('playlist detail screen shows banner and bulk-adds tracks to downloads', (tester) async {
