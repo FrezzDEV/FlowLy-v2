@@ -307,8 +307,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  Color(0xFF345B56),
-                                  Color(0xFF263047),
+                                  Color(0xFF55575B),
+                                  Color(0xFF383A40),
                                   Color(0xFF15171E),
                                 ],
                               ),
