@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/flowly_accent.dart';
+
 import '../../navigation/circle_reveal_route.dart';
 import '../player/player_controller.dart';
 import '../library/playlist_detail_screen.dart';
@@ -7,7 +9,6 @@ import '../library/playlist_sheets.dart';
 import '../player/draggable_player.dart';
 
 const _muted = Color(0xFFA5A6AC);
-const _lime = Color(0xFFB6F36B);
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -54,12 +55,14 @@ class HomeScreen extends StatelessWidget {
           width: 38,
           height: 38,
           decoration: BoxDecoration(
-            color: _lime,
+            color: FlowLyAccent.color,
             borderRadius: BorderRadius.circular(13),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.graphic_eq_rounded,
-            color: Color(0xFF11130D),
+            color: FlowLyAccent.color.computeLuminance() > .55
+                ? const Color(0xFF11130D)
+                : Colors.white,
             size: 25,
           ),
         ),
@@ -72,12 +75,12 @@ class HomeScreen extends StatelessWidget {
             letterSpacing: -.8,
           ),
         ),
-        const Text(
+        Text(
           'Ly',
           style: TextStyle(
             fontSize: 25,
             fontWeight: FontWeight.w800,
-            color: _lime,
+            color: FlowLyAccent.color,
             letterSpacing: -.8,
           ),
         ),

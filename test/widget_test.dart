@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -46,15 +48,8 @@ void main() {
     expect(find.text('Популярные жанры'), findsNothing);
     expect(find.text('Найди музыку'), findsOneWidget);
   });
-  testWidgets('profile opens a separate settings screen', (tester) async {
+  testWidgets('profile settings menu offers settings, editor and share', (tester) async {
     await tester.pumpWidget(const FlowLyApp());
-
-    expect(
-      find.byWidgetPredicate(
-        (widget) => widget is IconButton && widget.tooltip == 'Профиль',
-      ),
-      findsNothing,
-    );
 
     await tester.tap(find.descendant(
       of: find.byType(NavigationBar),
@@ -62,15 +57,60 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Настройки'));
+    await tester.tap(find.byTooltip('Настройки профиля'));
+    await tester.pumpAndSettle();
+    expect(find.text('Настройки'), findsOneWidget);
+    expect(find.text('Карандаш'), findsOneWidget);
+    expect(find.text('Поделиться профилем'), findsOneWidget);
+
+    await tester.tap(find.text('Карандаш'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(SettingsScreen), findsOneWidget);
-    expect(find.text('Внешний вид'), findsOneWidget);
-    expect(find.text('Уведомления'), findsOneWidget);
-    expect(find.text('Качество звука'), findsOneWidget);
-    expect(find.text('Язык'), findsOneWidget);
-    expect(find.text('О приложении'), findsOneWidget);
+    expect(find.byType(ProfileEditorScreen), findsOneWidget);
+    expect(find.text('Предпросмотр профиля'), findsOneWidget);
+    final editorScrollable = find.descendant(
+      of: find.byType(ProfileEditorScreen),
+      matching: find.byType(Scrollable),
+    ).first;
+
+    await tester.scrollUntilVisible(
+      find.text('Аватарка'),
+      260,
+      scrollable: editorScrollable,
+    );
+    expect(find.text('Аватарка'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Витрина профиля'),
+      260,
+      scrollable: editorScrollable,
+    );
+    expect(find.text('Витрина профиля'), findsOneWidget);
+    expect(find.text('Добавить контент'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Рамка аватарки'),
+      260,
+      scrollable: editorScrollable,
+    );
+    expect(find.text('Рамка аватарки'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Показывать плейлисты'),
+      260,
+      scrollable: editorScrollable,
+    );
+    for (final label in [
+      'Показывать плейлисты',
+      'Показывать треки',
+      'Показывать альбомы',
+      'Показывать авторов',
+    ]) {
+      await tester.scrollUntilVisible(
+        find.text(label),
+        180,
+        scrollable: editorScrollable,
+      );
+      expect(find.text(label), findsOneWidget);
+    }
   });
 
   testWidgets('home favorites quick tile opens the playlist screen', (tester) async {
@@ -80,6 +120,28 @@ void main() {
 
     expect(find.byType(PlaylistDetailScreen), findsOneWidget);
     expect(find.text('Твои любимые треки'), findsOneWidget);
+  });
+
+  testWidgets('tapping the currently playing track pauses and resumes it', (tester) async {
+    final player = PlayerController.instance;
+    if (player.isPlaying) player.togglePlay();
+
+    final current = player.currentTrack;
+    final track = PlayerController.catalog.firstWhere(
+      (item) => item.title != current.title || item.artist != current.artist,
+    );
+    player.playTrack(track);
+    expect(player.isPlaying, isTrue);
+
+    player.seek(0.4);
+    player.playTrack(track);
+    expect(player.isPlaying, isFalse);
+    expect(player.progress, closeTo(0.4, 0.02));
+
+    player.playTrack(track);
+    expect(player.isPlaying, isTrue);
+    expect(player.progress, closeTo(0.4, 0.02));
+    player.togglePlay();
   });
 
   testWidgets('playback timer advances and pause freezes it', (tester) async {
@@ -119,6 +181,40 @@ void main() {
 
     await player.removeTrackFromPlaylist(playlist.id, PlayerController.catalog.first);
     expect(player.playlistById(playlist.id)!.tracks, hasLength(1));
+  });
+
+  testWidgets('custom playlists support editing and track reordering', (tester) async {
+    final player = PlayerController.instance;
+    final playlist = await player.createPlaylist(
+      'Плейлист для изменения и порядка',
+      initialTrack: PlayerController.catalog[0],
+    );
+    await player.addTracksToPlaylist(
+      playlist.id,
+      [PlayerController.catalog[1], PlayerController.catalog[2]],
+    );
+
+    await player.reorderPlaylistTracks(playlist.id, 0, 3);
+    expect(
+      player.playlistById(playlist.id)!.tracks.map((track) => track.title),
+      [
+        PlayerController.catalog[1].title,
+        PlayerController.catalog[2].title,
+        PlayerController.catalog[0].title,
+      ],
+    );
+
+    final updated = await player.updatePlaylistDetails(
+      playlist.id,
+      name: 'Новое имя плейлиста',
+      coverPath: '/test/playlist-cover.png',
+    );
+    expect(updated, isTrue);
+    expect(player.playlistById(playlist.id)!.name, 'Новое имя плейлиста');
+    expect(
+      player.playlistById(playlist.id)!.coverPath,
+      '/test/playlist-cover.png',
+    );
   });
 
   testWidgets('playlist detail screen shows banner and bulk-adds tracks to downloads', (tester) async {
@@ -190,10 +286,10 @@ void main() {
 
     await tester.tap(find.text('Исполнители'));
     await tester.pumpAndSettle();
-    expect(find.text('Ed Sheeran'), findsOneWidget);
-    await tester.tap(find.text('Ed Sheeran'));
+    expect(find.text('Ed Sheeran'), findsWidgets);
+    await tester.tap(find.text('Ed Sheeran').first);
     await tester.pumpAndSettle();
-    expect(find.text('Afterlife'), findsOneWidget);
+    expect(find.text('Afterlife'), findsWidgets);
     expect(find.byType(CatalogCollectionScreen), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.arrow_back_rounded).last);
@@ -216,7 +312,12 @@ void main() {
     final player = PlayerController.instance;
     await tester.pumpWidget(const FlowLyApp());
 
-    await tester.tap(find.text('Midnight Flow').first);
+    if (player.currentTrack.title != PlayerController.catalog.first.title) {
+      player.playTrack(PlayerController.catalog.first);
+    }
+    unawaited(draggablePlayerKey.currentState?.close());
+    await pumpPlayerUi(tester);
+    unawaited(draggablePlayerKey.currentState?.open());
     await pumpPlayerUi(tester);
     await tester.tap(find.byIcon(Icons.more_horiz_rounded));
     await pumpPlayerUi(tester);
@@ -238,6 +339,7 @@ void main() {
       (item) => item.name == 'Создан из плеера',
     );
     expect(playlist.tracks, contains(player.currentTrack));
+    if (player.isPlaying) player.togglePlay();
   });
 
   testWidgets('playlist screen keeps bottom navigation and mini player visible', (tester) async {
@@ -255,12 +357,14 @@ void main() {
   testWidgets('playlist picker stays open and toggles track membership', (tester) async {
     final player = PlayerController.instance;
     await tester.pumpWidget(const FlowLyApp());
-    await tester.tap(find.text('Midnight Flow').first);
+    unawaited(draggablePlayerKey.currentState?.close());
     await pumpPlayerUi(tester);
     await player.removeTrackFromPlaylist(
       PlayerController.favoritesPlaylistId,
       player.currentTrack,
     );
+    unawaited(draggablePlayerKey.currentState?.open());
+    await pumpPlayerUi(tester);
     await tester.tap(find.byIcon(Icons.more_horiz_rounded));
     await pumpPlayerUi(tester);
 
@@ -289,9 +393,11 @@ void main() {
       isNot(contains(player.currentTrack)),
     );
     expect(find.byType(SnackBar), findsNothing);
+    if (player.isPlaying) player.togglePlay();
   });
 
   testWidgets('tapping any part of the mini player opens the full player', (tester) async {
+    final player = PlayerController.instance;
     await tester.pumpWidget(const FlowLyApp());
     await tester.pumpAndSettle();
 
@@ -300,6 +406,7 @@ void main() {
     await pumpPlayerUi(tester);
 
     expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsOneWidget);
+    if (player.isPlaying) player.togglePlay();
   });
 
   testWidgets('circular reveal demo opens the selected playlist and exits', (tester) async {
@@ -325,10 +432,19 @@ void main() {
   });
 
   testWidgets('mini player opens and closes the full-screen player', (tester) async {
+    final player = PlayerController.instance;
+    if (player.currentTrack.title != PlayerController.catalog.first.title) {
+      player.playTrack(PlayerController.catalog.first);
+    }
     await tester.pumpWidget(const FlowLyApp());
+    unawaited(draggablePlayerKey.currentState?.close());
+    await pumpPlayerUi(tester);
 
-    expect(find.text('Midnight Flow'), findsWidgets);
-    await tester.tap(find.text('Midnight Flow').first);
+    final miniTitle = find.byKey(
+      const ValueKey('mini-title-Midnight Flow'),
+    );
+    expect(miniTitle, findsOneWidget);
+    await tester.tap(miniTitle);
     await pumpPlayerUi(tester);
 
     expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsOneWidget);
@@ -336,7 +452,8 @@ void main() {
     await pumpPlayerUi(tester);
 
     expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsNothing);
-    expect(find.text('Midnight Flow'), findsWidgets);
+    expect(find.byKey(const ValueKey('mini-title-Midnight Flow')), findsOneWidget);
+    if (player.isPlaying) player.togglePlay();
   });
 
 }

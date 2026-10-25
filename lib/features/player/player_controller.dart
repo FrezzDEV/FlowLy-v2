@@ -29,19 +29,27 @@ class MusicPlaylist {
     required this.name,
     Iterable<PlayerTrack> tracks = const <PlayerTrack>[],
     this.isSystem = false,
+    this.coverPath,
   }) : tracks = List<PlayerTrack>.unmodifiable(tracks);
 
   final String id;
   final String name;
   final List<PlayerTrack> tracks;
   final bool isSystem;
+  final String? coverPath;
 
-  MusicPlaylist copyWith({String? name, Iterable<PlayerTrack>? tracks}) =>
+  MusicPlaylist copyWith({
+    String? name,
+    Iterable<PlayerTrack>? tracks,
+    String? coverPath,
+    bool clearCoverPath = false,
+  }) =>
       MusicPlaylist(
         id: id,
         name: name ?? this.name,
         tracks: tracks ?? this.tracks,
         isSystem: isSystem,
+        coverPath: clearCoverPath ? null : (coverPath ?? this.coverPath),
       );
 }
 
@@ -165,6 +173,99 @@ class PlayerController extends ChangeNotifier {
     return null;
   }
 
+  Future<bool> updatePlaylistDetails(
+    String playlistId, {
+    String? name,
+    String? coverPath,
+    bool clearCoverPath = false,
+  }) async {
+    final index = _playlists.indexWhere((playlist) => playlist.id == playlistId);
+    if (index < 0 || _playlists[index].isSystem) return false;
+
+    final cleanName = name?.trim();
+    if (cleanName != null && cleanName.isEmpty) {
+      throw const FormatException('Название плейлиста не может быть пустым.');
+    }
+    if (cleanName != null &&
+        _playlists.any((playlist) =>
+            playlist.id != playlistId &&
+            playlist.name.toLowerCase() == cleanName.toLowerCase())) {
+      throw const FormatException('Плейлист с таким названием уже существует.');
+    }
+
+    final updated = [..._playlists];
+    updated[index] = updated[index].copyWith(
+      name: cleanName,
+      coverPath: coverPath,
+      clearCoverPath: clearCoverPath,
+    );
+    _playlists = updated;
+    notifyListeners();
+    await _persistPlaylists();
+    return true;
+  }
+
+  /// Moves a track to its exact final position without implicit reordering animations.
+  Future<void> movePlaylistTrack(
+    String playlistId,
+    int fromIndex,
+    int toIndex,
+  ) async {
+    final playlistIndex =
+        _playlists.indexWhere((playlist) => playlist.id == playlistId);
+    if (playlistIndex < 0 || _playlists[playlistIndex].isSystem) return;
+
+    final tracks = _playlists[playlistIndex].tracks;
+    if (fromIndex < 0 ||
+        fromIndex >= tracks.length ||
+        toIndex < 0 ||
+        toIndex >= tracks.length ||
+        fromIndex == toIndex) {
+      return;
+    }
+
+    final moved = [...tracks];
+    final track = moved.removeAt(fromIndex);
+    moved.insert(toIndex, track);
+    final updated = [..._playlists];
+    updated[playlistIndex] = _playlists[playlistIndex].copyWith(tracks: moved);
+    _playlists = updated;
+    notifyListeners();
+    await _persistPlaylists();
+  }
+
+  Future<void> reorderPlaylistTracks(
+    String playlistId,
+    int oldIndex,
+    int newIndex,
+  ) async {
+    final index = _playlists.indexWhere((playlist) => playlist.id == playlistId);
+    if (index < 0 || _playlists[index].isSystem) return;
+
+    final currentTracks = _playlists[index].tracks;
+    if (oldIndex < 0 ||
+        oldIndex >= currentTracks.length ||
+        newIndex < 0 ||
+        newIndex > currentTracks.length) {
+      return;
+    }
+    if (newIndex > oldIndex) newIndex--;
+    if (newIndex == oldIndex ||
+        newIndex < 0 ||
+        newIndex >= currentTracks.length) {
+      return;
+    }
+
+    final reorderedTracks = [...currentTracks];
+    final movedTrack = reorderedTracks.removeAt(oldIndex);
+    reorderedTracks.insert(newIndex, movedTrack);
+    final updated = [..._playlists];
+    updated[index] = _playlists[index].copyWith(tracks: reorderedTracks);
+    _playlists = updated;
+    notifyListeners();
+    await _persistPlaylists();
+  }
+
   bool _sameTrack(PlayerTrack first, PlayerTrack second) =>
       first.title == second.title && first.artist == second.artist;
 
@@ -183,6 +284,7 @@ class PlayerController extends ChangeNotifier {
             final id = item['id'];
             final name = item['name'];
             if (id is! String || name is! String) continue;
+            final coverPath = item['coverPath'];
             final tracks = <PlayerTrack>[];
             final savedTracks = item['tracks'];
             if (savedTracks is List) {
@@ -204,6 +306,7 @@ class PlayerController extends ChangeNotifier {
               name: id == downloadsPlaylistId ? 'Скачанные' : name,
               tracks: tracks,
               isSystem: item['isSystem'] == true,
+              coverPath: coverPath is String ? coverPath : null,
             ));
           }
           _playlists = loaded;
@@ -249,6 +352,7 @@ class PlayerController extends ChangeNotifier {
         'id': playlist.id,
         'name': playlist.name,
         'isSystem': playlist.isSystem,
+        if (playlist.coverPath != null) 'coverPath': playlist.coverPath!,
         'tracks': playlist.tracks.map((track) => <String, String>{
           'title': track.title,
           'artist': track.artist,
@@ -350,6 +454,17 @@ class PlayerController extends ChangeNotifier {
       );
 
   void playTrack(PlayerTrack track) {
+    final isSameTrack =
+        track.title == _currentTrack.title &&
+        track.artist == _currentTrack.artist;
+
+    if (isSameTrack) {
+      // A tap on the current track pauses; the next tap resumes from its
+      // current position rather than restarting the song.
+      togglePlay();
+      return;
+    }
+
     _currentTrack = track;
     final index = catalog.indexWhere(
       (item) => item.title == track.title && item.artist == track.artist,
