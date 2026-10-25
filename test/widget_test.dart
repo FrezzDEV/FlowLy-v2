@@ -458,7 +458,7 @@ void main() {
     await pumpPlayerUi(tester);
 
     expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsNothing);
-    expect(find.byKey(const ValueKey('mini-title-Midnight Flow')), findsOneWidget);
+    expect(find.byKey(const ValueKey('mini-title-label')), findsOneWidget);
     if (player.isPlaying) player.togglePlay();
   });
 
