@@ -10,6 +10,7 @@ import 'package:flowly/features/library/playlist_detail_screen.dart';
 import 'package:flowly/features/library/catalog_collection_screen.dart';
 import 'package:flowly/features/library/library_screen.dart';
 import 'package:flowly/features/profile/profile_screen.dart';
+import 'package:flowly/features/profile/profile_showcase.dart';
 import 'package:flowly/examples/circle_reveal_demo_page.dart';
 import 'package:flowly/examples/playlist_page.dart';
 
@@ -123,7 +124,9 @@ void main() {
     await tester.pumpAndSettle();
 
     for (final title in ['Избранное', 'Плейлисты', 'Треки', 'Альбомы', 'Авторы']) {
-      expect(find.text(title), findsOneWidget, reason: title);
+      // Featured cards reuse words like «Плейлисты», so match the header widget.
+      expect(find.widgetWithText(ProfileSectionHeader, title), findsOneWidget,
+          reason: title);
     }
     expect(find.text('Редактировать'), findsNWidgets(5));
     expect(find.text('Любимые треки'), findsOneWidget);
