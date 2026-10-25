@@ -247,8 +247,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Color _frameColor(String style) {
     switch (style) {
+      // Keep older saved "lime" frame settings consistent with the white preview.
       case 'lime':
-        return const Color(0xFFB6F36B);
+        return const Color(0xFFF5F5F5);
       case 'violet':
         return const Color(0xFFB28BFF);
       case 'blue':
@@ -1502,9 +1503,9 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                     onTap: () => setState(() => _frameStyle = 'none'),
                   ),
                   _FrameChoice(
-                    title: 'Лайм',
+                    title: 'Белая',
                     style: 'lime',
-                    color: const Color(0xFFB6F36B),
+                    color: const Color(0xFFF5F5F5),
                     selected: _frameStyle == 'lime',
                     onTap: () => setState(() => _frameStyle = 'lime'),
                   ),

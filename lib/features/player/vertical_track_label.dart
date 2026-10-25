@@ -57,19 +57,30 @@ class _VerticalTrackLabelState extends State<VerticalTrackLabel>
   @override
   void didUpdateWidget(covariant VerticalTrackLabel oldWidget) {
     super.didUpdateWidget(oldWidget);
+    final nextDuration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : widget.duration;
+    if (oldWidget.duration != widget.duration ||
+        _transition.duration != nextDuration) {
+      _transition.duration = nextDuration;
+    }
     if (oldWidget.trackKey == widget.trackKey && oldWidget.text == widget.text) {
-      if (oldWidget.duration != widget.duration) {
-        _transition.duration = widget.duration;
-      }
       return;
     }
 
     _transition.stop();
+    // A track can change while its artist/title remains identical. Do not
+    // animate two identical labels over one another: this looked like a text
+    // stutter, especially for short names in the mini-player.
+    if (oldWidget.text == widget.text || nextDuration == Duration.zero) {
+      _previousText = null;
+      _shownText = widget.text;
+      _transition.value = 1;
+      return;
+    }
+
     _previousText = _shownText;
     _shownText = widget.text;
-    _transition.duration = MediaQuery.disableAnimationsOf(context)
-        ? Duration.zero
-        : widget.duration;
     _transition.forward(from: 0);
   }
 
