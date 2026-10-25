@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../core/theme/flowly_accent.dart';
+
 import '../../navigation/reveal_stagger.dart';
 import '../player/player_controller.dart';
 import '../player/draggable_player.dart';
@@ -261,8 +263,11 @@ class PlaylistDetailScreen extends StatelessWidget {
                                     : 'Скачать все',
                               ),
                               style: FilledButton.styleFrom(
-                                backgroundColor: const Color(0xFFB6F36B),
-                                foregroundColor: const Color(0xFF11130D),
+                                backgroundColor: FlowLyAccent.color,
+                                foregroundColor:
+                                    FlowLyAccent.color.computeLuminance() > .55
+                                        ? const Color(0xFF11130D)
+                                        : Colors.white,
                                 disabledBackgroundColor:
                                     const Color(0xFF282A2F),
                                 disabledForegroundColor: Colors.white38,
@@ -377,7 +382,7 @@ class PlaylistDetailScreen extends StatelessWidget {
                                       ? FontWeight.w700
                                       : FontWeight.w500,
                                   color: isCurrent
-                                      ? const Color(0xFFB6F36B)
+                                      ? FlowLyAccent.color
                                       : Colors.white,
                                 ),
                               ),
@@ -407,7 +412,7 @@ class PlaylistDetailScreen extends StatelessWidget {
                                           ? Icons.pause_rounded
                                           : Icons.play_arrow_rounded,
                                       color: isCurrent
-                                          ? const Color(0xFFB6F36B)
+                                          ? FlowLyAccent.color
                                           : Colors.white70,
                                     ),
                                     onPressed: () {
@@ -487,7 +492,7 @@ class PlaylistDetailScreen extends StatelessWidget {
                                     ),
                                     trailing: const Icon(
                                       Icons.drag_handle_rounded,
-                                      color: Color(0xFFB6F36B),
+                                      color: FlowLyAccent.color,
                                     ),
                                   ),
                                 ),
