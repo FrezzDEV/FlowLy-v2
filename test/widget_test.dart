@@ -10,6 +10,7 @@ import 'package:flowly/features/library/playlist_detail_screen.dart';
 import 'package:flowly/features/library/catalog_collection_screen.dart';
 import 'package:flowly/features/library/library_screen.dart';
 import 'package:flowly/features/profile/profile_screen.dart';
+import 'package:flowly/features/profile/profile_showcase.dart';
 import 'package:flowly/examples/circle_reveal_demo_page.dart';
 import 'package:flowly/examples/playlist_page.dart';
 
@@ -111,6 +112,31 @@ void main() {
       );
       expect(find.text(label), findsOneWidget);
     }
+  });
+
+  testWidgets('profile shows the five showcase sections with edit buttons', (tester) async {
+    await tester.pumpWidget(const FlowLyApp());
+
+    await tester.tap(find.descendant(
+      of: find.byType(NavigationBar),
+      matching: find.byIcon(Icons.person_outline_rounded),
+    ));
+    await tester.pumpAndSettle();
+
+    for (final title in ['Избранное', 'Плейлисты', 'Треки', 'Альбомы', 'Авторы']) {
+      // Featured cards reuse words like «Плейлисты», so match the header widget.
+      expect(find.widgetWithText(ProfileSectionHeader, title), findsOneWidget,
+          reason: title);
+    }
+    expect(find.text('Редактировать'), findsNWidgets(5));
+    expect(find.text('Любимые треки'), findsOneWidget);
+    expect(find.text('Мой Микс'), findsOneWidget);
+    expect(find.text('27 подписчиков'), findsOneWidget);
+    expect(find.text('Lord Huron'), findsOneWidget);
+
+    await tester.tap(find.text('Редактировать').first);
+    await tester.pumpAndSettle();
+    expect(find.byType(ProfileEditorScreen), findsOneWidget);
   });
 
   testWidgets('home favorites quick tile opens the playlist screen', (tester) async {
