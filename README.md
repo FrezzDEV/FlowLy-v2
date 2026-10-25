@@ -24,7 +24,7 @@ Artifact: `build/app/outputs/flutter-apk/FlowLy.apk`.
 - **Latest stable build:** [Download FlowLy.apk](https://github.com/FrezzDEV/FlowLy-v2/releases/latest/download/FlowLy.apk)
 - **Latest preview build:** [Download FlowLy.apk](https://github.com/FrezzDEV/FlowLy-v2/releases/download/preview/FlowLy.apk)
 
-The feature-branch workflow publishes the APK as a direct release asset, so you do not need to download the ZIP-wrapped Actions artifact.
+The feature-branch workflow publishes the APK as a direct release asset, so you do not need to download the ZIP-wrapped Actions artifact. Every build uses the GitHub Actions run number as Android's version code, allowing a newer APK to replace an installed older build.
 
 ## GitHub Actions
 Workflow `.github/workflows/android-apk.yml` runs on pushes, pull requests and manual dispatch. It resolves dependencies, runs static analysis and widget tests, builds a release APK and uploads it as the `FlowLy-release-apk` artifact. Open the Actions run and download the artifact.
