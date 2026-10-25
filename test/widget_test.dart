@@ -121,6 +121,40 @@ void main() {
     expect(player.playlistById(playlist.id)!.tracks, hasLength(1));
   });
 
+  testWidgets('custom playlists support editing and track reordering', (tester) async {
+    final player = PlayerController.instance;
+    final playlist = await player.createPlaylist(
+      'Плейлист для изменения и порядка',
+      initialTrack: PlayerController.catalog[0],
+    );
+    await player.addTracksToPlaylist(
+      playlist.id,
+      [PlayerController.catalog[1], PlayerController.catalog[2]],
+    );
+
+    await player.reorderPlaylistTracks(playlist.id, 0, 3);
+    expect(
+      player.playlistById(playlist.id)!.tracks.map((track) => track.title),
+      [
+        PlayerController.catalog[1].title,
+        PlayerController.catalog[2].title,
+        PlayerController.catalog[0].title,
+      ],
+    );
+
+    final updated = await player.updatePlaylistDetails(
+      playlist.id,
+      name: 'Новое имя плейлиста',
+      coverPath: '/test/playlist-cover.png',
+    );
+    expect(updated, isTrue);
+    expect(player.playlistById(playlist.id)!.name, 'Новое имя плейлиста');
+    expect(
+      player.playlistById(playlist.id)!.coverPath,
+      '/test/playlist-cover.png',
+    );
+  });
+
   testWidgets('playlist detail screen shows banner and bulk-adds tracks to downloads', (tester) async {
     final player = PlayerController.instance;
     final playlist = await player.createPlaylist(

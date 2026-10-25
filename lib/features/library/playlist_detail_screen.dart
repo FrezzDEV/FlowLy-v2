@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../../navigation/reveal_stagger.dart';
 import '../player/player_controller.dart';
 import '../player/draggable_player.dart';
+import 'playlist_sheets.dart';
 
 class PlaylistDetailScreen extends StatelessWidget {
   const PlaylistDetailScreen({
@@ -88,6 +91,16 @@ class PlaylistDetailScreen extends StatelessWidget {
             centerTitle: true,
             backgroundColor: const Color(0xFF08090B),
             surfaceTintColor: Colors.transparent,
+            actions: [
+              if (!playlist.isSystem)
+                IconButton(
+                  tooltip: 'Изменить плейлист',
+                  onPressed: () async {
+                    await showEditPlaylistDialog(context, playlistId);
+                  },
+                  icon: const Icon(Icons.edit_rounded),
+                ),
+            ],
           ),
           body: SafeArea(
             top: false,
@@ -120,6 +133,29 @@ class PlaylistDetailScreen extends StatelessWidget {
                           ),
                           child: Stack(
                             children: [
+                              if (playlist.coverPath != null)
+                                Positioned.fill(
+                                  child: Image.file(
+                                    File(playlist.coverPath!),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        const SizedBox.shrink(),
+                                  ),
+                                ),
+                              const Positioned.fill(
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Color(0x22000000),
+                                        Color(0xCC000000),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
                               Positioned(
                                 right: -26,
                                 top: -36,
@@ -284,21 +320,28 @@ class PlaylistDetailScreen extends StatelessWidget {
                 else
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(12, 0, 12, 28),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final track = playlist.tracks[index];
-                          final isCurrent =
-                              track.title == controller.currentTrack.title &&
-                              track.artist == controller.currentTrack.artist;
-                          final trackKey = ValueKey(
-                            '$playlistId:${track.title}:${track.artist}',
+                    sliver: SliverReorderableList(
+                      itemCount: playlist.tracks.length,
+                      onReorder: (oldIndex, newIndex) {
+                        if (!playlist.isSystem) {
+                          controller.reorderPlaylistTracks(
+                            playlistId,
+                            oldIndex,
+                            newIndex,
                           );
-                          return RevealStagger(
-                            key: trackKey,
-                            index: index,
-                            child: Dismissible(
-                            key: trackKey,
+                        }
+                      },
+                      itemBuilder: (context, index) {
+                        final track = playlist.tracks[index];
+                        final isCurrent =
+                            track.title == controller.currentTrack.title &&
+                            track.artist == controller.currentTrack.artist;
+                        final itemId =
+                            '$playlistId:${track.title}:${track.artist}';
+                        final row = RevealStagger(
+                          index: index,
+                          child: Dismissible(
+                            key: ValueKey('dismiss:$itemId'),
                             direction: DismissDirection.endToStart,
                             background: Container(
                               alignment: Alignment.centerRight,
@@ -309,7 +352,8 @@ class PlaylistDetailScreen extends StatelessWidget {
                                 color: Colors.redAccent,
                               ),
                             ),
-                            onDismissed: (_) => controller.removeTrackFromPlaylist(
+                            onDismissed: (_) =>
+                                controller.removeTrackFromPlaylist(
                               playlistId,
                               track,
                             ),
@@ -354,36 +398,58 @@ class PlaylistDetailScreen extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(color: Colors.white60),
                               ),
-                              trailing: IconButton(
-                                tooltip: isCurrent && controller.isPlaying
-                                    ? 'Пауза'
-                                    : 'Воспроизвести',
-                                icon: Icon(
-                                  isCurrent && controller.isPlaying
-                                      ? Icons.pause_rounded
-                                      : Icons.play_arrow_rounded,
-                                  color: isCurrent
-                                      ? const Color(0xFFB6F36B)
-                                      : Colors.white70,
-                                ),
-                                onPressed: () {
-                                  if (isCurrent) {
-                                    controller.togglePlay();
-                                  } else {
-                                    controller.playTrack(track);
-                                  }
-                                },
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (!playlist.isSystem)
+                                    const Padding(
+                                      padding: EdgeInsets.only(right: 4),
+                                      child: Icon(
+                                        Icons.drag_handle_rounded,
+                                        color: Colors.white38,
+                                      ),
+                                    ),
+                                  IconButton(
+                                    tooltip: isCurrent && controller.isPlaying
+                                        ? 'Пауза'
+                                        : 'Воспроизвести',
+                                    icon: Icon(
+                                      isCurrent && controller.isPlaying
+                                          ? Icons.pause_rounded
+                                          : Icons.play_arrow_rounded,
+                                      color: isCurrent
+                                          ? const Color(0xFFB6F36B)
+                                          : Colors.white70,
+                                    ),
+                                    onPressed: () {
+                                      if (isCurrent) {
+                                        controller.togglePlay();
+                                      } else {
+                                        controller.playTrack(track);
+                                      }
+                                    },
+                                  ),
+                                ],
                               ),
                               onTap: () {
                                 controller.playTrack(track);
                                 draggablePlayerKey.currentState?.open();
                               },
                             ),
-                            ),
+                          ),
+                        );
+                        if (playlist.isSystem) {
+                          return KeyedSubtree(
+                            key: ValueKey('row:$itemId'),
+                            child: row,
                           );
-                        },
-                        childCount: playlist.tracks.length,
-                      ),
+                        }
+                        return ReorderableDelayedDragStartListener(
+                          key: ValueKey('reorder:$itemId'),
+                          index: index,
+                          child: row,
+                        );
+                      },
                     ),
                   ),
               ],

@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
+import '../../core/storage/local_image_storage.dart';
 import '../player/player_controller.dart';
 import '../player/draggable_player.dart';
 
@@ -65,6 +68,177 @@ class _CreatePlaylistDialogState extends State<_CreatePlaylistDialog> {
           FilledButton(
             onPressed: _submit,
             child: const Text('Создать'),
+          ),
+        ],
+      );
+}
+
+
+Future<void> showEditPlaylistDialog(
+  BuildContext context,
+  String playlistId,
+) async {
+  final controller = PlayerController.instance;
+  final playlist = controller.playlistById(playlistId);
+  if (playlist == null || playlist.isSystem) return;
+
+  final result = await showDialog<_PlaylistEditResult>(
+    context: context,
+    useRootNavigator: true,
+    builder: (_) => _EditPlaylistDialog(playlist: playlist),
+  );
+  if (result == null || !context.mounted) return;
+
+  try {
+    await controller.updatePlaylistDetails(
+      playlistId,
+      name: result.name,
+      coverPath: result.coverPath,
+      clearCoverPath: result.clearCoverPath,
+    );
+  } on FormatException catch (error) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(error.message.toString())),
+    );
+  }
+}
+
+class _PlaylistEditResult {
+  const _PlaylistEditResult({
+    required this.name,
+    required this.coverPath,
+    required this.clearCoverPath,
+  });
+
+  final String name;
+  final String? coverPath;
+  final bool clearCoverPath;
+}
+
+class _EditPlaylistDialog extends StatefulWidget {
+  const _EditPlaylistDialog({required this.playlist});
+
+  final MusicPlaylist playlist;
+
+  @override
+  State<_EditPlaylistDialog> createState() => _EditPlaylistDialogState();
+}
+
+class _EditPlaylistDialogState extends State<_EditPlaylistDialog> {
+  late final TextEditingController _nameController =
+      TextEditingController(text: widget.playlist.name);
+  late String? _coverPath = widget.playlist.coverPath;
+  bool _clearCoverPath = false;
+  String? _errorText;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickCover() async {
+    try {
+      final path =
+          await LocalImageStorage.pickAndPersistImage(folder: 'playlist_covers');
+      if (!mounted || path == null) return;
+      setState(() {
+        _coverPath = path;
+        _clearCoverPath = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _errorText = 'Не удалось открыть галерею.');
+    }
+  }
+
+  void _submit() {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      setState(() => _errorText = 'Введите название плейлиста.');
+      return;
+    }
+    Navigator.of(context).pop(
+      _PlaylistEditResult(
+        name: name,
+        coverPath: _coverPath,
+        clearCoverPath: _clearCoverPath,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        backgroundColor: const Color(0xFF191A20),
+        title: const Text('Изменить плейлист'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: _nameController,
+                autofocus: true,
+                maxLength: 40,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: InputDecoration(
+                  labelText: 'Название',
+                  counterText: '',
+                  errorText: _errorText,
+                ),
+                onSubmitted: (_) => _submit(),
+              ),
+              const SizedBox(height: 12),
+              if (_coverPath != null && !_clearCoverPath) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: SizedBox(
+                    width: 112,
+                    height: 112,
+                    child: Image.file(
+                      File(_coverPath!),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const ColoredBox(
+                        color: Color(0xFF282A31),
+                        child: Center(
+                          child: Icon(Icons.broken_image_outlined),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+              OutlinedButton.icon(
+                onPressed: _pickCover,
+                icon: const Icon(Icons.photo_library_outlined),
+                label: Text(
+                  _coverPath != null && !_clearCoverPath
+                      ? 'Заменить обложку'
+                      : 'Выбрать обложку',
+                ),
+              ),
+              if (_coverPath != null && !_clearCoverPath)
+                TextButton.icon(
+                  onPressed: () => setState(() {
+                    _clearCoverPath = true;
+                    _coverPath = null;
+                  }),
+                  icon: const Icon(Icons.delete_outline_rounded),
+                  label: const Text('Убрать обложку'),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            onPressed: _submit,
+            child: const Text('Сохранить'),
           ),
         ],
       );
