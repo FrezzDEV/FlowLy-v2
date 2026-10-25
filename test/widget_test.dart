@@ -144,6 +144,12 @@ void main() {
     player.togglePlay();
   });
 
+  testWidgets('profile accent defaults to white', (tester) async {
+    await tester.pumpWidget(const FlowLyApp());
+    expect(Theme.of(tester.element(find.byType(Scaffold).first)).colorScheme.primary,
+        const Color(0xFFF5F5F5));
+  });
+
   testWidgets('playback timer advances and pause freezes it', (tester) async {
     final player = PlayerController.instance;
     if (player.isPlaying) player.togglePlay();
@@ -441,7 +447,7 @@ void main() {
     await pumpPlayerUi(tester);
 
     final miniTitle = find.byKey(
-      const ValueKey('mini-title-Midnight Flow'),
+      const ValueKey('mini-title-label'),
     );
     expect(miniTitle, findsOneWidget);
     await tester.tap(miniTitle);
