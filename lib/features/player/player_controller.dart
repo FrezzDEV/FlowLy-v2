@@ -29,6 +29,7 @@ class MusicPlaylist {
     required this.name,
     Iterable<PlayerTrack> tracks = const <PlayerTrack>[],
     this.isSystem = false,
+    this.coverPath,
   }) : tracks = List<PlayerTrack>.unmodifiable(tracks);
 
   final String id;
@@ -36,12 +37,23 @@ class MusicPlaylist {
   final List<PlayerTrack> tracks;
   final bool isSystem;
 
-  MusicPlaylist copyWith({String? name, Iterable<PlayerTrack>? tracks}) =>
+  /// Путь к пользовательской обложке в хранилище приложения (или null).
+  final String? coverPath;
+
+  /// [clearCover] = true убирает обложку; иначе [coverPath] null означает
+  /// «оставить как есть».
+  MusicPlaylist copyWith({
+    String? name,
+    Iterable<PlayerTrack>? tracks,
+    String? coverPath,
+    bool clearCover = false,
+  }) =>
       MusicPlaylist(
         id: id,
         name: name ?? this.name,
         tracks: tracks ?? this.tracks,
         isSystem: isSystem,
+        coverPath: clearCover ? null : (coverPath ?? this.coverPath),
       );
 }
 
@@ -204,6 +216,9 @@ class PlayerController extends ChangeNotifier {
               name: id == downloadsPlaylistId ? 'Скачанные' : name,
               tracks: tracks,
               isSystem: item['isSystem'] == true,
+              coverPath: item['coverPath'] is String
+                  ? item['coverPath'] as String
+                  : null,
             ));
           }
           _playlists = loaded;
@@ -249,6 +264,7 @@ class PlayerController extends ChangeNotifier {
         'id': playlist.id,
         'name': playlist.name,
         'isSystem': playlist.isSystem,
+        if (playlist.coverPath != null) 'coverPath': playlist.coverPath!,
         'tracks': playlist.tracks.map((track) => <String, String>{
           'title': track.title,
           'artist': track.artist,
@@ -325,6 +341,70 @@ class PlayerController extends ChangeNotifier {
     notifyListeners();
     await _persistPlaylists();
     return addedCount;
+  }
+
+  /// Переносит трек внутри плейлиста. [newIndex] — итоговая позиция трека
+  /// в списке после переноса (уже с поправкой, как в ReorderableListView).
+  Future<bool> moveTrackInPlaylist(
+    String playlistId,
+    int oldIndex,
+    int newIndex,
+  ) async {
+    final index = _playlists.indexWhere((playlist) => playlist.id == playlistId);
+    if (index < 0) return false;
+    final playlist = _playlists[index];
+    final length = playlist.tracks.length;
+    if (oldIndex < 0 || oldIndex >= length) return false;
+    final target = newIndex.clamp(0, length - 1).toInt();
+    if (target == oldIndex) return false;
+    final reordered = [...playlist.tracks];
+    final moved = reordered.removeAt(oldIndex);
+    reordered.insert(target, moved);
+    final updated = [..._playlists];
+    updated[index] = playlist.copyWith(tracks: reordered);
+    _playlists = updated;
+    notifyListeners();
+    await _persistPlaylists();
+    return true;
+  }
+
+  /// Переименовывает пользовательский плейлист. Возвращает false, если имя
+  /// пустое, занято другим плейлистом или плейлист системный.
+  Future<bool> renamePlaylist(String playlistId, String name) async {
+    final cleanName = name.trim();
+    if (cleanName.isEmpty) return false;
+    final index = _playlists.indexWhere((playlist) => playlist.id == playlistId);
+    if (index < 0 || _playlists[index].isSystem) return false;
+    final taken = _playlists.any(
+      (playlist) =>
+          playlist.id != playlistId &&
+          playlist.name.toLowerCase() == cleanName.toLowerCase(),
+    );
+    if (taken) return false;
+    if (_playlists[index].name == cleanName) return true;
+    final updated = [..._playlists];
+    updated[index] = _playlists[index].copyWith(name: cleanName);
+    _playlists = updated;
+    notifyListeners();
+    await _persistPlaylists();
+    return true;
+  }
+
+  /// Ставит обложку плейлиста; null убирает её. Возвращает путь прежней
+  /// обложки, если её файл теперь можно удалить.
+  Future<String?> setPlaylistCover(String playlistId, String? path) async {
+    final index = _playlists.indexWhere((playlist) => playlist.id == playlistId);
+    if (index < 0 || _playlists[index].isSystem) return null;
+    final previous = _playlists[index].coverPath;
+    if (previous == path) return null;
+    final updated = [..._playlists];
+    updated[index] = path == null
+        ? _playlists[index].copyWith(clearCover: true)
+        : _playlists[index].copyWith(coverPath: path);
+    _playlists = updated;
+    notifyListeners();
+    await _persistPlaylists();
+    return previous;
   }
 
   Future<bool> removeTrackFromPlaylist(

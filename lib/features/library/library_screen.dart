@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/storage/image_store.dart';
 import '../../navigation/circle_reveal_route.dart';
 import '../player/player_controller.dart';
 import '../player/draggable_player.dart';
@@ -148,6 +149,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         : const Color(0xFF275F7D),
                     playlist.name,
                     '${playlist.tracks.length} треков',
+                    coverPath: playlist.coverPath,
                     onTapAt: (position) =>
                         _openPlaylist(context, playlist.id, position),
                   ),
@@ -271,6 +273,7 @@ class _LibraryRow extends StatelessWidget {
     this.subtitle, {
     this.onTap,
     this.onTapAt,
+    this.coverPath,
   }) : assert(onTap != null || onTapAt != null);
 
   final IconData icon;
@@ -279,6 +282,7 @@ class _LibraryRow extends StatelessWidget {
   final String subtitle;
   final VoidCallback? onTap;
   final ValueChanged<Offset>? onTapAt;
+  final String? coverPath;
 
   @override
   Widget build(BuildContext context) {
@@ -301,11 +305,18 @@ class _LibraryRow extends StatelessWidget {
         leading: Container(
           width: 52,
           height: 52,
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(icon, size: 27, color: Colors.white),
+          child: coverPath == null
+              ? Icon(icon, size: 27, color: Colors.white)
+              : FileImageBox(
+                  path: coverPath!,
+                  cacheWidth: 160,
+                  fallback: Icon(icon, size: 27, color: Colors.white),
+                ),
         ),
         title: Text(
           title,

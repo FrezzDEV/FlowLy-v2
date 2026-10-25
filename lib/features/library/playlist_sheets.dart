@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/storage/image_store.dart';
 import '../player/player_controller.dart';
 import '../player/draggable_player.dart';
 
@@ -361,4 +362,261 @@ Future<void> showPlaylistDetailsSheet(
       ),
     ),
   );
+}
+
+/// Редактирование пользовательского плейлиста: название и обложка.
+Future<void> showEditPlaylistSheet(
+  BuildContext context,
+  String playlistId,
+) async {
+  final playlist = PlayerController.instance.playlistById(playlistId);
+  if (playlist == null || playlist.isSystem) return;
+  await showModalBottomSheet<void>(
+    context: context,
+    useRootNavigator: true,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => _EditPlaylistSheet(playlistId: playlistId),
+  );
+}
+
+class _EditPlaylistSheet extends StatefulWidget {
+  const _EditPlaylistSheet({required this.playlistId});
+
+  final String playlistId;
+
+  @override
+  State<_EditPlaylistSheet> createState() => _EditPlaylistSheetState();
+}
+
+class _EditPlaylistSheetState extends State<_EditPlaylistSheet> {
+  final PlayerController _controller = PlayerController.instance;
+  late final TextEditingController _nameController;
+  late final String? _originalCover;
+
+  /// Новая обложка, выбранная в этом окне, но ещё не сохранённая.
+  String? _stagedCover;
+  bool _coverRemoved = false;
+  bool _saved = false;
+  bool _picking = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    final playlist = _controller.playlistById(widget.playlistId);
+    _nameController = TextEditingController(text: playlist?.name ?? '');
+    _originalCover = playlist?.coverPath;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    // Закрыли окно без сохранения: выбранная копия больше не нужна.
+    if (!_saved) ImageStore.delete(_stagedCover);
+    super.dispose();
+  }
+
+  String? get _shownCover {
+    if (_stagedCover != null) return _stagedCover;
+    if (_coverRemoved) return null;
+    return _originalCover;
+  }
+
+  Future<void> _pickCover() async {
+    if (_picking) return;
+    setState(() => _picking = true);
+    final path = await pickImageWithFeedback(
+      context,
+      prefix: 'playlist-cover',
+      maxWidth: 1200,
+      maxHeight: 1200,
+    );
+    if (!mounted) {
+      await ImageStore.delete(path);
+      return;
+    }
+    setState(() {
+      _picking = false;
+      if (path != null) {
+        ImageStore.delete(_stagedCover);
+        _stagedCover = path;
+        _coverRemoved = false;
+      }
+    });
+  }
+
+  void _removeCover() {
+    ImageStore.delete(_stagedCover);
+    setState(() {
+      _stagedCover = null;
+      _coverRemoved = true;
+    });
+  }
+
+  Future<void> _save() async {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      setState(() => _error = 'Введите название');
+      return;
+    }
+    final renamed = await _controller.renamePlaylist(widget.playlistId, name);
+    if (!renamed) {
+      if (!mounted) return;
+      setState(() => _error = 'Плейлист с таким названием уже есть');
+      return;
+    }
+    String? obsoleteCover;
+    if (_stagedCover != null) {
+      obsoleteCover = await _controller.setPlaylistCover(
+        widget.playlistId,
+        _stagedCover,
+      );
+    } else if (_coverRemoved) {
+      obsoleteCover = await _controller.setPlaylistCover(
+        widget.playlistId,
+        null,
+      );
+    }
+    _saved = true;
+    await ImageStore.delete(obsoleteCover);
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cover = _shownCover;
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    final placeholder = Container(
+      color: const Color(0xFF282A31),
+      child: const Icon(
+        Icons.queue_music_rounded,
+        size: 44,
+        color: Colors.white54,
+      ),
+    );
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomInset),
+      child: Material(
+        color: const Color(0xFF17181D),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+        clipBehavior: Clip.antiAlias,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 38,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'Изменить плейлист',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 18),
+              Center(
+                child: GestureDetector(
+                  onTap: _pickCover,
+                  child: Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: SizedBox(
+                          width: 132,
+                          height: 132,
+                          child: cover == null
+                              ? placeholder
+                              : FileImageBox(
+                                  key: ValueKey(cover),
+                                  path: cover,
+                                  cacheWidth: 400,
+                                  fallback: placeholder,
+                                ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 6,
+                        bottom: 6,
+                        child: Container(
+                          width: 34,
+                          height: 34,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFB6F36B),
+                            shape: BoxShape.circle,
+                          ),
+                          child: _picking
+                              ? const Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.4,
+                                    color: Color(0xFF11130D),
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.photo_camera_rounded,
+                                  size: 18,
+                                  color: Color(0xFF11130D),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton.icon(
+                    onPressed: _picking ? null : _pickCover,
+                    icon: const Icon(Icons.image_outlined, size: 18),
+                    label: const Text('Выбрать обложку'),
+                  ),
+                  if (cover != null)
+                    TextButton(
+                      onPressed: _removeCover,
+                      child: const Text('Убрать'),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _nameController,
+                textCapitalization: TextCapitalization.sentences,
+                maxLength: 40,
+                decoration: InputDecoration(
+                  labelText: 'Название',
+                  counterText: '',
+                  errorText: _error,
+                ),
+                onChanged: (_) {
+                  if (_error != null) setState(() => _error = null);
+                },
+                onSubmitted: (_) => _save(),
+              ),
+              const SizedBox(height: 18),
+              FilledButton(
+                onPressed: _save,
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFB6F36B),
+                  foregroundColor: const Color(0xFF11130D),
+                  minimumSize: const Size.fromHeight(48),
+                ),
+                child: const Text('Сохранить'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
