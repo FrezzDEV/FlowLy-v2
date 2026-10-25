@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -293,9 +295,9 @@ void main() {
     if (player.currentTrack.title != PlayerController.catalog.first.title) {
       player.playTrack(PlayerController.catalog.first);
     }
-    await draggablePlayerKey.currentState?.close();
+    unawaited(draggablePlayerKey.currentState?.close());
     await pumpPlayerUi(tester);
-    await draggablePlayerKey.currentState?.open();
+    unawaited(draggablePlayerKey.currentState?.open());
     await pumpPlayerUi(tester);
     await tester.tap(find.byIcon(Icons.more_horiz_rounded));
     await pumpPlayerUi(tester);
@@ -334,13 +336,13 @@ void main() {
   testWidgets('playlist picker stays open and toggles track membership', (tester) async {
     final player = PlayerController.instance;
     await tester.pumpWidget(const FlowLyApp());
-    await draggablePlayerKey.currentState?.close();
+    unawaited(draggablePlayerKey.currentState?.close());
     await pumpPlayerUi(tester);
     await player.removeTrackFromPlaylist(
       PlayerController.favoritesPlaylistId,
       player.currentTrack,
     );
-    await draggablePlayerKey.currentState?.open();
+    unawaited(draggablePlayerKey.currentState?.open());
     await pumpPlayerUi(tester);
     await tester.tap(find.byIcon(Icons.more_horiz_rounded));
     await pumpPlayerUi(tester);
@@ -411,7 +413,7 @@ void main() {
       player.playTrack(PlayerController.catalog.first);
     }
     await tester.pumpWidget(const FlowLyApp());
-    await draggablePlayerKey.currentState?.close();
+    unawaited(draggablePlayerKey.currentState?.close());
     await pumpPlayerUi(tester);
 
     final miniTitle = find.byKey(
