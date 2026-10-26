@@ -263,6 +263,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: AnimatedBuilder(
         animation: player,
         builder: (context, _) {
+          final favoritesPlaylist = player.playlists.firstWhere(
+            (item) => item.id == PlayerController.favoritesPlaylistId,
+          );
           final customPlaylists =
               player.playlists.where((item) => !item.isSystem).toList();
           final albumsByName = <String, PlayerTrack>{};
@@ -421,6 +424,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    _ProfileSection(
+                      title: 'Избранное',
+                      emptyText: 'Отмеченные сердечком треки появятся здесь.',
+                      isEmpty: favoritesPlaylist.tracks.isEmpty,
+                      children: [
+                        for (final track in favoritesPlaylist.tracks)
+                          _ProfileContentRow(
+                            icon: track.icon,
+                            title: track.title,
+                            subtitle: track.artist,
+                            color: track.color,
+                            onTap: () => player.playTrack(track),
+                          ),
+                      ],
+                    ),
                     if (_showPlaylists)
                       _ProfileSection(
                         title: 'Плейлисты',
