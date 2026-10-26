@@ -365,7 +365,7 @@ class ProfilePlaylistRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-        height: 150,
+        height: 120,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: _edgePadding),
@@ -400,7 +400,7 @@ class _PlaylistCard extends StatelessWidget {
       onTap: data.onTap,
       child: Container(
         width: 120,
-        height: 150,
+        height: 120,
         decoration: BoxDecoration(borderRadius: BorderRadius.circular(18)),
         clipBehavior: Clip.antiAlias,
         child: Stack(
@@ -628,56 +628,88 @@ class ProfileTrackList extends StatelessWidget {
   final ValueChanged<PlayerTrack> onPlay;
 
   @override
-  Widget build(BuildContext context) => Column(
-        children: [
-          for (final track in tracks)
-            InkWell(
+  Widget build(BuildContext context) => SizedBox(
+        height: 120,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: _edgePadding),
+          itemCount: tracks.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 12),
+          itemBuilder: (context, index) {
+            final track = tracks[index];
+            return GestureDetector(
               onTap: () => onPlay(track),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: _edgePadding,
-                  vertical: 5,
+              child: Container(
+                width: 120,
+                height: 120,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
                 ),
-                child: Row(
+                child: Stack(
                   children: [
-                    ProfileCoverArt(
-                      art: profileArtForTrack(track),
-                      size: 50,
-                      radius: 12,
-                      fallbackColor: track.color,
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              track.color,
+                              Color.lerp(track.color, Colors.black, .62)!,
+                            ],
+                          ),
+                        ),
+                        child: Center(
+                          child: Icon(
+                            track.icon,
+                            size: 54,
+                            color: Colors.white.withValues(alpha: .58),
+                          ),
+                        ),
+                      ),
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            track.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        color: _plaqueColor,
+                        padding: const EdgeInsets.fromLTRB(8, 6, 8, 7),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              track.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            track.artist,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              color: _mutedText,
+                            const SizedBox(height: 2),
+                            Text(
+                              track.artist,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: _mutedText,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-        ],
+            );
+          },
+        ),
       );
 }
 
