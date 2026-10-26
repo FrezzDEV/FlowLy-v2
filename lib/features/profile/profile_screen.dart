@@ -12,7 +12,6 @@ import '../player/player_controller.dart';
 import 'profile_showcase.dart';
 
 const _profileBackground = Color(0xFF08090B);
-const _profileMuted = Color(0xFF9B9DA4);
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key, this.backButtonKey});
