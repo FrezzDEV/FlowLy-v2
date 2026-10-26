@@ -239,6 +239,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Color _frameColor(String style) {
+    switch (style) {
+      case 'lime':
+        return const Color(0xFFB6F36B);
+      case 'pink':
+        return const Color(0xFFFF4081);
+      case 'violet':
+      case 'gradient':
+        return const Color(0xFFB28BFF);
+      case 'blue':
+        return const Color(0xFF73C9FF);
+      case 'gold':
+        return const Color(0xFFFFC66D);
+      default:
+        return Colors.transparent;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final player = PlayerController.instance;
@@ -300,40 +318,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: const EdgeInsets.only(bottom: 150),
             children: [
               SizedBox(
-                height: 112,
+                height: 206 + statusInset,
                 child: Stack(
+                  clipBehavior: Clip.none,
                   children: [
                     Positioned(
-                      top: statusInset + 18,
-                      left: 24,
-                      right: 64,
-                      child: Text(
-                        _name,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -.3,
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: 158 + statusInset,
+                      child: ClipRect(
+                        child: _CropTransformImage(
+                          path: _bannerPath,
+                          scale: _bannerScale,
+                          offsetX: _bannerX,
+                          offsetY: _bannerY,
+                          placeholder: const DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFF55575B),
+                                  Color(0xFF383A40),
+                                  Color(0xFF15171E),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                    Positioned(
-                      top: statusInset + 49,
-                      left: 24,
-                      right: 64,
-                      child: Text(
-                        '@$_username',
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white60,
-                          fontSize: 15,
+                    if (widget.backButtonKey != null)
+                      Positioned(
+                        top: statusInset + 2,
+                        left: 12,
+                        child: IconButton(
+                          key: widget.backButtonKey,
+                          tooltip: 'Назад',
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.arrow_back_rounded),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.black.withValues(alpha: .28),
+                          ),
                         ),
                       ),
-                    ),
                     Positioned(
                       top: statusInset + 2,
                       right: 12,
@@ -346,8 +375,84 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           color: FlowLyAccent.color,
                         ),
                         style: IconButton.styleFrom(
-                          backgroundColor: const Color(0xFF202126),
+                          backgroundColor: Colors.black.withValues(alpha: .28),
                         ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      height: 108,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _SocialCount(
+                              value: '0',
+                              label: 'подписчиков',
+                            ),
+                          ),
+                          Container(
+                            width: 108,
+                            height: 108,
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: _profileBackground,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: _frameColor(_frameStyle),
+                                width: _frameStyle == 'none' ? 0 : 3,
+                              ),
+                            ),
+                            child: ClipOval(
+                              child: _CropTransformImage(
+                                path: _avatarPath,
+                                scale: _avatarScale,
+                                offsetX: _avatarX,
+                                offsetY: _avatarY,
+                                placeholder: const ColoredBox(
+                                  color: Color(0xFF24272B),
+                                  child: Center(
+                                    child: Icon(Icons.person_rounded, size: 44),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: _SocialCount(
+                              value: '0',
+                              label: 'подписок',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: Column(
+                  children: [
+                    Text(
+                      _name,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -.3,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      '@$_username',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white60,
+                        fontSize: 14,
                       ),
                     ),
                   ],
