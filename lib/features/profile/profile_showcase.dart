@@ -46,7 +46,6 @@ class ProfileSectionHeader extends StatelessWidget {
 
   final String title;
   final VoidCallback onEdit;
-  final List<String>? visibilityOptions;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -96,7 +95,13 @@ class ProfileVisibilitySelector extends StatefulWidget {
 }
 
 class _ProfileVisibilitySelectorState extends State<ProfileVisibilitySelector> {
-  late String _selected = widget.options.first;
+  late String _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = widget.options.first;
+  }
 
   @override
   void didUpdateWidget(covariant ProfileVisibilitySelector oldWidget) {
