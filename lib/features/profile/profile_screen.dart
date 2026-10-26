@@ -465,15 +465,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     ProfileSectionBlock(
                       title: 'Избранное',
-                      onEdit: _editProfile,
-                      visibilityOptions: const ['Все', 'Только я'],
+                                            visibilityOptions: const ['Все', 'Только я', 'Подписчики'],
                       child: ProfileFeaturedCarousel(cards: featuredCards),
                     ),
                     if (_showPlaylists)
                       ProfileSectionBlock(
                         title: 'Плейлисты',
-                        onEdit: _editProfile,
-                        visibilityOptions: const ['Все', 'Подписчики', 'Только я'],
+                                                visibilityOptions: const ['Все', 'Только я', 'Подписчики'],
                         child: ProfilePlaylistRow(
                           cards: playlistCards,
                           onAdd: () async {
@@ -484,8 +482,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     if (_showTracks)
                       ProfileSectionBlock(
                         title: 'Треки',
-                        onEdit: _editProfile,
-                        visibilityOptions: const ['Все', 'Подписчики', 'Только я'],
+                                                visibilityOptions: const ['Все', 'Только я', 'Подписчики'],
                         emptyText: 'Треки пока не добавлены.',
                         child: PlayerController.catalog.isEmpty
                             ? null
@@ -498,8 +495,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     if (_showAlbums)
                       ProfileSectionBlock(
                         title: 'Альбомы',
-                        onEdit: _editProfile,
-                        visibilityOptions: const ['Все', 'Подписчики', 'Только я'],
+                                                visibilityOptions: const ['Все', 'Только я', 'Подписчики'],
                         child: ProfileAlbumRow(
                           albums: ProfileAlbumData.defaults,
                           onPlay: player.playTrack,
@@ -508,8 +504,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     if (_showArtists)
                       ProfileSectionBlock(
                         title: 'Авторы',
-                        onEdit: _editProfile,
-                        visibilityOptions: const ['Все', 'Подписчики', 'Только я'],
+                                                visibilityOptions: const ['Все', 'Только я', 'Подписчики'],
                         child: ProfileArtistRow(
                           artists: ProfileArtistData.defaults,
                           onPlay: player.playTrack,
