@@ -70,11 +70,13 @@ class ProfileSectionHeader extends StatelessWidget {
               child: InkWell(
                 borderRadius: BorderRadius.circular(14),
                 onTap: onEdit,
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  child: Text(
-                    'Редактировать',
-                    style: TextStyle(fontSize: 14, color: Color(0xFFE6E7EB)),
+                child: const SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: Icon(
+                    Icons.edit_rounded,
+                    size: 19,
+                    color: Color(0xFFE6E7EB),
                   ),
                 ),
               ),
@@ -84,32 +86,17 @@ class ProfileSectionHeader extends StatelessWidget {
       );
 }
 
-class ProfileVisibilitySelector extends StatefulWidget {
-  const ProfileVisibilitySelector({super.key, required this.options});
+class ProfileVisibilitySelector extends StatelessWidget {
+  const ProfileVisibilitySelector({
+    super.key,
+    required this.options,
+    required this.selected,
+    required this.onSelected,
+  });
 
   final List<String> options;
-
-  @override
-  State<ProfileVisibilitySelector> createState() =>
-      _ProfileVisibilitySelectorState();
-}
-
-class _ProfileVisibilitySelectorState extends State<ProfileVisibilitySelector> {
-  late String _selected;
-
-  @override
-  void initState() {
-    super.initState();
-    _selected = widget.options.first;
-  }
-
-  @override
-  void didUpdateWidget(covariant ProfileVisibilitySelector oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!widget.options.contains(_selected)) {
-      _selected = widget.options.first;
-    }
-  }
+  final String selected;
+  final ValueChanged<String> onSelected;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -117,7 +104,7 @@ class _ProfileVisibilitySelectorState extends State<ProfileVisibilitySelector> {
         child: Row(
           children: [
             const Text(
-              'Видят',
+              'Видят:',
               style: TextStyle(color: _mutedText, fontSize: 13),
             ),
             const SizedBox(width: 8),
@@ -133,10 +120,10 @@ class _ProfileVisibilitySelectorState extends State<ProfileVisibilitySelector> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      for (final option in widget.options)
+                      for (final option in options)
                         InkWell(
                           borderRadius: BorderRadius.circular(24),
-                          onTap: () => setState(() => _selected = option),
+                          onTap: () => onSelected(option),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 120),
                             padding: const EdgeInsets.symmetric(
@@ -144,7 +131,7 @@ class _ProfileVisibilitySelectorState extends State<ProfileVisibilitySelector> {
                               vertical: 7,
                             ),
                             decoration: BoxDecoration(
-                              color: _selected == option
+                              color: selected == option
                                   ? Colors.white
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(24),
@@ -152,11 +139,11 @@ class _ProfileVisibilitySelectorState extends State<ProfileVisibilitySelector> {
                             child: Text(
                               option,
                               style: TextStyle(
-                                color: _selected == option
+                                color: selected == option
                                     ? const Color(0xFF17181C)
                                     : _mutedText,
                                 fontSize: 12,
-                                fontWeight: _selected == option
+                                fontWeight: selected == option
                                     ? FontWeight.w600
                                     : FontWeight.w400,
                               ),
@@ -173,21 +160,42 @@ class _ProfileVisibilitySelectorState extends State<ProfileVisibilitySelector> {
       );
 }
 
-class ProfileSectionBlock extends StatelessWidget {
+class ProfileSectionBlock extends StatefulWidget {
   const ProfileSectionBlock({
     super.key,
     required this.title,
-    required this.onEdit,
     required this.child,
     this.emptyText,
     this.visibilityOptions,
   });
 
   final String title;
-  final VoidCallback onEdit;
   final Widget? child;
   final String? emptyText;
   final List<String>? visibilityOptions;
+
+  @override
+  State<ProfileSectionBlock> createState() => _ProfileSectionBlockState();
+}
+
+class _ProfileSectionBlockState extends State<ProfileSectionBlock> {
+  bool _showVisibility = false;
+  String? _selectedVisibility;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedVisibility = widget.visibilityOptions?.first;
+  }
+
+  @override
+  void didUpdateWidget(covariant ProfileSectionBlock oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.visibilityOptions != widget.visibilityOptions &&
+        !(widget.visibilityOptions?.contains(_selectedVisibility) ?? false)) {
+      _selectedVisibility = widget.visibilityOptions?.first;
+    }
+  }
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -195,18 +203,26 @@ class ProfileSectionBlock extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ProfileSectionHeader(title: title, onEdit: onEdit),
-            if (visibilityOptions != null) ...[
-              ProfileVisibilitySelector(options: visibilityOptions!),
+            ProfileSectionHeader(
+              title: widget.title,
+              onEdit: () => setState(() => _showVisibility = !_showVisibility),
+            ),
+            if (_showVisibility && widget.visibilityOptions != null) ...[
+              ProfileVisibilitySelector(
+                options: widget.visibilityOptions!,
+                selected: _selectedVisibility ?? widget.visibilityOptions!.first,
+                onSelected: (value) =>
+                    setState(() => _selectedVisibility = value),
+              ),
               const SizedBox(height: 10),
             ],
-            if (child != null)
-              child!
+            if (widget.child != null)
+              widget.child!
             else
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: _edgePadding),
                 child: Text(
-                  emptyText ?? '',
+                  widget.emptyText ?? '',
                   style: const TextStyle(color: Colors.white54),
                 ),
               ),
@@ -214,10 +230,6 @@ class ProfileSectionBlock extends StatelessWidget {
         ),
       );
 }
-
-// ---------------------------------------------------------------------------
-// Избранное
-// ---------------------------------------------------------------------------
 
 class ProfileFeaturedCardData {
   const ProfileFeaturedCardData({
