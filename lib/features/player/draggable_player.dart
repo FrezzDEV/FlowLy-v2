@@ -40,18 +40,10 @@ class DraggableViewState extends State<DraggableView>
   void initState() {
     super.initState();
     _progress = AnimationController(vsync: this, value: 0);
-    _player.addListener(_onPlayerTrackChanged);
-  }
-
-  void _onPlayerTrackChanged() {
-    // The player itself is listened to by the AnimatedBuilder below, so the
-    // current artwork can swap immediately without a separate reveal effect.
-    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
-    _player.removeListener(_onPlayerTrackChanged);
     _progress.dispose();
     super.dispose();
   }
