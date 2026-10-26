@@ -46,6 +46,7 @@ class ProfileSectionHeader extends StatelessWidget {
 
   final String title;
   final VoidCallback onEdit;
+  final List<String>? visibilityOptions;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -84,6 +85,89 @@ class ProfileSectionHeader extends StatelessWidget {
       );
 }
 
+class ProfileVisibilitySelector extends StatefulWidget {
+  const ProfileVisibilitySelector({super.key, required this.options});
+
+  final List<String> options;
+
+  @override
+  State<ProfileVisibilitySelector> createState() =>
+      _ProfileVisibilitySelectorState();
+}
+
+class _ProfileVisibilitySelectorState extends State<ProfileVisibilitySelector> {
+  late String _selected = widget.options.first;
+
+  @override
+  void didUpdateWidget(covariant ProfileVisibilitySelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!widget.options.contains(_selected)) {
+      _selected = widget.options.first;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: _edgePadding),
+        child: Row(
+          children: [
+            const Text(
+              'Видят',
+              style: TextStyle(color: _mutedText, fontSize: 13),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF25262C),
+                    borderRadius: BorderRadius.circular(26),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final option in widget.options)
+                        InkWell(
+                          borderRadius: BorderRadius.circular(24),
+                          onTap: () => setState(() => _selected = option),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 120),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 7,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _selected == option
+                                  ? Colors.white
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Text(
+                              option,
+                              style: TextStyle(
+                                color: _selected == option
+                                    ? const Color(0xFF17181C)
+                                    : _mutedText,
+                                fontSize: 12,
+                                fontWeight: _selected == option
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
 class ProfileSectionBlock extends StatelessWidget {
   const ProfileSectionBlock({
     super.key,
@@ -91,12 +175,14 @@ class ProfileSectionBlock extends StatelessWidget {
     required this.onEdit,
     required this.child,
     this.emptyText,
+    this.visibilityOptions,
   });
 
   final String title;
   final VoidCallback onEdit;
   final Widget? child;
   final String? emptyText;
+  final List<String>? visibilityOptions;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -105,6 +191,10 @@ class ProfileSectionBlock extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ProfileSectionHeader(title: title, onEdit: onEdit),
+            if (visibilityOptions != null) ...[
+              ProfileVisibilitySelector(options: visibilityOptions!),
+              const SizedBox(height: 10),
+            ],
             if (child != null)
               child!
             else
@@ -359,9 +449,10 @@ class ProfilePlaylistCardData {
 }
 
 class ProfilePlaylistRow extends StatelessWidget {
-  const ProfilePlaylistRow({super.key, required this.cards});
+  const ProfilePlaylistRow({super.key, required this.cards, this.onAdd});
 
   final List<ProfilePlaylistCardData> cards;
+  final VoidCallback? onAdd;
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -369,9 +460,14 @@ class ProfilePlaylistRow extends StatelessWidget {
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: _edgePadding),
-          itemCount: cards.length,
+          itemCount: cards.length + (onAdd == null ? 0 : 1),
           separatorBuilder: (_, __) => const SizedBox(width: 12),
-          itemBuilder: (_, index) => _PlaylistCard(data: cards[index]),
+          itemBuilder: (_, index) {
+            if (index == cards.length && onAdd != null) {
+              return _NewPlaylistCard(onTap: onAdd!);
+            }
+            return _PlaylistCard(data: cards[index]);
+          },
         ),
       );
 }
@@ -443,6 +539,42 @@ class _PlaylistCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _NewPlaylistCard extends StatelessWidget {
+  const _NewPlaylistCard({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 120,
+          height: 120,
+          decoration: BoxDecoration(
+            color: const Color(0xFF111216),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFF3B3D44), width: 1.2),
+          ),
+          child: const Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.add_rounded, size: 34, color: Colors.white),
+              SizedBox(height: 5),
+              Text(
+                'Новый\nплейлист',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: _mutedText,
+                  fontSize: 12,
+                  height: 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
 }
 
 class _PlaylistFallback extends StatelessWidget {
