@@ -240,25 +240,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Color _frameColor(String style) {
-    switch (style) {
-      case 'lime':
-        return const Color(0xFFB6F36B);
-      case 'violet':
-        return const Color(0xFFB28BFF);
-      case 'blue':
-        return const Color(0xFF73C9FF);
-      case 'gold':
-        return const Color(0xFFFFC66D);
-      case 'pink':
-        return const Color(0xFFFF4081);
-      case 'gradient':
-        return const Color(0xFFB28BFF);
-      default:
-        return Colors.transparent;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final player = PlayerController.instance;
@@ -482,31 +463,6 @@ class ProfileSettingsScreen extends StatelessWidget {
             ),
           ],
         ),
-      );
-}
-
-class _SocialCount extends StatelessWidget {
-  const _SocialCount({required this.value, required this.label});
-
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            value,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            style: const TextStyle(color: _profileMuted, fontSize: 11),
-          ),
-        ],
       );
 }
 
@@ -875,6 +831,10 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                                 ),
                               ),
                             ),
+                          ],
+                        ),
+                      ),
+                    ),
                     Positioned(
                       top: 116,
                       left: 22,
@@ -1178,7 +1138,11 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
   Color _framePreviewColor(String style) {
     switch (style) {
       case 'lime':
-        return const Color(0xFFF5F5F5);
+        return const Color(0xFFB6F36B);
+      case 'pink':
+        return const Color(0xFFFF4081);
+      case 'gradient':
+        return const Color(0xFFB28BFF);
       case 'violet':
         return const Color(0xFFB28BFF);
       case 'blue':
@@ -1533,30 +1497,6 @@ class _ProfileTextSettingTile extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      );
-}
-
-class _PreviewEditButton extends StatelessWidget {
-  const _PreviewEditButton({
-    required this.onPressed,
-    required this.tooltip,
-  });
-
-  final VoidCallback onPressed;
-  final String tooltip;
-
-  @override
-  Widget build(BuildContext context) => Material(
-        color: Colors.black.withValues(alpha: .72),
-        shape: const CircleBorder(),
-        child: IconButton(
-          onPressed: onPressed,
-          tooltip: tooltip,
-          visualDensity: VisualDensity.compact,
-          constraints: const BoxConstraints.tightFor(width: 32, height: 32),
-          padding: EdgeInsets.zero,
-          icon: const Icon(Icons.edit_rounded, size: 15, color: Colors.white),
         ),
       );
 }
