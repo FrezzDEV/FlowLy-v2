@@ -126,7 +126,7 @@ void main() {
     }
   });
 
-  testWidgets('profile shows the five showcase sections with edit buttons', (tester) async {
+  testWidgets('profile shows five sections with pencil visibility controls', (tester) async {
     await tester.pumpWidget(const FlowLyApp());
 
     await tester.tap(find.descendant(
@@ -140,15 +140,21 @@ void main() {
       expect(find.widgetWithText(ProfileSectionHeader, title), findsOneWidget,
           reason: title);
     }
-    expect(find.text('Редактировать'), findsNWidgets(5));
+    expect(find.byIcon(Icons.edit_rounded), findsNWidgets(5));
+    expect(find.text('подписчиков'), findsOneWidget);
     expect(find.text('Любимые треки'), findsOneWidget);
     expect(find.text('Мой Микс'), findsOneWidget);
     expect(find.text('27 подписчиков'), findsOneWidget);
     expect(find.text('Lord Huron'), findsOneWidget);
 
-    await tester.tap(find.text('Редактировать').first);
+    await tester.tap(find.byIcon(Icons.edit_rounded).first);
     await tester.pumpAndSettle();
-    expect(find.byType(ProfileEditorScreen), findsOneWidget);
+    expect(find.byType(ProfileEditorScreen), findsNothing);
+    expect(find.byType(ProfileVisibilitySelector), findsOneWidget);
+    expect(find.text('Видят:'), findsOneWidget);
+    expect(find.text('Все'), findsOneWidget);
+    expect(find.text('Только я'), findsOneWidget);
+    expect(find.text('Подписчики'), findsOneWidget);
   });
 
   testWidgets('home favorites quick tile opens the playlist screen', (tester) async {
