@@ -249,6 +249,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return const Color(0xFF73C9FF);
       case 'gold':
         return const Color(0xFFFFC66D);
+      case 'pink':
+        return const Color(0xFFFF4081);
+      case 'gradient':
+        return const Color(0xFFB28BFF);
       default:
         return Colors.transparent;
     }
@@ -312,54 +316,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ];
 
           return ListView(
-            padding: EdgeInsets.zero,
+            padding: const EdgeInsets.only(bottom: 150),
             children: [
               SizedBox(
-                height: 206 + statusInset,
+                height: 112,
                 child: Stack(
-                  clipBehavior: Clip.none,
                   children: [
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: 158 + statusInset,
-                      child: ClipRect(
-                        child: _CropTransformImage(
-                          path: _bannerPath,
-                          scale: _bannerScale,
-                          offsetX: _bannerX,
-                          offsetY: _bannerY,
-                          placeholder: const DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Color(0xFF55575B),
-                                  Color(0xFF383A40),
-                                  Color(0xFF15171E),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (widget.backButtonKey != null)
-                      Positioned(
-                        top: statusInset + 2,
-                        left: 12,
-                        child: IconButton(
-                          key: widget.backButtonKey,
-                          tooltip: 'Назад',
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(Icons.arrow_back_rounded),
-                          style: IconButton.styleFrom(
-                            backgroundColor: Colors.black.withValues(alpha: .28),
-                          ),
-                        ),
-                      ),
                     Positioned(
                       top: statusInset + 2,
                       right: 12,
@@ -372,91 +334,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           color: FlowLyAccent.color,
                         ),
                         style: IconButton.styleFrom(
-                          backgroundColor: Colors.black.withValues(alpha: .28),
+                          backgroundColor: const Color(0xFF202126),
                         ),
                       ),
                     ),
                     Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      height: 108,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _SocialCount(
-                              value: '0',
-                              label: 'подписчиков',
-                            ),
-                          ),
-                          Container(
-                            width: 108,
-                            height: 108,
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: _profileBackground,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: _frameColor(_frameStyle),
-                                width: _frameStyle == 'none' ? 0 : 3,
-                              ),
-                            ),
-                            child: ClipOval(
-                              child: _CropTransformImage(
-                                path: _avatarPath,
-                                scale: _avatarScale,
-                                offsetX: _avatarX,
-                                offsetY: _avatarY,
-                                placeholder: const ColoredBox(
-                                  color: Color(0xFF24272B),
-                                  child: Center(
-                                    child: Icon(Icons.person_rounded, size: 44),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: _SocialCount(
-                              value: '0',
-                              label: 'подписок',
-                            ),
-                          ),
-                        ],
+                      top: statusInset + 18,
+                      left: 24,
+                      right: 24,
+                      child: Text(
+                        _name,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -.3,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: statusInset + 49,
+                      left: 24,
+                      right: 24,
+                      child: Text(
+                        '@$_username',
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 15,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                child: Column(
-                  children: [
-                    Text(
-                      _name,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -.3,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      '@$_username',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white60,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 24, bottom: 8),
+                padding: const EdgeInsets.only(top: 12, bottom: 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -675,7 +592,9 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
   late double _bannerScale = widget.bannerScale.clamp(1.0, 4.0).toDouble();
   late double _bannerX = widget.bannerX;
   late double _bannerY = widget.bannerY;
-  late String _frameStyle = widget.frameStyle;
+  late String _frameStyle = const {'none', 'lime', 'pink', 'gradient'}.contains(widget.frameStyle)
+      ? widget.frameStyle
+      : 'none';
   late Color _accentColor = widget.initialAccentColor;
   late bool _showPlaylists = widget.showPlaylists;
   late bool _showTracks = widget.showTracks;
@@ -834,31 +753,40 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
           backgroundColor: _profileBackground,
           surfaceTintColor: Colors.transparent,
           title: const Text(
-            'Предпросмотр профиля',
-            style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
+            'Профиль',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
           ),
           actions: [
-            TextButton(
-              onPressed: _save,
-              child: Text(
-                'Сохранить',
-                style: TextStyle(
-                  color: _accentColor,
-                  fontWeight: FontWeight.w700,
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: FilledButton(
+                onPressed: _save,
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  elevation: 0,
+                  minimumSize: const Size(112, 44),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  shape: const StadiumBorder(),
+                ),
+                child: const Text(
+                  'Сохранить',
+                  style: TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),
-            ),
           ],
         ),
         body: SafeArea(
           top: false,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 36),
+            padding: const EdgeInsets.fromLTRB(14, 8, 14, 36),
             children: [
-              // Combined profile preview: banner, avatar, name and username
-              // stay in the same order as the actual profile screen.
-              SizedBox(
-                height: 232,
+              Container(
+                height: 296,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1B1C21),
+                  borderRadius: BorderRadius.circular(26),
+                ),
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -866,87 +794,70 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                       top: 0,
                       left: 0,
                       right: 0,
-                      height: 132,
-                      child: Stack(
-                        children: [
-                          Positioned.fill(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(18),
-                              child: _CropTransformImage(
-                                key: ValueKey('profile-preview-banner:${_bannerPath ?? 'empty'}'),
-                                path: _bannerPath,
-                                scale: _bannerScale,
-                                offsetX: _bannerX,
-                                offsetY: _bannerY,
-                                placeholder: const DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        Color(0xFF55575B),
-                                        Color(0xFF383A40),
-                                        Color(0xFF15171E),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: _PreviewEditButton(
-                              onPressed: _chooseBanner,
-                              tooltip: 'Изменить баннер',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Positioned(
-                      top: 88,
-                      left: 0,
-                      right: 0,
-                      child: Center(
+                      height: 182,
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(26),
+                        ),
                         child: Stack(
-                          clipBehavior: Clip.none,
+                          fit: StackFit.expand,
                           children: [
-                            Container(
-                              width: 88,
-                              height: 88,
-                              padding: const EdgeInsets.all(3),
-                              decoration: BoxDecoration(
-                                color: _profileBackground,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: _framePreviewColor(_frameStyle),
-                                  width: _frameStyle == 'none' ? 0 : 3,
-                                ),
+                            _CropTransformImage(
+                              key: ValueKey(
+                                'profile-preview-banner:${_bannerPath ?? 'empty'}',
                               ),
-                              child: ClipOval(
-                                child: _CropTransformImage(
-                                  key: ValueKey('profile-preview-avatar:${_avatarPath ?? 'empty'}'),
-                                  path: _avatarPath,
-                                  scale: _avatarScale,
-                                  offsetX: _avatarX,
-                                  offsetY: _avatarY,
-                                  placeholder: const ColoredBox(
-                                    color: Color(0xFF24272B),
-                                    child: Center(
-                                      child: Icon(Icons.person_rounded, size: 40),
-                                    ),
+                              path: _bannerPath,
+                              scale: _bannerScale,
+                              offsetX: _bannerX,
+                              offsetY: _bannerY,
+                              placeholder: const DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Color(0xFF55575B),
+                                      Color(0xFF383A40),
+                                      Color(0xFF15171E),
+                                    ],
                                   ),
                                 ),
                               ),
                             ),
                             Positioned(
-                              right: -8,
-                              bottom: -2,
-                              child: _PreviewEditButton(
-                                onPressed: _chooseAvatar,
-                                tooltip: 'Изменить аватар',
+                              right: 12,
+                              bottom: 12,
+                              child: Material(
+                                color: Colors.black.withValues(alpha: .64),
+                                borderRadius: BorderRadius.circular(22),
+                                child: InkWell(
+                                  onTap: _chooseBanner,
+                                  borderRadius: BorderRadius.circular(22),
+                                  child: const Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 9,
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.image_rounded,
+                                          size: 18,
+                                          color: Colors.white,
+                                        ),
+                                        SizedBox(width: 7),
+                                        Text(
+                                          'Обложка',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -954,60 +865,142 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                       ),
                     ),
                     Positioned(
-                      left: 12,
-                      right: 12,
-                      top: 178,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      top: 116,
+                      left: 22,
+                      child: Stack(
+                        clipBehavior: Clip.none,
                         children: [
-                          Flexible(
-                            child: Text(
-                              _nameController.text.trim().isEmpty
-                                  ? 'Имя профиля'
-                                  : _nameController.text.trim(),
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 19,
-                                fontWeight: FontWeight.w800,
+                          Container(
+                            width: 120,
+                            height: 120,
+                            padding: const EdgeInsets.all(4),
+                            decoration: _frameStyle == 'gradient'
+                                ? const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Color(0xFF8F5CF7),
+                                        Color(0xFFFF4D9D),
+                                        Color(0xFF55B8F5),
+                                      ],
+                                    ),
+                                  )
+                                : BoxDecoration(
+                                    color: _profileBackground,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: _framePreviewColor(_frameStyle),
+                                      width: _frameStyle == 'none' ? 0 : 3,
+                                    ),
+                                  ),
+                            child: ClipOval(
+                              child: _CropTransformImage(
+                                key: ValueKey(
+                                  'profile-preview-avatar:${_avatarPath ?? 'empty'}',
+                                ),
+                                path: _avatarPath,
+                                scale: _avatarScale,
+                                offsetX: _avatarX,
+                                offsetY: _avatarY,
+                                placeholder: const ColoredBox(
+                                  color: Color(0xFF24272B),
+                                  child: Center(
+                                    child: Icon(Icons.person_rounded, size: 44),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          _PreviewEditButton(
-                            onPressed: () => _editPreviewText(_nameController),
-                            tooltip: 'Изменить имя',
+                          Positioned(
+                            right: -2,
+                            bottom: -2,
+                            child: Tooltip(
+                              message: 'Изменить аватар',
+                              child: Material(
+                                color: Colors.white,
+                                shape: const CircleBorder(),
+                                child: InkWell(
+                                  customBorder: const CircleBorder(),
+                                  onTap: _chooseAvatar,
+                                  child: const SizedBox(
+                                    width: 38,
+                                    height: 38,
+                                    child: Icon(
+                                      Icons.camera_alt_rounded,
+                                      color: Colors.black,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
                     ),
                     Positioned(
-                      left: 12,
-                      right: 12,
-                      top: 204,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      top: 198,
+                      left: 160,
+                      right: 16,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Flexible(
-                            child: Text(
-                              '@${_usernameController.text.trim().replaceFirst(RegExp(r'^@+'), '')}',
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white60,
-                                fontSize: 13,
-                              ),
+                          Text(
+                            _nameController.text.trim().isEmpty
+                                ? 'Имя профиля'
+                                : _nameController.text.trim(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          _PreviewEditButton(
-                            onPressed: () => _editPreviewText(_usernameController),
-                            tooltip: 'Изменить юзернейм',
+                          const SizedBox(height: 4),
+                          Text(
+                            '@${_usernameController.text.trim().replaceFirst(RegExp(r'^@+'), '')}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white60,
+                              fontSize: 14,
+                            ),
                           ),
                         ],
                       ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1B1C21),
+                  borderRadius: BorderRadius.circular(22),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    _ProfileTextSettingTile(
+                      icon: Icons.person_rounded,
+                      label: 'Имя',
+                      value: _nameController.text.trim(),
+                      tooltip: 'Изменить имя',
+                      onTap: () => _editPreviewText(_nameController),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Divider(height: 1, color: Color(0xFF303137)),
+                    ),
+                    _ProfileTextSettingTile(
+                      icon: Icons.alternate_email_rounded,
+                      label: 'Юзернейм',
+                      value:
+                          '@${_usernameController.text.trim().replaceFirst(RegExp(r'^@+'), '')}',
+                      tooltip: 'Изменить юзернейм',
+                      onTap: () => _editPreviewText(_usernameController),
                     ),
                   ],
                 ),
@@ -1032,8 +1025,8 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                 subtitle: 'Меняет цвет кнопок, выделений и активных элементов во всём приложении.',
               ),
               Wrap(
-                spacing: 10,
-                runSpacing: 10,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   _AccentChoice(
                     title: 'Белый',
@@ -1052,19 +1045,19 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                     ),
                   ),
                   _AccentChoice(
+                    title: 'Розовый',
+                    color: const Color(0xFFFF4081),
+                    selected: _accentColor.toARGB32() == 0xFFFF4081,
+                    onTap: () => setState(
+                      () => _accentColor = const Color(0xFFFF4081),
+                    ),
+                  ),
+                  _AccentChoice(
                     title: 'Фиолетовый',
                     color: const Color(0xFFB28BFF),
                     selected: _accentColor.toARGB32() == 0xFFB28BFF,
                     onTap: () => setState(
                       () => _accentColor = const Color(0xFFB28BFF),
-                    ),
-                  ),
-                  _AccentChoice(
-                    title: 'Розовый',
-                    color: const Color(0xFFFF70A6),
-                    selected: _accentColor.toARGB32() == 0xFFFF70A6,
-                    onTap: () => setState(
-                      () => _accentColor = const Color(0xFFFF70A6),
                     ),
                   ),
                   _AccentChoice(
@@ -1097,7 +1090,7 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                   _FrameChoice(
                     title: 'Без рамки',
                     style: 'none',
-                    color: Colors.white24,
+                    color: Colors.white54,
                     selected: _frameStyle == 'none',
                     onTap: () => setState(() => _frameStyle = 'none'),
                   ),
@@ -1109,25 +1102,18 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                     onTap: () => setState(() => _frameStyle = 'lime'),
                   ),
                   _FrameChoice(
-                    title: 'Фиолетовая',
-                    style: 'violet',
+                    title: 'Розовый',
+                    style: 'pink',
+                    color: const Color(0xFFFF4081),
+                    selected: _frameStyle == 'pink',
+                    onTap: () => setState(() => _frameStyle = 'pink'),
+                  ),
+                  _FrameChoice(
+                    title: 'Градиент',
+                    style: 'gradient',
                     color: const Color(0xFFB28BFF),
-                    selected: _frameStyle == 'violet',
-                    onTap: () => setState(() => _frameStyle = 'violet'),
-                  ),
-                  _FrameChoice(
-                    title: 'Голубая',
-                    style: 'blue',
-                    color: const Color(0xFF73C9FF),
-                    selected: _frameStyle == 'blue',
-                    onTap: () => setState(() => _frameStyle = 'blue'),
-                  ),
-                  _FrameChoice(
-                    title: 'Золотая',
-                    style: 'gold',
-                    color: const Color(0xFFFFC66D),
-                    selected: _frameStyle == 'gold',
-                    onTap: () => setState(() => _frameStyle = 'gold'),
+                    selected: _frameStyle == 'gradient',
+                    onTap: () => setState(() => _frameStyle = 'gradient'),
                   ),
                 ],
               ),
@@ -1406,22 +1392,142 @@ class _AccentChoice extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => ChoiceChip(
-        avatar: Container(
-          width: 13,
-          height: 13,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color,
-            border: Border.all(color: Colors.white54),
+  Widget build(BuildContext context) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(28),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 140),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: selected
+                  ? const Color(0xFF34353A)
+                  : const Color(0xFF0C0D10),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: selected
+                    ? const Color(0xFFE7E7E9)
+                    : const Color(0xFF292B30),
+                width: selected ? 1.5 : 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: color,
+                    border: Border.all(
+                      color: color.computeLuminance() > .85
+                          ? Colors.white70
+                          : color,
+                    ),
+                  ),
+                  child: selected
+                      ? Icon(
+                          Icons.check_rounded,
+                          size: 15,
+                          color: color.computeLuminance() > .55
+                              ? Colors.black87
+                              : Colors.white,
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 7),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFFE6E6E9),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        label: Text(title),
-        selected: selected,
-        onSelected: (_) => onTap(),
-        selectedColor: color.withValues(alpha: .18),
-        side: BorderSide(
-          color: selected ? color : Colors.white24,
+      );
+}
+
+class _ProfileTextSettingTile extends StatelessWidget {
+  const _ProfileTextSettingTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+        message: tooltip,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: SizedBox(
+                height: 58,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF292A30),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(icon, size: 24, color: Colors.white),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            label,
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            value,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: Colors.white38,
+                      size: 25,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       );
 }
@@ -1451,7 +1557,7 @@ class _PreviewEditButton extends StatelessWidget {
 }
 
 class _EditorSectionTitle extends StatelessWidget {
-  const _EditorSectionTitle({required this.title, required this.subtitle});
+  const _EditorSectionTitle({required this.title, this.subtitle = ''});
 
   final String title;
   final String subtitle;
@@ -1464,17 +1570,19 @@ class _EditorSectionTitle extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
             ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                color: Colors.white54,
-                height: 1.35,
-                fontSize: 12,
+            if (subtitle.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  color: Colors.white54,
+                  height: 1.35,
+                  fontSize: 12,
+                ),
               ),
-            ),
+            ],
           ],
         ),
       );
@@ -1496,24 +1604,98 @@ class _FrameChoice extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => ChoiceChip(
-        avatar: Container(
-          width: 12,
-          height: 12,
+  Widget build(BuildContext context) {
+    Widget indicator;
+    switch (style) {
+      case 'lime':
+        indicator = Container(
+          width: 20,
+          height: 20,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: style == 'none' ? Colors.transparent : color,
-            border: Border.all(color: color),
+            color: Colors.transparent,
+            border: Border.all(color: color, width: 3),
+          ),
+        );
+        break;
+      case 'pink':
+        indicator = Container(
+          width: 20,
+          height: 20,
+          decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+        );
+        break;
+      case 'gradient':
+        indicator = Container(
+          width: 20,
+          height: 20,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF8F5CF7),
+                Color(0xFFFF4D9D),
+              ],
+            ),
+          ),
+        );
+        break;
+      default:
+        indicator = Container(
+          width: 20,
+          height: 20,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white38),
+          ),
+          child: const Icon(
+            Icons.remove_rounded,
+            size: 14,
+            color: Colors.white54,
+          ),
+        );
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(28),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+          decoration: BoxDecoration(
+            color: selected
+                ? const Color(0xFF34353A)
+                : const Color(0xFF0C0D10),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: selected
+                  ? const Color(0xFFE7E7E9)
+                  : const Color(0xFF292B30),
+              width: selected ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              indicator,
+              const SizedBox(width: 7),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFFE6E6E9),
+                ),
+              ),
+            ],
           ),
         ),
-        label: Text(title),
-        selected: selected,
-        onSelected: (_) => onTap(),
-        selectedColor: FlowLyAccent.color.withValues(alpha: .16),
-        side: BorderSide(
-          color: selected ? FlowLyAccent.color : Colors.white24,
-        ),
-      );
+      ),
+    );
+  }
 }
 
 class _CropTransformImage extends StatefulWidget {
