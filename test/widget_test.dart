@@ -68,7 +68,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(ProfileEditorScreen), findsOneWidget);
-    expect(find.text('Предпросмотр профиля'), findsOneWidget);
+    expect(find.text('Профиль'), findsOneWidget);
     final editorScrollable = find.descendant(
       of: find.byType(ProfileEditorScreen),
       matching: find.byType(Scrollable),
