@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/storage/local_image_storage.dart';
 import '../../core/theme/flowly_accent.dart';
+import '../library/playlist_sheets.dart';
 import '../player/player_controller.dart';
 import 'profile_showcase.dart';
 
@@ -380,18 +381,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ProfileSectionBlock(
                       title: 'Избранное',
                       onEdit: _editProfile,
+                      visibilityOptions: const ['Все', 'Только я'],
                       child: ProfileFeaturedCarousel(cards: featuredCards),
                     ),
                     if (_showPlaylists)
                       ProfileSectionBlock(
                         title: 'Плейлисты',
                         onEdit: _editProfile,
-                        child: ProfilePlaylistRow(cards: playlistCards),
+                        visibilityOptions: const ['Все', 'Подписчики', 'Только я'],
+                        child: ProfilePlaylistRow(
+                          cards: playlistCards,
+                          onAdd: () async {
+                            await showCreatePlaylistDialog(context);
+                          },
+                        ),
                       ),
                     if (_showTracks)
                       ProfileSectionBlock(
                         title: 'Треки',
                         onEdit: _editProfile,
+                        visibilityOptions: const ['Все', 'Подписчики', 'Только я'],
                         emptyText: 'Треки пока не добавлены.',
                         child: PlayerController.catalog.isEmpty
                             ? null
@@ -405,6 +414,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ProfileSectionBlock(
                         title: 'Альбомы',
                         onEdit: _editProfile,
+                        visibilityOptions: const ['Все', 'Подписчики', 'Только я'],
                         child: ProfileAlbumRow(
                           albums: ProfileAlbumData.defaults,
                           onPlay: player.playTrack,
@@ -414,6 +424,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ProfileSectionBlock(
                         title: 'Авторы',
                         onEdit: _editProfile,
+                        visibilityOptions: const ['Все', 'Подписчики', 'Только я'],
                         child: ProfileArtistRow(
                           artists: ProfileArtistData.defaults,
                           onPlay: player.playTrack,
@@ -827,43 +838,42 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                             Positioned(
                               right: 12,
                               bottom: 12,
-                              child: Material(
-                                color: Colors.black.withValues(alpha: .64),
-                                borderRadius: BorderRadius.circular(22),
-                                child: InkWell(
-                                  onTap: _chooseBanner,
+                              child: Tooltip(
+                                message: 'Изменить баннер',
+                                child: Material(
+                                  color: Colors.black.withValues(alpha: .64),
                                   borderRadius: BorderRadius.circular(22),
-                                  child: const Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 9,
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.image_rounded,
-                                          size: 18,
-                                          color: Colors.white,
-                                        ),
-                                        SizedBox(width: 7),
-                                        Text(
-                                          'Обложка',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
+                                  child: InkWell(
+                                    onTap: _chooseBanner,
+                                    borderRadius: BorderRadius.circular(22),
+                                    child: const Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 9,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.image_rounded,
+                                            size: 18,
                                             color: Colors.white,
                                           ),
-                                        ),
-                                      ],
+                                          SizedBox(width: 7),
+                                          Text(
+                                            'Обложка',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
                     Positioned(
                       top: 116,
                       left: 22,
@@ -1020,10 +1030,7 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                 ),
               ],
               const SizedBox(height: 30),
-              const _EditorSectionTitle(
-                title: 'Акцентный цвет',
-                subtitle: 'Меняет цвет кнопок, выделений и активных элементов во всём приложении.',
-              ),
+              const _EditorSectionTitle(title: 'Акцентный цвет'),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -1079,10 +1086,7 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                 ],
               ),
               const SizedBox(height: 30),
-              const _EditorSectionTitle(
-                title: 'Рамка аватарки',
-                subtitle: 'Выбери оформление вокруг фотографии.',
-              ),
+              const _EditorSectionTitle(title: 'Рамка аватарки'),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
