@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/storage/local_image_storage.dart';
 import '../../core/theme/flowly_accent.dart';
 import '../player/player_controller.dart';
+import 'profile_showcase.dart';
 
 const _profileBackground = Color(0xFF08090B);
 const _profileMuted = Color(0xFF9B9DA4);
@@ -268,12 +269,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
           final customPlaylists =
               player.playlists.where((item) => !item.isSystem).toList();
-          final albumsByName = <String, PlayerTrack>{};
-          final artistsByName = <String, PlayerTrack>{};
-          for (final track in PlayerController.catalog) {
-            albumsByName.putIfAbsent(track.album, () => track);
-            artistsByName.putIfAbsent(track.artist, () => track);
-          }
+          final favoriteTracks = favoritesPlaylist.tracks;
+          final featuredCards = <ProfileFeaturedCardData>[
+            ProfileFeaturedCardData(
+              title: 'Любимые треки',
+              subtitle: '${favoriteTracks.length} треков',
+              colors: const [Color(0xFF7A5CFF), Color(0xFFFF6FA8)],
+              art: ProfileArt.heart,
+              vinyl: false,
+              selected: true,
+              onTap: favoriteTracks.isEmpty
+                  ? null
+                  : () => player.playTrack(favoriteTracks.first),
+            ),
+            for (final track in favoriteTracks)
+              ProfileFeaturedCardData(
+                title: track.title,
+                subtitle: track.artist,
+                colors: [
+                  track.color,
+                  Color.lerp(track.color, Colors.black, .55)!,
+                ],
+                art: profileArtForTrack(track),
+                onTap: () => player.playTrack(track),
+              ),
+          ];
+          final playlistCards = customPlaylists.isEmpty
+              ? ProfilePlaylistCardData.defaults
+              : [
+                  for (final playlist in customPlaylists)
+                    ProfilePlaylistCardData(
+                      title: playlist.name,
+                      subtitle: '${playlist.tracks.length} треков',
+                      coverPath: playlist.coverPath,
+                      color: playlist.tracks.isEmpty
+                          ? const Color(0xFF275F7D)
+                          : playlist.tracks.first.color,
+                      onTap: playlist.tracks.isEmpty
+                          ? null
+                          : () => player.playTrack(playlist.tracks.first),
+                    ),
+                ];
 
           return ListView(
             padding: EdgeInsets.zero,
@@ -420,93 +456,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
+                padding: const EdgeInsets.only(top: 24, bottom: 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _ProfileSection(
+                    ProfileSectionBlock(
                       title: 'Избранное',
-                      emptyText: 'Отмеченные сердечком треки появятся здесь.',
-                      isEmpty: favoritesPlaylist.tracks.isEmpty,
-                      children: [
-                        for (final track in favoritesPlaylist.tracks)
-                          _ProfileContentRow(
-                            icon: track.icon,
-                            title: track.title,
-                            subtitle: track.artist,
-                            color: track.color,
-                            onTap: () => player.playTrack(track),
-                          ),
-                      ],
+                      onEdit: _editProfile,
+                      child: ProfileFeaturedCarousel(cards: featuredCards),
                     ),
                     if (_showPlaylists)
-                      _ProfileSection(
+                      ProfileSectionBlock(
                         title: 'Плейлисты',
-                        emptyText: 'Созданные плейлисты появятся здесь.',
-                        isEmpty: customPlaylists.isEmpty,
-                        children: [
-                          for (final playlist in customPlaylists)
-                            _ProfileContentRow(
-                              icon: Icons.queue_music_rounded,
-                              title: playlist.name,
-                              subtitle: '${playlist.tracks.length} треков',
-                              color: playlist.tracks.isEmpty
-                                  ? const Color(0xFF275F7D)
-                                  : playlist.tracks.first.color,
-                              imagePath: playlist.coverPath,
-                              onTap: playlist.tracks.isEmpty
-                                  ? null
-                                  : () => player.playTrack(playlist.tracks.first),
-                            ),
-                        ],
+                        onEdit: _editProfile,
+                        child: ProfilePlaylistRow(cards: playlistCards),
                       ),
                     if (_showTracks)
-                      _ProfileSection(
+                      ProfileSectionBlock(
                         title: 'Треки',
+                        onEdit: _editProfile,
                         emptyText: 'Треки пока не добавлены.',
-                        isEmpty: PlayerController.catalog.isEmpty,
-                        children: [
-                          for (final track in PlayerController.catalog.take(5))
-                            _ProfileContentRow(
-                              icon: track.icon,
-                              title: track.title,
-                              subtitle: track.artist,
-                              color: track.color,
-                              onTap: () => player.playTrack(track),
-                            ),
-                        ],
+                        child: PlayerController.catalog.isEmpty
+                            ? null
+                            : ProfileTrackList(
+                                tracks:
+                                    PlayerController.catalog.take(2).toList(),
+                                onPlay: player.playTrack,
+                              ),
                       ),
                     if (_showAlbums)
-                      _ProfileSection(
+                      ProfileSectionBlock(
                         title: 'Альбомы',
-                        emptyText: 'Альбомы не найдены.',
-                        isEmpty: albumsByName.isEmpty,
-                        children: [
-                          for (final entry in albumsByName.entries)
-                            _ProfileContentRow(
-                              icon: Icons.album_rounded,
-                              title: entry.key,
-                              subtitle: entry.value.artist,
-                              color: entry.value.color,
-                              onTap: () => player.playTrack(entry.value),
-                            ),
-                        ],
+                        onEdit: _editProfile,
+                        child: ProfileAlbumRow(
+                          albums: ProfileAlbumData.defaults,
+                          onPlay: player.playTrack,
+                        ),
                       ),
                     if (_showArtists)
-                      _ProfileSection(
+                      ProfileSectionBlock(
                         title: 'Авторы',
-                        emptyText: 'Авторы не найдены.',
-                        isEmpty: artistsByName.isEmpty,
-                        children: [
-                          for (final entry in artistsByName.entries)
-                            _ProfileContentRow(
-                              icon: Icons.person_rounded,
-                              title: entry.key,
-                              subtitle: 'Исполнитель',
-                              color: entry.value.color,
-                              onTap: () => player.playTrack(entry.value),
-                            ),
-                        ],
+                        onEdit: _editProfile,
+                        child: ProfileArtistRow(
+                          artists: ProfileArtistData.defaults,
+                          onPlay: player.playTrack,
+                        ),
                       ),
                   ],
                 ),
@@ -585,101 +579,6 @@ class _SocialCount extends StatelessWidget {
             style: const TextStyle(color: _profileMuted, fontSize: 11),
           ),
         ],
-      );
-}
-
-class _ProfileSection extends StatelessWidget {
-  const _ProfileSection({
-    required this.title,
-    required this.children,
-    required this.emptyText,
-    required this.isEmpty,
-  });
-
-  final String title;
-  final List<Widget> children;
-  final String emptyText;
-  final bool isEmpty;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 22),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            if (isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Text(
-                  emptyText,
-                  style: const TextStyle(color: Colors.white54),
-                ),
-              )
-            else
-              ...children,
-          ],
-        ),
-      );
-}
-
-class _ProfileContentRow extends StatelessWidget {
-  const _ProfileContentRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    this.imagePath,
-    this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final String? imagePath;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) => ListTile(
-        dense: true,
-        contentPadding: EdgeInsets.zero,
-        onTap: onTap,
-        leading: Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: .45),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: imagePath == null
-              ? Icon(icon, color: Colors.white)
-              : Image.file(
-                  File(imagePath!),
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Icon(icon),
-                ),
-        ),
-        title: Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          subtitle,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(color: Colors.white60, fontSize: 12),
-        ),
-        trailing: onTap == null
-            ? null
-            : const Icon(Icons.play_arrow_rounded, color: Colors.white38),
       );
 }
 
