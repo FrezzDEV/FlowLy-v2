@@ -785,6 +785,7 @@ class _ProfileEditorScreenState extends State<ProfileEditorScreen> {
                   style: TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),
+            ),
           ],
         ),
         body: SafeArea(
