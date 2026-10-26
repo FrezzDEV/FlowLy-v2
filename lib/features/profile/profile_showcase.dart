@@ -70,11 +70,13 @@ class ProfileSectionHeader extends StatelessWidget {
               child: InkWell(
                 borderRadius: BorderRadius.circular(14),
                 onTap: onEdit,
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  child: Text(
-                    'Редактировать',
-                    style: TextStyle(fontSize: 14, color: Color(0xFFE6E7EB)),
+                child: const SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: Icon(
+                    Icons.edit_rounded,
+                    size: 19,
+                    color: Color(0xFFE6E7EB),
                   ),
                 ),
               ),
@@ -84,19 +86,116 @@ class ProfileSectionHeader extends StatelessWidget {
       );
 }
 
-class ProfileSectionBlock extends StatelessWidget {
+class ProfileVisibilitySelector extends StatelessWidget {
+  const ProfileVisibilitySelector({
+    super.key,
+    required this.options,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final List<String> options;
+  final String selected;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: _edgePadding),
+        child: Row(
+          children: [
+            const Text(
+              'Видят:',
+              style: TextStyle(color: _mutedText, fontSize: 13),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF25262C),
+                    borderRadius: BorderRadius.circular(26),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final option in options)
+                        InkWell(
+                          borderRadius: BorderRadius.circular(24),
+                          onTap: () => onSelected(option),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 120),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 7,
+                            ),
+                            decoration: BoxDecoration(
+                              color: selected == option
+                                  ? Colors.white
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: Text(
+                              option,
+                              style: TextStyle(
+                                color: selected == option
+                                    ? const Color(0xFF17181C)
+                                    : _mutedText,
+                                fontSize: 12,
+                                fontWeight: selected == option
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+class ProfileSectionBlock extends StatefulWidget {
   const ProfileSectionBlock({
     super.key,
     required this.title,
-    required this.onEdit,
     required this.child,
     this.emptyText,
+    this.visibilityOptions,
   });
 
   final String title;
-  final VoidCallback onEdit;
   final Widget? child;
   final String? emptyText;
+  final List<String>? visibilityOptions;
+
+  @override
+  State<ProfileSectionBlock> createState() => _ProfileSectionBlockState();
+}
+
+class _ProfileSectionBlockState extends State<ProfileSectionBlock> {
+  bool _showVisibility = false;
+  String? _selectedVisibility;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedVisibility = widget.visibilityOptions?.first;
+  }
+
+  @override
+  void didUpdateWidget(covariant ProfileSectionBlock oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.visibilityOptions != widget.visibilityOptions &&
+        !(widget.visibilityOptions?.contains(_selectedVisibility) ?? false)) {
+      _selectedVisibility = widget.visibilityOptions?.first;
+    }
+  }
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -104,14 +203,26 @@ class ProfileSectionBlock extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ProfileSectionHeader(title: title, onEdit: onEdit),
-            if (child != null)
-              child!
+            ProfileSectionHeader(
+              title: widget.title,
+              onEdit: () => setState(() => _showVisibility = !_showVisibility),
+            ),
+            if (_showVisibility && widget.visibilityOptions != null) ...[
+              ProfileVisibilitySelector(
+                options: widget.visibilityOptions!,
+                selected: _selectedVisibility ?? widget.visibilityOptions!.first,
+                onSelected: (value) =>
+                    setState(() => _selectedVisibility = value),
+              ),
+              const SizedBox(height: 10),
+            ],
+            if (widget.child != null)
+              widget.child!
             else
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: _edgePadding),
                 child: Text(
-                  emptyText ?? '',
+                  widget.emptyText ?? '',
                   style: const TextStyle(color: Colors.white54),
                 ),
               ),
@@ -119,10 +230,6 @@ class ProfileSectionBlock extends StatelessWidget {
         ),
       );
 }
-
-// ---------------------------------------------------------------------------
-// Избранное
-// ---------------------------------------------------------------------------
 
 class ProfileFeaturedCardData {
   const ProfileFeaturedCardData({
@@ -359,19 +466,25 @@ class ProfilePlaylistCardData {
 }
 
 class ProfilePlaylistRow extends StatelessWidget {
-  const ProfilePlaylistRow({super.key, required this.cards});
+  const ProfilePlaylistRow({super.key, required this.cards, this.onAdd});
 
   final List<ProfilePlaylistCardData> cards;
+  final VoidCallback? onAdd;
 
   @override
   Widget build(BuildContext context) => SizedBox(
-        height: 150,
+        height: 120,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: _edgePadding),
-          itemCount: cards.length,
+          itemCount: cards.length + (onAdd == null ? 0 : 1),
           separatorBuilder: (_, __) => const SizedBox(width: 12),
-          itemBuilder: (_, index) => _PlaylistCard(data: cards[index]),
+          itemBuilder: (_, index) {
+            if (index == cards.length && onAdd != null) {
+              return _NewPlaylistCard(onTap: onAdd!);
+            }
+            return _PlaylistCard(data: cards[index]);
+          },
         ),
       );
 }
@@ -400,7 +513,7 @@ class _PlaylistCard extends StatelessWidget {
       onTap: data.onTap,
       child: Container(
         width: 120,
-        height: 150,
+        height: 120,
         decoration: BoxDecoration(borderRadius: BorderRadius.circular(18)),
         clipBehavior: Clip.antiAlias,
         child: Stack(
@@ -443,6 +556,42 @@ class _PlaylistCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _NewPlaylistCard extends StatelessWidget {
+  const _NewPlaylistCard({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 120,
+          height: 120,
+          decoration: BoxDecoration(
+            color: const Color(0xFF111216),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFF3B3D44), width: 1.2),
+          ),
+          child: const Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.add_rounded, size: 34, color: Colors.white),
+              SizedBox(height: 5),
+              Text(
+                'Новый\nплейлист',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: _mutedText,
+                  fontSize: 12,
+                  height: 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
 }
 
 class _PlaylistFallback extends StatelessWidget {
@@ -628,56 +777,88 @@ class ProfileTrackList extends StatelessWidget {
   final ValueChanged<PlayerTrack> onPlay;
 
   @override
-  Widget build(BuildContext context) => Column(
-        children: [
-          for (final track in tracks)
-            InkWell(
+  Widget build(BuildContext context) => SizedBox(
+        height: 120,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: _edgePadding),
+          itemCount: tracks.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 12),
+          itemBuilder: (context, index) {
+            final track = tracks[index];
+            return GestureDetector(
               onTap: () => onPlay(track),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: _edgePadding,
-                  vertical: 5,
+              child: Container(
+                width: 120,
+                height: 120,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
                 ),
-                child: Row(
+                child: Stack(
                   children: [
-                    ProfileCoverArt(
-                      art: profileArtForTrack(track),
-                      size: 50,
-                      radius: 12,
-                      fallbackColor: track.color,
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              track.color,
+                              Color.lerp(track.color, Colors.black, .62)!,
+                            ],
+                          ),
+                        ),
+                        child: Center(
+                          child: Icon(
+                            track.icon,
+                            size: 54,
+                            color: Colors.white.withValues(alpha: .58),
+                          ),
+                        ),
+                      ),
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            track.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        color: _plaqueColor,
+                        padding: const EdgeInsets.fromLTRB(8, 6, 8, 7),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              track.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            track.artist,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              color: _mutedText,
+                            const SizedBox(height: 2),
+                            Text(
+                              track.artist,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: _mutedText,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-        ],
+            );
+          },
+        ),
       );
 }
 

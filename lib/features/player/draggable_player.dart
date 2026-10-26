@@ -32,80 +32,18 @@ class DraggableViewState extends State<DraggableView>
   static const double _navBarHeight = 54; // высота NavigationBar в app.dart
 
   late final AnimationController _progress;
-  late final AnimationController _coverReveal;
   final PlayerController _player = PlayerController.instance;
-  late PlayerTrack _coverTrack;
-  PlayerTrack? _incomingTrack;
-  bool _coverForward = true;
 
   bool get isOpen => _progress.value > 0.5;
 
   @override
   void initState() {
     super.initState();
-    _coverTrack = _player.currentTrack;
     _progress = AnimationController(vsync: this, value: 0);
-    _coverReveal = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..addStatusListener(_onCoverRevealStatus);
-    _player.addListener(_onPlayerTrackChanged);
-  }
-
-  void _onCoverRevealStatus(AnimationStatus status) {
-    if (status != AnimationStatus.completed || !mounted) return;
-    final incoming = _incomingTrack;
-    if (incoming == null) return;
-    setState(() {
-      _coverTrack = incoming;
-      _incomingTrack = null;
-    });
-    _coverReveal.value = 0;
-  }
-
-  void _onPlayerTrackChanged() {
-    final next = _player.currentTrack;
-    if (identical(next, _coverTrack) || identical(next, _incomingTrack)) return;
-
-    // In the collapsed mini-player, swap the cover immediately without a reveal.
-    if (_progress.value < 0.5) {
-      _coverReveal
-        ..stop()
-        ..value = 0;
-      _coverTrack = next;
-      _incomingTrack = null;
-      if (mounted) setState(() {});
-      return;
-    }
-
-    // Finish an interrupted reveal first, so rapid next/previous taps never leave stale art.
-    if (_incomingTrack != null) {
-      _coverTrack = _incomingTrack!;
-      _incomingTrack = null;
-      _coverReveal.stop();
-      _coverReveal.value = 0;
-    }
-
-    final catalog = PlayerController.catalog;
-    final oldIndex = catalog.indexOf(_coverTrack);
-    final newIndex = catalog.indexOf(next);
-    _coverForward = oldIndex < 0 || newIndex < 0
-        ? true
-        : newIndex == (oldIndex + 1) % catalog.length;
-    _incomingTrack = next;
-    _coverReveal.duration = MediaQuery.disableAnimationsOf(context)
-        ? Duration.zero
-        : const Duration(milliseconds: 1500);
-    if (mounted) setState(() {});
-    _coverReveal.forward(from: 0);
   }
 
   @override
   void dispose() {
-    _player.removeListener(_onPlayerTrackChanged);
-    _coverReveal
-      ..removeStatusListener(_onCoverRevealStatus)
-      ..dispose();
     _progress.dispose();
     super.dispose();
   }
@@ -230,39 +168,7 @@ class DraggableViewState extends State<DraggableView>
                     child: ClipRRect(
                       clipBehavior: Clip.antiAliasWithSaveLayer,
                       borderRadius: BorderRadius.circular(artSize * .08),
-                      child: AnimatedBuilder(
-                        animation: _coverReveal,
-                        builder: (context, _) {
-                          // Mini-player art changes immediately; the circular
-                          // reveal is reserved for the expanded player.
-                          if (_progress.value < 0.5) {
-                            return _demoTintedCover(track, artSize);
-                          }
-                          return Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              _demoTintedCover(_coverTrack, artSize),
-                              if (_incomingTrack != null)
-                                ClipRRect(
-                                  clipBehavior: Clip.antiAliasWithSaveLayer,
-                                  borderRadius: BorderRadius.circular(artSize * .08),
-                                  child: ClipPath(
-                                    clipper: _TrackCircleRevealClipper(
-                                      t: Curves.easeInOutCubic.transform(
-                                        _coverReveal.value,
-                                      ),
-                                      forward: _coverForward,
-                                    ),
-                                    child: _demoTintedCover(
-                                      _incomingTrack!,
-                                      artSize,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          );
-                        },
-                      ),
+                      child: _demoTintedCover(track, artSize),
                     ),
                   ),
                   Positioned(
@@ -464,33 +370,4 @@ class _ActionButton extends StatelessWidget {
       ),
     );
   }
-}
-
-
-/// Reveals the incoming track cover from a circle growing below the artwork.
-class _TrackCircleRevealClipper extends CustomClipper<Path> {
-  const _TrackCircleRevealClipper({required this.t, required this.forward});
-
-  final double t;
-  final bool forward;
-
-  @override
-  Path getClip(Size size) {
-    // Start clearly inside the cover, not on its clipped corner.
-    final center = Offset(
-      size.width * (forward ? .82 : .18),
-      size.height * .82,
-    );
-    return Path()
-      ..addOval(
-        Rect.fromCircle(
-          center: center,
-          radius: size.width * 1.65 * t,
-        ),
-      );
-  }
-
-  @override
-  bool shouldReclip(covariant _TrackCircleRevealClipper oldClipper) =>
-      oldClipper.t != t || oldClipper.forward != forward;
 }
