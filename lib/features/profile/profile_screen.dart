@@ -304,25 +304,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Stack(
                   children: [
                     Positioned(
-                      top: statusInset + 2,
-                      right: 12,
-                      child: IconButton(
-                        tooltip: 'Настройки профиля',
-                        onPressed: _openProfileMenu,
-                        icon: Icon(
-                          Icons.settings_rounded,
-                          size: 25,
-                          color: FlowLyAccent.color,
-                        ),
-                        style: IconButton.styleFrom(
-                          backgroundColor: const Color(0xFF202126),
-                        ),
-                      ),
-                    ),
-                    Positioned(
                       top: statusInset + 18,
                       left: 24,
-                      right: 24,
+                      right: 64,
                       child: Text(
                         _name,
                         textAlign: TextAlign.center,
@@ -338,7 +322,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Positioned(
                       top: statusInset + 49,
                       left: 24,
-                      right: 24,
+                      right: 64,
                       child: Text(
                         '@$_username',
                         textAlign: TextAlign.center,
@@ -347,6 +331,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         style: const TextStyle(
                           color: Colors.white60,
                           fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: statusInset + 2,
+                      right: 12,
+                      child: IconButton(
+                        tooltip: 'Настройки профиля',
+                        onPressed: _openProfileMenu,
+                        icon: Icon(
+                          Icons.settings_rounded,
+                          size: 25,
+                          color: FlowLyAccent.color,
+                        ),
+                        style: IconButton.styleFrom(
+                          backgroundColor: const Color(0xFF202126),
                         ),
                       ),
                     ),
