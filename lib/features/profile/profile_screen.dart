@@ -12,6 +12,7 @@ import '../player/player_controller.dart';
 import 'profile_showcase.dart';
 
 const _profileBackground = Color(0xFF08090B);
+const _profileMuted = Color(0xFF9B9DA4);
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key, this.backButtonKey});
@@ -465,13 +466,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     ProfileSectionBlock(
                       title: 'Избранное',
-                                            visibilityOptions: const ['Все', 'Только я', 'Подписчики'],
+                        visibilityOptions: const ['Все', 'Только я', 'Подписчики'],
                       child: ProfileFeaturedCarousel(cards: featuredCards),
                     ),
                     if (_showPlaylists)
                       ProfileSectionBlock(
                         title: 'Плейлисты',
-                                                visibilityOptions: const ['Все', 'Только я', 'Подписчики'],
+                        visibilityOptions: const ['Все', 'Только я', 'Подписчики'],
                         child: ProfilePlaylistRow(
                           cards: playlistCards,
                           onAdd: () async {
@@ -482,7 +483,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     if (_showTracks)
                       ProfileSectionBlock(
                         title: 'Треки',
-                                                visibilityOptions: const ['Все', 'Только я', 'Подписчики'],
+                        visibilityOptions: const ['Все', 'Только я', 'Подписчики'],
                         emptyText: 'Треки пока не добавлены.',
                         child: PlayerController.catalog.isEmpty
                             ? null
@@ -495,7 +496,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     if (_showAlbums)
                       ProfileSectionBlock(
                         title: 'Альбомы',
-                                                visibilityOptions: const ['Все', 'Только я', 'Подписчики'],
+                        visibilityOptions: const ['Все', 'Только я', 'Подписчики'],
                         child: ProfileAlbumRow(
                           albums: ProfileAlbumData.defaults,
                           onPlay: player.playTrack,
@@ -504,7 +505,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     if (_showArtists)
                       ProfileSectionBlock(
                         title: 'Авторы',
-                                                visibilityOptions: const ['Все', 'Только я', 'Подписчики'],
+                        visibilityOptions: const ['Все', 'Только я', 'Подписчики'],
                         child: ProfileArtistRow(
                           artists: ProfileArtistData.defaults,
                           onPlay: player.playTrack,
@@ -519,6 +520,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+}
+
+class _SocialCount extends StatelessWidget {
+  const _SocialCount({required this.value, required this.label});
+
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            value,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            style: const TextStyle(color: _profileMuted, fontSize: 11),
+          ),
+        ],
+      );
 }
 
 class ProfileSettingsScreen extends StatelessWidget {
