@@ -464,6 +464,7 @@ class _BigPlayerContentState extends State<BigPlayerContent>
     final scheme = Theme.of(context).colorScheme;
     final ink = scheme.onSurface;
     final duration = _durationSeconds;
+    final titleHeight = _track.title.length > 20 ? 56.0 : 32.0;
 
     return SingleChildScrollView(
       physics: const ClampingScrollPhysics(),
@@ -479,7 +480,7 @@ class _BigPlayerContentState extends State<BigPlayerContent>
                     VerticalTrackLabel(
                       text: _track.title,
                       trackKey: _track.id,
-                      height: 58,
+                      height: titleHeight,
                       duration: _reduceMotion
                           ? Duration.zero
                           : const Duration(milliseconds: 230),
@@ -490,7 +491,7 @@ class _BigPlayerContentState extends State<BigPlayerContent>
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 2),
                     VerticalTrackLabel(
                       text: _track.artist,
                       trackKey: _track.id,
